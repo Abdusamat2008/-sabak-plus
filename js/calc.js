@@ -21,13 +21,21 @@ export function wavg(gs) {
 export const roundHalfUp = x => Math.floor(x + 0.5 + 1e-9);
 export function finalGrade(gs) { const a = wavg(gs); return a == null ? null : roundHalfUp(a); }
 
-// Сколько ещё пятёрок (вес 1) нужно, чтобы итог стал >= target. 0 — уже достаточно, null — недостижимо.
-export function fivesNeeded(gs, target) {
+// Сколько ещё оценок value (вес 1) нужно, чтобы итог стал >= target. 0 — уже достаточно, null — недостижимо (>20).
+export function gradesNeeded(gs, target, value = 5) {
   if (!gs.length) return null;
   let sw = 0, s = 0;
   gs.forEach(g => { const w = wOf(g); sw += w; s += w * g.value; });
-  for (let n = 0; n <= 20; n++) if (roundHalfUp((s + 5 * n) / (sw + n)) >= target) return n;
+  for (let n = 0; n <= 20; n++) if (roundHalfUp((s + value * n) / (sw + n)) >= target) return n;
   return null;
+}
+export const fivesNeeded = (gs, target) => gradesNeeded(gs, target, 5);
+// «Что если следующая контрольная (вес 2) будет value?»
+export function whatIfTest(gs, value) {
+  let sw = 0, s = 0;
+  gs.forEach(g => { const w = wOf(g); sw += w; s += w * g.value; });
+  sw += 2; s += 2 * value;
+  return { avg: s / sw, fin: roundHalfUp(s / sw) };
 }
 // Насколько среднему не хватает до порога округления target-0.5
 export const gapTo = (gs, target) => { const a = wavg(gs); return a == null ? null : Math.max(0, (target - 0.5) - a); };

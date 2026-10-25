@@ -209,3 +209,26 @@ select,input,textarea{font:inherit;padding:10px 12px;border:2px solid var(--ink)
 .toast-item{background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font-weight:700;font-size:.9rem;box-shadow:0 6px 18px #0005;transition:.4s;border-left:6px solid var(--blue-l)}
 .toast-item.ok{border-color:#35d07f}.toast-item.warn{border-color:#ffb74d}.toast-item.out{opacity:0;transform:translateY(8px)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* демо-сценарий, переключатель ролей, калькулятор */
+.roleSel{width:auto;padding:6px 8px;min-height:36px;font-size:.85rem;font-weight:700;border:1.5px solid #fff;background:#000;color:#fff;border-radius:6px}
+.ibtn.demo{background:var(--blue);border-color:var(--blue)}
+.tourcta{margin:20px 0 0}
+.ibtn.exp{color:var(--ink);align-self:end;min-height:44px}
+#tour{position:fixed;z-index:70;left:50%;transform:translateX(-50%);bottom:84px;width:min(94vw,560px);background:var(--ink);color:#fff;border:2px solid var(--blue-l);border-radius:10px;padding:12px 16px 14px;box-shadow:0 10px 30px #0008}
+#tour b{display:block;font:700 1.25rem/1.15 var(--head);text-transform:uppercase;letter-spacing:.03em;margin:4px 0}
+#tour p{margin:4px 0 10px;color:#ddd;font-size:.92rem}
+.tour-h{display:flex;justify-content:space-between;align-items:center;font:700 .72rem var(--body);letter-spacing:.14em;color:var(--blue-l)}
+.tx{background:none;border:0;color:#fff;font-size:1.1rem}
+.tour-b{display:flex;gap:8px}
+.tbtn{background:#222;border:1.5px solid #555;color:#fff;border-radius:6px;padding:8px 14px;font-weight:700}
+.tbtn.main{background:var(--blue);border-color:var(--blue);flex:1}
+@media(min-width:860px){#tour{bottom:84px;left:auto;right:24px;transform:none}}
+body.touring .savebar{bottom:210px}
+.whatif{margin-top:16px}
+.wgrid{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:700px){.wgrid{grid-template-columns:1fr 1fr}}
+.res{margin:10px 0 0;font-size:1.05rem}
+.res b{font:700 1.4rem var(--head);color:var(--blue)}
+body.touring{padding-bottom:320px}
+@media(min-width:860px){body.touring .savebar{left:24px;right:auto;margin:0;width:min(44vw,520px);bottom:84px}}

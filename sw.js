@@ -1,8 +1,8 @@
 // Service Worker: оболочка приложения кэшируется, поэтому SABAK+ открывается без интернета.
-const CACHE = 'sabak-shell-v3';
+const CACHE = 'sabak-shell-v4';
 const SHELL = [
   '/', '/index.html', '/css/app.css', '/css/paper.jpg',
-  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js',
+  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/tour.js',
   '/fonts/oswald-700.woff2', '/fonts/inter-400.woff2', '/fonts/inter-700.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest',
 ];

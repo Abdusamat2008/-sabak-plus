@@ -3,7 +3,7 @@
 import { schoolDaysBack, todayISO, addDays, sortGrades } from './calc.js';
 
 const KEY = 'sabak.mvp.v1';
-const VERSION = 3;
+const VERSION = 4;
 let S = null;
 const subs = new Set();
 export const on = fn => { subs.add(fn); return () => subs.delete(fn); };
@@ -108,7 +108,11 @@ function seed() {
   const events = [{ id: 'e1', cls: '9А', subj: 'phys', kind: 'Контрольная', due: 1 }];
 
   return {
-    v: VERSION, students, grades, att, homework, hwDone, events, mail: [], log: [], undo: [], queue: [],
+    v: VERSION, students, grades, att, homework, hwDone, events, ach: {}, log: [], undo: [], queue: [],
+    mail: [
+      { id: 'm1', ts: Date.now() - 86400000, cat: 'Проблема с оценкой', text: '(демо) В четверти вместо 5 стоит 4, а учитель не может быстро исправить — система не даёт поменять. Что делать?', read: false },
+      { id: 'm2', ts: Date.now() - 3600000 * 5, cat: 'Жалоба', text: '(демо) Дневник не открывается на телефоне, когда в школе плохой интернет.', read: false },
+    ],
     session: null, prefs: { lang: 'ru', scale: 1, contrast: false, offlineDemo: false },
     nextId: 1000,
   };
@@ -207,3 +211,13 @@ export const studentsOf = cls => S.students.filter(s => s.cls === cls);
 export const gradesOf = (sid, sj) => sortGrades(S.grades.filter(g => g.sid === sid && (!sj || g.subj === sj)));
 export const hwFor = sid => { const st = S.students.find(s => s.id === sid); return S.homework.filter(h => h.cls === (st && st.cls)).map(h => ({ ...h, dueDate: addDays(todayISO(), h.due), done: !!(S.hwDone[h.id] && S.hwDone[h.id][sid]) })); };
 export const attOf = (sid, n = 10) => schoolDaysBack(n).map(d => ({ date: d, v: (S.att[d] && S.att[d][sid]) || null }));
+
+// Достижения: возвращает ID впервые полученных (не шлёт emit — вызывается из render)
+export function claimAchievements(sid, okIds) {
+  S.ach[sid] = S.ach[sid] || null;
+  const known = S.ach[sid];
+  S.ach[sid] = okIds;
+  save();
+  if (known === null) return []; // первый заход — тихо запоминаем базу
+  return okIds.filter(id => !known.includes(id));
+}

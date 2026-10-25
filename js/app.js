@@ -1,7 +1,8 @@
 import * as S from './store.js';
 import { t, setLang, getLang, AFFIRMATIONS } from './i18n.js';
-import { TYPES, RULES_RU, wavg, finalGrade, fmt1, fmt2, dmy, todayISO, addDays, fiveStreak, sortGrades, mean, trend, isWeekend } from './calc.js';
-import { advise, studentReport, subjectReport, isAtRisk, anonymousSummary } from './ai.js';
+import { TYPES, RULES_RU, wavg, finalGrade, fmt1, fmt2, dmy, todayISO, addDays, fiveStreak, sortGrades, mean, trend, isWeekend, gradesNeeded, whatIfTest } from './calc.js';
+import { advise, studentReport, subjectReport, isAtRisk, anonymousSummary, achievements } from './ai.js';
+import * as Tour from './tour.js';
 
 const $app = document.getElementById('app');
 const $toast = document.getElementById('toast');
@@ -55,6 +56,8 @@ function shell(content) {
     <div class="who"><span class="role">${t('role_' + u.role)}</span><span class="nm">${esc(u.name)}</span></div>
     <div class="tools">
       ${statusChip()}
+      <button class="ibtn demo" data-act="tour">▶ Демо</button>
+      <select class="roleSel" data-act="role" aria-label="Показать как">${['student', 'parent', 'teacher', 'admin'].map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${t('role_' + r)}</option>`).join('')}</select>
       <button class="ibtn" data-act="offline-demo" aria-pressed="${st.prefs.offlineDemo}" title="${t('offline_demo')}">${st.prefs.offlineDemo ? '⏻ ' + t('offline_demo') : '⏻'}</button>
       <button class="ibtn" data-act="scale" title="${t('font_size')}" aria-label="${t('font_size')}">Аа</button>
       <button class="ibtn" data-act="contrast" aria-pressed="${st.prefs.contrast}" title="${t('contrast')}" aria-label="${t('contrast')}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
@@ -78,6 +81,7 @@ function loginView() {
       <h1>SABAK<span>+</span></h1><p class="lead">${t('app_tag')}</p></div>
     <h2 class="pick">${t('pick_role')}</h2>
     <div class="roles">${roles.map(([r, e], i) => `<button class="role-card ${i % 2 ? 'dark' : ''}" data-act="login" data-role="${r}"><span class="em" aria-hidden="true">${e}</span><b>${t('role_' + r)}</b><small>${t('role_' + r + '_d')}</small></button>`).join('')}</div>
+    <p class="tourcta"><button class="btn blue" data-act="tour">▶ Демо-сценарий для жюри (2 минуты)</button></p>
     <p class="note">${t('demo_note')}</p>
   </div>`;
 }
@@ -167,7 +171,26 @@ function subjectDetail(sid, sj, back) {
       <ul class="plain">${a.explain.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
       ${a.facts.length ? `<h3>${t('ai_facts')}</h3><ul class="plain">${a.facts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     </section>
-  </div>`;
+  </div>
+  ${whatIf(sid, sj, r)}`;
+}
+
+function whatIf(sid, sj, r) {
+  if (r.fin == null) return '';
+  const targets = [3, 4, 5].filter(x => x > r.fin);
+  const w = ui.wi = ui.wi || {};
+  const tg = Math.max(w.target || 0, 0) && targets.includes(w.target) ? w.target : targets[0];
+  const tv = w.test || 5;
+  const wi = whatIfTest(r.gs, tv);
+  const n5 = tg ? gradesNeeded(r.gs, tg, 5) : null, n4 = tg ? gradesNeeded(r.gs, tg, 4) : null;
+  const fm = n => n == null ? (L() === 'ru' ? 'недостижимо в этой четверти' : '—') : `${n}`;
+  return `<section class="card whatif"><h2 class="tp">${L() === 'ru' ? 'А что если?' : 'А эгер...'}</h2>
+    <div class="wgrid">
+      <div><label>${L() === 'ru' ? 'Хочу итог' : 'Жыйынтык'}<select data-act="wi-target">${targets.map(x => `<option value="${x}" ${x === tg ? 'selected' : ''}>«${x}»</option>`).join('') || '<option>«5»</option>'}</select></label>
+        ${tg ? `<p class="res">${L() === 'ru' ? 'Нужно получить подряд' : 'Удаа алуу керек'}: <b>${fm(n5)}</b> ${n5 != null ? L() === 'ru' ? plural(n5, 'пятёрку', 'пятёрки', 'пятёрок') : 'беш' : ''}<br><small>${L() === 'ru' ? 'или' : 'же'} <b>${fm(n4)}</b> ${n4 != null ? L() === 'ru' ? plural(n4, 'четвёрку', 'четвёрки', 'четвёрок') : 'төрт' : ''}</small></p>` : `<p class="res">${L() === 'ru' ? 'Максимальный итог уже достигнут' : 'Эң жогорку жыйынтык'}</p>`}</div>
+      <div><label>${L() === 'ru' ? 'Если следующая контрольная будет' : 'Эгер кийинки текшерүү'}<select data-act="wi-test">${[5, 4, 3, 2].map(x => `<option value="${x}" ${x === tv ? 'selected' : ''}>${x}</option>`).join('')}</select></label>
+        <p class="res">${L() === 'ru' ? 'Среднее станет' : 'Орточо'} <b>${fmt2(wi.avg)}</b> → ${L() === 'ru' ? 'итог' : 'жыйынтык'} <b>«${wi.fin}»</b></p></div>
+    </div><small>${RULES_RU}</small></section>`;
 }
 
 function schedulePage(sid) {
@@ -186,16 +209,7 @@ function hwPage(sid, canToggle) {
 }
 
 function achPage(sid) {
-  const gs = S.gradesOf(sid), streak = fiveStreak(gs);
-  const has5 = gs.some(g => g.value === 5), att = S.attOf(sid, 10).filter(a => a.v);
-  const noAbs = att.length >= 8 && !att.some(a => a.v === 'n');
-  const hwAll = S.hwFor(sid).every(h => h.done);
-  const A = [
-    { e: '🥇', n: 'Первая пятёрка в учебном году', ok: has5, p: has5 ? '1/1' : '0/1' },
-    { e: '🔥', n: 'Огонь: 30 дней подряд пятёрки', ok: streak >= 30, p: `${streak}/30`, pct: streak / 30 },
-    { e: '📅', n: 'Без пропусков 10 учебных дней', ok: noAbs, p: noAbs ? '10/10' : `${att.filter(a => a.v !== 'n').length}/10`, pct: att.filter(a => a.v !== 'n').length / 10 },
-    { e: '📚', n: 'Все домашние задания сданы', ok: hwAll, p: hwAll ? 'готово' : 'в процессе' },
-  ];
+  const A = achievements(sid);
   return `${head(t('ach_title'), '', L() === 'ru' ? 'Награды за действия, а не только за оценки' : '')}<div class="grid2">${A.map(a => `<div class="card ach ${a.ok ? 'got' : ''}"><div class="em">${a.e}</div><div><b>${a.n}</b><div class="bar"><i style="width:${a.ok ? 100 : Math.round((a.pct || 0) * 100)}%"></i></div><small>${a.ok ? '✓ получено' : a.p}</small></div></div>`).join('')}</div>`;
 }
 
@@ -234,6 +248,7 @@ function teacherJournal() {
   <div class="ctl">
     <label>${t('cls')}<select data-act="cls">${u.classes.map(c => `<option ${c === ui.cls ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
     <label>${t('subject')}<select data-act="subj">${u.subjects.map(s => `<option value="${s}" ${s === ui.subj ? 'selected' : ''}>${sjName(s)}</option>`).join('')}</select></label>
+    <button class="ibtn exp" data-act="export">⬇ Excel (CSV)</button>
     <form class="addst" data-form="student"><input name="name" placeholder="${t('student_name')}" required minlength="3" aria-label="${t('student_name')}"><button class="btn" type="submit">+ ${t('add_student')}</button></form>
   </div>
   ${ui.newCode ? `<p class="okmsg">✓ ${esc(ui.newCode.name)} · ${t('code_hint')}: <b>${ui.newCode.code}</b></p>` : ''}
@@ -364,11 +379,31 @@ function render() {
   document.body.classList.toggle('hc', !!st.prefs.contrast);
   const v = view();
   if (v === '') return;
+  if (st.session && st.session.role === 'student') {
+    const ach = achievements(st.session.id), ok = ach.filter(a => a.ok).map(a => a.id);
+    const fresh = S.claimAchievements(st.session.id, ok);
+    fresh.forEach(id => { const a = ach.find(x => x.id === id); setTimeout(() => toast(`🏆 ${a.e} ${a.n}`, 'ok'), 350); });
+  }
   const y = window.scrollY;
   const sheetScroll = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
   $app.innerHTML = st.session ? shell(v) : v;
   window.scrollTo(0, y);
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sheetScroll;
+}
+
+// ---------- экспорт ----------
+function exportCsv() {
+  const students = S.studentsOf(ui.cls), today = todayISO(), att = S.state().att[today] || {};
+  const rows = [['ФИО', 'Класс', 'Предмет', 'Оценки (дата:значение:за что)', 'Среднее', 'Итог', 'Посещаемость сегодня']];
+  students.forEach(s => {
+    const gs = S.gradesOf(s.id, ui.subj);
+    rows.push([s.name, s.cls, S.subj(ui.subj).ru, gs.map(g => `${dmy(g.date)}:${g.value}:${TYPES[g.type] ? TYPES[g.type].ru : g.type}`).join(' | '), gs.length ? fmt2(wavg(gs)) : '', gs.length ? finalGrade(gs) : '', { p: 'был', n: 'Н', l: 'опоздал' }[att[s.id]] || '']);
+  });
+  const csv = '\ufeff' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = `sabak_${ui.cls}_${ui.subj}_${todayISO()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('CSV ✓', 'ok');
 }
 
 // ---------- sync ----------
@@ -383,7 +418,9 @@ function scheduleFlush() {
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, st = S.state();
-  if (['cls', 'subj'].includes(act)) return; // обрабатываются на change
+  if (['cls', 'subj', 'role', 'wi-target', 'wi-test'].includes(act)) return; // обрабатываются на change
+  if (act === 'tour') { Tour.start(); return; }
+  if (act === 'export') { exportCsv(); return; }
   if (act === 'login') { S.login(el.dataset.role); go(el.dataset.role); return; }
   if (act === 'logout') { S.logout(); location.hash = ''; return; }
   if (act === 'lang') { S.setPrefs({ lang: st.prefs.lang === 'ru' ? 'ky' : 'ru' }); return; }
@@ -423,6 +460,9 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('change', e => {
   const el = e.target.closest('select[data-act]'); if (!el) return;
+  if (el.dataset.act === 'role') { S.login(el.value); go(el.value); return; }
+  if (el.dataset.act === 'wi-target') { (ui.wi = ui.wi || {}).target = Number(el.value); render(); return; }
+  if (el.dataset.act === 'wi-test') { (ui.wi = ui.wi || {}).test = Number(el.value); render(); return; }
   if (el.dataset.act === 'cls') ui.cls = el.value;
   if (el.dataset.act === 'subj') ui.subj = el.value;
   render();
@@ -440,6 +480,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.sheet) 
 
 // ---------- start ----------
 S.load();
+Tour.init({ S, ui, go, render, scheduleFlush });
 S.on(() => render());
 setLang(S.state().prefs.lang);
 render();

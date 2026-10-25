@@ -1,6 +1,6 @@
 // ЖАРДАМЧЫ AI (встроенный анализ). Только рекомендации: функции ничего не пишут в оценки.
 // Каждый вывод объясним: показываем числа, на которых он основан.
-import { wavg, finalGrade, fivesNeeded, trend, sortGrades, mean, fmt1, fmt2, dmy, RULES_RU } from './calc.js';
+import { wavg, finalGrade, fivesNeeded, trend, sortGrades, mean, fmt1, fmt2, dmy, RULES_RU, fiveStreak } from './calc.js';
 import { SUBJECTS, subj, gradesOf, attOf } from './store.js';
 
 export function subjectReport(sid, sj) {
@@ -92,4 +92,20 @@ export function anonymousSummary(sid, sj) {
     fivesNeededForNextGrade: r.need,
     trend: r.tr != null ? Number(r.tr.toFixed(2)) : null,
   };
+}
+
+// Достижения ученика (считаются из оценок, посещаемости и ДЗ — без ручных наград)
+export function achievements(sid) {
+  const gs = gradesOf(sid), streak = fiveStreak(gs);
+  const has5 = gs.some(g => g.value === 5);
+  const test5 = gs.some(g => g.type === 'test' && g.value === 5);
+  const att = attOf(sid, 10).filter(a => a.v);
+  const present = att.filter(a => a.v !== 'n').length;
+  const noAbs = att.length >= 8 && !att.some(a => a.v === 'n');
+  return [
+    { id: 'first5', e: '🥇', n: 'Первая пятёрка в учебном году', ok: has5, p: has5 ? '1/1' : '0/1', pct: has5 ? 1 : 0 },
+    { id: 'test5', e: '🎯', n: 'Пятёрка за контрольную', ok: test5, p: test5 ? '1/1' : '0/1', pct: test5 ? 1 : 0 },
+    { id: 'fire30', e: '🔥', n: 'Огонь: 30 дней подряд пятёрки', ok: streak >= 30, p: `${streak}/30`, pct: streak / 30 },
+    { id: 'att10', e: '📅', n: 'Без пропусков 10 учебных дней', ok: noAbs, p: `${present}/10`, pct: present / 10 },
+  ];
 }
