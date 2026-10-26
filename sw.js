@@ -1,8 +1,8 @@
 // Service Worker: оболочка приложения кэшируется, поэтому SABAK+ открывается без интернета.
-const CACHE = 'sabak-shell-v4';
+const CACHE = 'sabak-shell-v5';
 const SHELL = [
   '/', '/index.html', '/css/app.css', '/css/paper.jpg',
-  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/tour.js',
+  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
   '/fonts/oswald-700.woff2', '/fonts/inter-400.woff2', '/fonts/inter-700.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest',
 ];
@@ -12,7 +12,7 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   const req = e.request, url = new URL(req.url);
-  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return; // API — всегда в сеть
+  if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname === '/hb') return; // API — всегда в сеть
   // Навигация: сеть → кэш (чтобы обновления приходили), офлайн → закэшированная страница
   if (req.mode === 'navigate') {
     e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('/index.html', c)); return r; }).catch(() => caches.match('/index.html')));

@@ -3,87 +3,73 @@ import { t, setLang, getLang, AFFIRMATIONS } from './i18n.js';
 import { TYPES, RULES_RU, wavg, finalGrade, fmt1, fmt2, dmy, todayISO, addDays, fiveStreak, sortGrades, mean, trend, isWeekend, gradesNeeded, whatIfTest } from './calc.js';
 import { advise, studentReport, subjectReport, isAtRisk, anonymousSummary, achievements } from './ai.js';
 import * as Tour from './tour.js';
+import * as Net from './net.js';
+import * as API from './api.js';
+import { esc, ui, L, sjName, typeName, hhmm, first, plural, route, go, chip, toast, head, avatar, ROLE_RU, downloadBlob } from './common.js';
+import * as Auth from './auth.js';
+import * as People from './people.js';
+import * as Admin from './admin.js';
 
 const $app = document.getElementById('app');
-const $toast = document.getElementById('toast');
-const ui = { cls: '9А', subj: 'math', type: 'hw', sheet: null, cloud: {}, lastSave: null, newCode: null, mailOk: false };
-
-// ---------- helpers ----------
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const L = () => getLang();
-const sjName = id => { const s = S.subj(id); return L() === 'ky' ? s.ky : s.ru; };
-const typeName = id => TYPES[id] ? (L() === 'ky' ? TYPES[id].ky : TYPES[id].ru) : id;
-const hhmm = ts => new Date(ts).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString(L() === 'ky' ? 'ru-RU' : 'ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
-const first = n => n.split(' ')[0];
-const plural = (n, a, b, c) => { const m = n % 100, k = n % 10; return (m > 10 && m < 20) ? c : k === 1 ? a : (k >= 2 && k <= 4) ? b : c; };
-
-function toast(msg, kind = '') {
-  const el = document.createElement('div'); el.className = 'toast-item ' + kind; el.textContent = msg; $toast.appendChild(el);
-  setTimeout(() => el.classList.add('out'), 2600); setTimeout(() => el.remove(), 3100);
-}
-const chip = g => `<span class="g g${g.value}" title="${esc(typeName(g.type))} · ${dmy(g.date)}">${g.value}</span>`;
+const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
 function spark(vals, w = 180, h = 44) {
   if (vals.length < 2) return '';
   const min = 1.5, max = 5.5, step = w / (vals.length - 1);
   const pts = vals.map((v, i) => [i * step, h - ((v - min) / (max - min)) * h]);
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="динамика оценок"><polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>${pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="currentColor"/>`).join('')}</svg>`;
 }
-const route = () => (location.hash || '').replace(/^#\/?/, '');
-const go = r => { location.hash = '#/' + r; };
 
 // ---------- shell ----------
-const NAV = {
-  student: [['student', 'nav_home', '⌂'], ['student/subjects', 'nav_subjects', '▤'], ['student/schedule', 'nav_schedule', '◷'], ['student/hw', 'nav_hw', '✎'], ['student/ach', 'nav_ach', '★'], ['student/mail', 'nav_mail', '✉']],
-  teacher: [['teacher', 'nav_journal', '▤'], ['teacher/class', 'nav_class', '▥'], ['teacher/log', 'nav_log', '↻']],
-  parent: [['parent', 'nav_week', '⌂'], ['parent/subjects', 'nav_subjects', '▤']],
-  admin: [['admin', 'nav_admin', '✉']],
+const IC = {
+  home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>', book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19a2 2 0 0 0 2 2h13"/>', cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  check: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 12l3 3 5-6"/>', star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>', mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', list: '<path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>', users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-4 3-6 6.500-6s6 2 6.500 6M16 4.500a3.500 3.500 0 0 1 0 7M18 14.500c2 .8 3.200 2.700 3.500 5.500"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/>', file: '<path d="M6 3h8l5 5v13H6zM14 3v5h5"/>', bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4zM10 21h4"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
 };
+const ico = n => `<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+const NAV = {
+  student: [['student', 'nav_home', 'home'], ['student/subjects', 'nav_subjects', 'book'], ['student/schedule', 'nav_schedule', 'cal'], ['student/hw', 'nav_hw', 'check'], ['student/ach', 'nav_ach', 'star'], ['student/mail', 'nav_mail', 'mail']],
+  teacher: [['teacher', 'nav_journal', 'book'], ['teacher/class', 'nav_class', 'chart'], ['teacher/students', 'Ученики', 'users'], ['teacher/log', 'nav_log', 'list']],
+  parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/dossier', 'Дело', 'file']],
+  admin: [['admin', 'Обзор', 'chart'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
+};
+const navLabel = k => (k.startsWith('nav_') ? t(k) : k);
+const isActive = (href, r, role) => r === href || (href !== role && r.startsWith(href + '/')) || (href === 'admin' && r.startsWith('admin/audit')) || (href === 'parent/dossier' && r.startsWith('dossier'));
 
-function statusChip() {
-  const st = S.state(), p = S.pending(), off = S.isOffline();
-  if (off) return `<span class="net off" role="status">● ${t('offline')}${p ? ` · ${p} ${t('queue')}` : ''}</span>`;
-  if (p) return `<span class="net sync" role="status">↻ ${p} ${t('queue')}</span>`;
-  return `<span class="net on" role="status">● ${t('online')}</span>`;
+function netPill() {
+  const p = S.pending(), off = S.isOffline();
+  if (off) return `<span class="net off" role="status" title="${t('offline_msg')}"><i></i>${t('offline')}${p ? ` · ${p}` : ''}</span>`;
+  if (p) return `<span class="net sync" role="status"><i></i>↻ ${p}</span>`;
+  return `<span class="net on" role="status" title="${t('online')}"><i></i><span class="net-t">${t('online')}</span></span>`;
 }
 
 function shell(content) {
   const st = S.state(), u = st.session, r = route();
-  const nav = NAV[u.role].map(([href, key, ic]) => `<a href="#/${href}" class="${r === href || (href !== u.role && r.startsWith(href)) ? 'act' : ''}"><span class="ic" aria-hidden="true">${ic}</span><span>${t(key)}</span></a>`).join('');
+  const unread = S.myNotifs().filter(n => !n.read).length;
+  const items = NAV[u.role].map(([href, key, ic]) => `<a href="#/${href}" class="${isActive(href, r, u.role) ? 'act' : ''}">${ico(ic)}<span>${navLabel(key)}</span></a>`).join('');
+  const me = S.state().students.find(s => s.id === u.id);
   return `
   <header class="top">
     <a class="brand" href="#/${u.role}" aria-label="SABAK+">SABAK<b>+</b></a>
-    <div class="who"><span class="role">${t('role_' + u.role)}</span><span class="nm">${esc(u.name)}</span></div>
+    <nav class="nav" aria-label="Навигация">${items}</nav>
     <div class="tools">
-      ${statusChip()}
-      <button class="ibtn demo" data-act="tour">▶ Демо</button>
-      <select class="roleSel" data-act="role" aria-label="Показать как">${['student', 'parent', 'teacher', 'admin'].map(r => `<option value="${r}" ${r === u.role ? 'selected' : ''}>${t('role_' + r)}</option>`).join('')}</select>
-      <button class="ibtn" data-act="offline-demo" aria-pressed="${st.prefs.offlineDemo}" title="${t('offline_demo')}">${st.prefs.offlineDemo ? '⏻ ' + t('offline_demo') : '⏻'}</button>
-      <button class="ibtn" data-act="scale" title="${t('font_size')}" aria-label="${t('font_size')}">Аа</button>
-      <button class="ibtn" data-act="contrast" aria-pressed="${st.prefs.contrast}" title="${t('contrast')}" aria-label="${t('contrast')}"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 1.5a6.5 6.5 0 0 1 0 13z" fill="currentColor"/></svg></button>
-      <button class="ibtn" data-act="lang" title="RU / КЫ">${L() === 'ru' ? 'КЫ' : 'RU'}</button>
-      <button class="ibtn" data-act="logout">${t('logout')}</button>
+      ${netPill()}
+      <a class="ibtn bell" href="#/notifs" aria-label="Уведомления${unread ? ': ' + unread : ''}">${ico('bell')}${unread ? `<b class="cnt">${unread}</b>` : ''}</a>
+      <div class="usr">
+        <button class="usr-b" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">${u.role === 'student' && me ? avatar(me, 32) : `<span class="av ini sm" style="width:32px;height:32px;border-color:var(--blue);color:var(--blue)">${esc((u.name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}<span class="usr-n"><b>${esc(first(u.name))}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}</small></span><span class="car" aria-hidden="true">▾</span></button>
+        ${ui.menu ? `<div class="menu" role="menu"><div class="mh2"><b>${esc(u.name)}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}${st.school ? ' · ' + esc(st.school.name) : ''}</small></div>
+          ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${['student', 'parent', 'teacher', 'admin'].map(x => `<option value="${x}" ${x === u.role ? 'selected' : ''}>${t('role_' + x)}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
+          <button class="mi" data-act="scale">Размер текста <b>${Math.round(st.prefs.scale * 100)}%</b></button>
+          <button class="mi" data-act="contrast" aria-pressed="${st.prefs.contrast}">Высокая контрастность <b>${st.prefs.contrast ? 'вкл' : 'выкл'}</b></button>
+          <button class="mi" data-act="lang">Язык: <b>${L() === 'ru' ? 'Русский → Кыргызча' : 'Кыргызча → Русский'}</b></button>
+          ${u.role === 'admin' ? '<a class="mi" href="#/admin/audit">Журнал аудита</a>' : ''}
+          <button class="mi out" data-act="logout">${t('logout')}</button></div>` : ''}
+      </div>
     </div>
   </header>
-  <nav class="nav" aria-label="Навигация">${nav}</nav>
-  <main class="wrap" id="main">${content}</main>
-  <footer class="foot"><button class="link" data-act="reset">${t('reset')}</button> · SABAK+ MVP · NEXUS · демо-данные</footer>`;
-}
-
-function head(l1, l2, sub) { return `<div class="hd"><h1>${esc(l1)}${l2 ? `<br><span>${esc(l2)}</span>` : ''}</h1>${sub ? `<p class="sub">${sub}</p>` : ''}</div>`; }
-
-// ---------- login ----------
-function loginView() {
-  const roles = [['student', '🎓'], ['parent', '👪'], ['teacher', '📘'], ['admin', '🏫']];
-  return `<div class="login">
-    <div class="login-top"><button class="ibtn" data-act="lang">${L() === 'ru' ? 'КЫ' : 'RU'}</button></div>
-    <div class="hero"><div class="tape">NEXUS · LOGOS HACKATHON 2026</div>
-      <h1>SABAK<span>+</span></h1><p class="lead">${t('app_tag')}</p></div>
-    <h2 class="pick">${t('pick_role')}</h2>
-    <div class="roles">${roles.map(([r, e], i) => `<button class="role-card ${i % 2 ? 'dark' : ''}" data-act="login" data-role="${r}"><span class="em" aria-hidden="true">${e}</span><b>${t('role_' + r)}</b><small>${t('role_' + r + '_d')}</small></button>`).join('')}</div>
-    <p class="tourcta"><button class="btn blue" data-act="tour">▶ Демо-сценарий для жюри (2 минуты)</button></p>
-    <p class="note">${t('demo_note')}</p>
-  </div>`;
+  <main class="wrap" id="main">${S.isLive() && S.failed().length ? `<div class="banner warn"><div><b>Часть изменений не принята сервером</b><p>${esc(S.failed()[0].text)}: ${esc(S.failed()[0].error)}</p></div><button class="btn sm ghost" data-act="clear-failed">Понятно</button></div>` : ''}${content}</main>
+  <footer class="foot">${S.isLive() ? `SABAK+ · ${esc(st.school ? st.school.name : '')}` : `<button class="link" data-act="reset">${t('reset')}</button> · <button class="link" data-act="to-live">Войти в настоящий аккаунт</button> · SABAK+ · демо-данные`}</footer>
+  ${People.photoModal()}`;
 }
 
 // ---------- student ----------
@@ -122,7 +108,7 @@ function studentHome(sid) {
   else if (events[0]) next = { t: `${sjName(events[0].subj)} · ${events[0].kind}`, d: L() === 'ru' ? 'Повтори тему и реши пробный вариант.' : 'Теманы кайталап, сыноо вариантын чыгар.', go: 'student/hw' };
   else if (weak[0]) next = { t: sjName(weak[0].subj), d: needText(weak[0]), go: 'student/subject/' + weak[0].subj };
 
-  return `${head(`${greet}, ${first(me.name)}`, '', dayFmt(todayISO()))}
+  return `${People.photoBanner()}${head(`${greet}, ${first(me.name)}`, '', dayFmt(todayISO()), `<button class="ibtn" data-act="photo-open" data-sid="${sid}">${avatar(me, 28)} Моё фото</button>`)}
   <div class="grid2">
     <section class="card">
       <h2 class="tp">${t('today_important')}</h2>
@@ -232,7 +218,7 @@ function teacherJournal() {
   const rows = students.map(s => {
     const gs = S.gradesOf(s.id, ui.subj), avg = wavg(gs), cur = att[s.id];
     return `<div class="jrow">
-      <div class="jn"><b>${esc(s.name)}</b><small>${fmt1(avg)} ${gs.length ? `· ${t('final_')} «${finalGrade(gs)}»` : ''}</small></div>
+      <div class="jn jn-av">${avatar(s, 38)}<div><b>${esc(s.name)}</b><small>${fmt1(avg)} ${gs.length ? `· ${t('final_')} «${finalGrade(gs)}»` : ''}</small></div></div>
       <div class="jrecent">${sortGrades(gs).slice(-5).map(chip).join('') || '<small class="muted">—</small>'}</div>
       <div class="jatt" role="group" aria-label="${t('attendance')}">
         <button class="ab p ${cur === 'p' ? 'on' : ''}" data-act="att" data-sid="${s.id}" data-v="p" aria-label="${t('present')} ${esc(s.name)}">✓</button>
@@ -244,20 +230,22 @@ function teacherJournal() {
     </div>`;
   }).join('');
   const pend = S.pending(), off = S.isOffline();
-  return `${head(t('journal'), `${ui.cls} · ${sjName(ui.subj)}`, '')}
+  return `${head(t('journal'), `${ui.cls} · ${sjName(ui.subj)}`, '', saveTool(off, pend))}
   <div class="ctl">
     <label>${t('cls')}<select data-act="cls">${u.classes.map(c => `<option ${c === ui.cls ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
     <label>${t('subject')}<select data-act="subj">${u.subjects.map(s => `<option value="${s}" ${s === ui.subj ? 'selected' : ''}>${sjName(s)}</option>`).join('')}</select></label>
-    <button class="ibtn exp" data-act="export">⬇ Excel (CSV)</button>
+    <button class="ibtn exp" data-act="export-xlsx" data-kind="class" data-cls="${ui.cls}">⬇ Excel</button><button class="ibtn exp" data-act="export-docx" data-kind="class" data-cls="${ui.cls}">Word</button><button class="ibtn exp" data-act="export-pdf" data-kind="class" data-cls="${ui.cls}">PDF</button>
     <form class="addst" data-form="student"><input name="name" placeholder="${t('student_name')}" required minlength="3" aria-label="${t('student_name')}"><button class="btn" type="submit">+ ${t('add_student')}</button></form>
   </div>
-  ${ui.newCode ? `<p class="okmsg">✓ ${esc(ui.newCode.name)} · ${t('code_hint')}: <b>${ui.newCode.code}</b></p>` : ''}
+  ${ui.newCode ? `<p class="okmsg">✓ ${esc(ui.newCode.name)} добавлен(а)${ui.newCode.code ? ` · ${t('code_hint')}: <b>${ui.newCode.code}</b>` : ' · код появится после синхронизации (раздел «Ученики»)'}</p>` : ''}
   <div class="reason"><span>${t('reason')}:</span>${typeBtns}</div>
   <div class="jtable">${rows}</div>
-  <div class="savebar" role="status"><span class="dot ${off ? 'off' : ''}"></span>
-    ${off ? `${t('offline_msg')} · ${pend} ${t('queue')}` : ui.lastSave ? `${t('saved')} · ${hhmm(ui.lastSave)}` : t('saved')}
-    <button class="btn light" data-act="undo" ${S.state().undo.length ? '' : 'disabled'}>↶ ${t('undo')}</button></div>
   ${sheetView()}`;
+}
+
+function saveTool(off, pend) {
+  const st = S.state();
+  return `<div class="savetool" role="status" aria-live="polite"><span class="sv ${off ? 'off' : ''}"><i></i>${off ? `${t('offline_msg')} · ${pend}` : ui.lastSave ? `${t('saved')} · ${hhmm(ui.lastSave)}` : t('saved')}</span><button class="ibtn undo" data-act="undo" ${st.undo.length ? '' : 'disabled'}>↶ ${t('undo')}</button></div>`;
 }
 
 function sheetView() {
@@ -309,6 +297,10 @@ function logPage() {
 }
 
 // ---------- parent ----------
+function kidPicker() {
+  const u = S.state().session; if (!u.children || u.children.length < 2) return '';
+  return `<div class="kids">${u.children.map(id => { const k = S.student(id); return `<button class="tag ${id === u.child ? 'on' : ''}" data-act="kid" data-id="${id}">${esc(first(k.name))}</button>`; }).join('')}</div>`;
+}
 function parentWeek() {
   const st = S.state(), sid = st.session.child, me = st.students.find(s => s.id === sid);
   const since = addDays(todayISO(), -7);
@@ -318,7 +310,7 @@ function parentWeek() {
   const overdue = S.hwFor(sid).filter(h => !h.done && h.dueDate < todayISO());
   const sig = rep.dropping[0];
   const attn = !!sig || overdue.length >= 2 || att >= 2;
-  return `${head(t('week_title'), first(me.name), `${me.cls}`)}
+  return `${People.photoBanner()}${kidPicker()}${head(t('week_title'), first(me.name), `${me.cls}`, `<a class="btn sm ghost" href="#/dossier/${sid}">Дело ученика</a><button class="btn sm ghost" data-act="photo-open" data-sid="${sid}">Фото профиля</button>`)}
   <div class="status ${attn ? 'attn' : 'ok'}"><b>${attn ? '⚠ ' + t('week_attn') : '✓ ' + t('week_ok')}</b></div>
   <div class="kpis"><div class="kpi"><small>${t('new_grades')}</small><b>${gs.length}</b></div><div class="kpi ${att ? 'alert' : ''}"><small>${t('absences')}</small><b>${att}</b></div><div class="kpi ${overdue.length ? 'alert' : ''}"><small>${t('overdue')}</small><b>${overdue.length}</b></div></div>
   <div class="grid2">
@@ -330,25 +322,28 @@ function parentWeek() {
   </div>`;
 }
 
-// ---------- admin ----------
-function adminPage() {
-  const st = S.state();
-  const risk = st.students.filter(s => isAtRisk(s.id));
-  return `${head(t('admin_title'), '', '')}
-  <div class="grid2"><section class="card"><h2 class="tp">${t('nav_admin')} (${st.mail.filter(m => !m.read).length} ${L() === 'ru' ? 'новых' : 'жаңы'})</h2>
-   ${st.mail.map(m => `<div class="mail ${m.read ? 'read' : ''}"><div class="mh"><span class="tag on">${esc(m.cat)}</span><small>${new Date(m.ts).toLocaleString('ru-RU')}</small></div><p>${esc(m.text)}</p>${m.read ? '' : `<button class="ibtn sm" data-act="mailread" data-id="${m.id}">${t('mark_read')}</button>`}</div>`).join('') || `<p class="muted">${t('admin_empty')}</p>`}</section>
-   <section class="card"><h2 class="tp">${t('school_risk')} (${risk.length})</h2>${risk.map(s => `<div class="row"><div><b>${esc(s.name)}</b><small>${s.cls}</small></div></div>`).join('')}</section></div>`;
-}
-
 // ---------- router ----------
+const empty = (title, text) => `<div class="card lock"><div class="big-ic">🕓</div><h2>${title}</h2><p>${text}</p></div>`;
+function demoPicker() {
+  const roles = [['student', '🎓'], ['parent', '👪'], ['teacher', '📘'], ['admin', '🏫']];
+  return `<div class="auth"><div class="auth-top"><button class="ibtn" data-act="lang">${L() === 'ru' ? 'КЫ' : 'RU'}</button></div><div class="auth-grid"><aside class="auth-side"><div class="tape">ДЕМО-РЕЖИМ</div><h1>SABAK<span>+</span></h1><p class="lead">${t('app_tag')}</p><p class="note">Данные демо хранятся только в вашем браузере. Настоящая работа школы — после входа по приглашению.</p></aside>
+    <div class="auth-main"><div class="auth-card wide-card"><h2>${t('pick_role')}</h2><div class="roles">${roles.map(([r, e], i) => `<button class="role-card ${i % 2 ? 'dark' : ''}" data-act="login" data-role="${r}"><span class="em" aria-hidden="true">${e}</span><b>${t('role_' + r)}</b><small>${t('role_' + r + '_d')}</small></button>`).join('')}</div>
+    <p class="tourcta"><button class="btn blue" data-act="tour">▶ Демо-сценарий для жюри (2 минуты)</button></p><p class="alt"><button class="link" data-act="demo-back">← Ко входу</button></p></div></div></div></div>`;
+}
 function view() {
   const st = S.state(), u = st.session, r = route();
-  if (!u) return loginView();
-  if (!r.startsWith(u.role)) { go(u.role); return ''; }
+  if (!u || u.needsProfile || (u.status && u.status !== 'active') || (ui.auth && ui.auth.mode === 'recover-set')) {
+    if (!S.isLive() && ui.demoPick && !u) return demoPicker();
+    return Auth.authView();
+  }
+  if (r === 'notifs') return People.notifsPage();
+  if (r.startsWith('dossier/')) return People.dossierView(r.split('/')[1]);
   const sub = r.split('/');
+  if (!r.startsWith(u.role)) { go(u.role); return ''; }
   switch (u.role) {
     case 'student': {
       const sid = u.id;
+      if (S.isLive() && !S.student(sid)) return empty('Профиль ещё не привязан', 'Ваш аккаунт не связан с записью ученика. Попросите классного руководителя выдать новый код.');
       if (sub[1] === 'subjects') return subjectsList(sid, 'student');
       if (sub[1] === 'subject') return subjectDetail(sid, sub[2], 'student/subjects');
       if (sub[1] === 'schedule') return schedulePage(sid);
@@ -358,20 +353,34 @@ function view() {
       return studentHome(sid);
     }
     case 'parent': {
-      if (sub[1] === 'subjects') return subjectsList(u.child, 'parent');
+      if (!u.child) return empty('Ребёнок не привязан', 'К вашему аккаунту пока не привязан ученик. Используйте код родителя от классного руководителя.');
+      if (sub[1] === 'dossier') { go('dossier/' + u.child); return ''; }
+      if (sub[1] === 'subjects') return kidPicker() + subjectsList(u.child, 'parent');
       if (sub[1] === 'subject') return subjectDetail(u.child, sub[2], 'parent/subjects');
       return parentWeek();
     }
     case 'teacher': {
+      if (!(u.classes || []).length) return empty('Классы пока не назначены', 'Администрация ещё не назначила вам классы и предметы. Как только это произойдёт, журнал появится здесь.');
+      if (!u.classes.includes(ui.cls)) ui.cls = u.classes[0];
+      if (!u.subjects.includes(ui.subj)) ui.subj = u.subjects[0] || ui.subj;
+      if (sub[1] === 'students') return People.studentsPage();
       if (sub[1] === 'class') return teacherClass();
       if (sub[1] === 'log') return logPage();
       return teacherJournal();
     }
-    case 'admin': return adminPage();
+    case 'admin': {
+      if (sub[1] === 'teachers') return Admin.teachersPage();
+      if (sub[1] === 'students') return People.studentsPage();
+      if (sub[1] === 'access') return Admin.accessPage();
+      if (sub[1] === 'mail') return Admin.mailPage();
+      if (sub[1] === 'audit') return Admin.auditPage();
+      return Admin.overview();
+    }
   }
   return '';
 }
 
+const isTyping = () => { const a = document.activeElement; return !!a && $app.contains(a) && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !['checkbox', 'radio', 'file', 'button', 'submit'].includes(a.type))); };
 function render() {
   const st = S.state();
   setLang(st.prefs.lang);
@@ -379,57 +388,51 @@ function render() {
   document.body.classList.toggle('hc', !!st.prefs.contrast);
   const v = view();
   if (v === '') return;
-  if (st.session && st.session.role === 'student') {
+  if (st.session && st.session.role === 'student' && st.session.status !== 'pending') {
     const ach = achievements(st.session.id), ok = ach.filter(a => a.ok).map(a => a.id);
     const fresh = S.claimAchievements(st.session.id, ok);
     fresh.forEach(id => { const a = ach.find(x => x.id === id); setTimeout(() => toast(`🏆 ${a.e} ${a.n}`, 'ok'), 350); });
   }
-  const y = window.scrollY;
+  const y = window.scrollY, focusId = document.activeElement && document.activeElement.id;
   const sheetScroll = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
-  $app.innerHTML = st.session ? shell(v) : v;
+  const authLike = !st.session || st.session.needsProfile || (st.session.status && st.session.status !== 'active');
+  $app.innerHTML = authLike ? v : shell(v);
+  document.body.classList.toggle('is-auth', authLike);
   window.scrollTo(0, y);
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sheetScroll;
+  if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
 }
+window.__render = render;
 
-// ---------- экспорт ----------
-function exportCsv() {
-  const students = S.studentsOf(ui.cls), today = todayISO(), att = S.state().att[today] || {};
-  const rows = [['ФИО', 'Класс', 'Предмет', 'Оценки (дата:значение:за что)', 'Среднее', 'Итог', 'Посещаемость сегодня']];
-  students.forEach(s => {
-    const gs = S.gradesOf(s.id, ui.subj);
-    rows.push([s.name, s.cls, S.subj(ui.subj).ru, gs.map(g => `${dmy(g.date)}:${g.value}:${TYPES[g.type] ? TYPES[g.type].ru : g.type}`).join(' | '), gs.length ? fmt2(wavg(gs)) : '', gs.length ? finalGrade(gs) : '', { p: 'был', n: 'Н', l: 'опоздал' }[att[s.id]] || '']);
-  });
-  const csv = '\ufeff' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n');
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = `sabak_${ui.cls}_${ui.subj}_${todayISO()}.csv`;
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
-  toast('CSV ✓', 'ok');
-}
-
-// ---------- sync ----------
+// ---------- sync (автоматически, без кнопок) ----------
 let flushTimer = null;
 function scheduleFlush() {
   clearTimeout(flushTimer);
   if (S.isOffline() || !S.pending()) return;
-  flushTimer = setTimeout(() => { if (!S.isOffline()) { const n = S.flushQueue(); if (n) toast(`${t('synced')}: ${n}`, 'ok'); } }, 1100);
+  flushTimer = setTimeout(async () => { const n = await S.flushQueue(); if (n) { toast(`${t('synced')}: ${n}`, 'ok'); bgHydrate(); } }, 900);
 }
+function bgHydrate() { if (S.isLive() && S.state().session && !S.isOffline() && !S.pending() && !isTyping() && !ui.photo) S.hydrate().catch(() => {}); }
+Net.onChange(v => { toast(v ? t('online') : t('offline_msg'), v ? 'ok' : 'warn'); render(); if (v) { scheduleFlush(); bgHydrate(); } });
+setInterval(() => { if (S.pending()) scheduleFlush(); }, 15000);
+setInterval(bgHydrate, 60000);
 
 // ---------- events ----------
 document.addEventListener('click', async e => {
+  if (ui.menu && !e.target.closest('.usr')) { ui.menu = false; render(); }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, st = S.state();
-  if (['cls', 'subj', 'role', 'wi-target', 'wi-test'].includes(act)) return; // обрабатываются на change
-  if (act === 'tour') { Tour.start(); return; }
-  if (act === 'export') { exportCsv(); return; }
-  if (act === 'login') { S.login(el.dataset.role); go(el.dataset.role); return; }
-  if (act === 'logout') { S.logout(); location.hash = ''; return; }
+  if (['cls', 'subj', 'role', 'wi-target', 'wi-test', 'acls', 'homeroom'].includes(act)) return; // обрабатываются на change
+  if (act === 'menu') { ui.menu = !ui.menu; render(); return; }
+  if (act === 'tour') { ui.menu = false; Tour.start(); return; }
+  if (act === 'login') { S.login(el.dataset.role); ui.demoPick = false; go(el.dataset.role); return; }
+  if (act === 'demo-back') { ui.demoPick = false; render(); return; }
+  if (act === 'logout') { ui.menu = false; S.logout(); location.hash = ''; ui.demoPick = false; render(); return; }
+  if (act === 'to-live') { S.switchMode('live'); location.hash = ''; render(); return; }
   if (act === 'lang') { S.setPrefs({ lang: st.prefs.lang === 'ru' ? 'ky' : 'ru' }); return; }
   if (act === 'scale') { S.setPrefs({ scale: st.prefs.scale >= 1.5 ? 1 : st.prefs.scale + 0.25 }); return; }
   if (act === 'contrast') { S.setPrefs({ contrast: !st.prefs.contrast }); return; }
-  if (act === 'offline-demo') {
-    const off = !st.prefs.offlineDemo; S.setPrefs({ offlineDemo: off });
-    toast(off ? t('offline_msg') : t('online'), off ? 'warn' : 'ok'); scheduleFlush(); return;
-  }
+  if (act === 'kid') { S.setChild(el.dataset.id); return; }
+  if (act === 'clear-failed') { st.failed = []; render(); return; }
   if (act === 'reset') { if (confirm(t('reset_q'))) { S.resetDemo(); ui.sheet = null; toast('OK'); } return; }
   if (act === 'type') { ui.type = el.dataset.v; render(); return; }
   if (act === 'grade') {
@@ -444,8 +447,8 @@ document.addEventListener('click', async e => {
   if (act === 'sheet') { ui.sheet = el.dataset.sid; render(); return; }
   if (act === 'sheet-go') { ui.pendingSheet = el.dataset.sid; go('teacher'); return; }
   if (act === 'close-sheet') { ui.sheet = null; render(); return; }
-  if (act === 'hw') { S.toggleHw(el.dataset.hid, el.dataset.sid); return; }
-  if (act === 'mailread') { S.markMailRead(el.dataset.id); return; }
+  if (act === 'hw') { S.toggleHw(el.dataset.hid, el.dataset.sid); scheduleFlush(); return; }
+  if (act === 'mailread') { S.markMailRead(el.dataset.id); scheduleFlush(); return; }
   if (act === 'contact') { toast(L() === 'ru' ? 'Сообщение учителю отправлено (демо)' : 'Мугалимге билдирүү жөнөтүлдү (демо)', 'ok'); return; }
   if (act === 'cloud') {
     const out = document.getElementById('cloud-out'), key = el.dataset.sid + ui.subj;
@@ -457,32 +460,42 @@ document.addEventListener('click', async e => {
     } catch { ui.cloud[key] = t('ai_cloud_off'); }
     out.textContent = ui.cloud[key]; return;
   }
+  for (const m of [Auth, People, Admin]) if (await m.act(act, el)) return;
 });
 document.addEventListener('change', e => {
+  if (People.onChange(e.target) || Auth.onChange(e.target)) return;
   const el = e.target.closest('select[data-act]'); if (!el) return;
-  if (el.dataset.act === 'role') { S.login(el.value); go(el.value); return; }
+  if (Admin.onChange(el)) return;
+  if (el.dataset.act === 'role') { S.login(el.value); ui.menu = false; go(el.value); return; }
   if (el.dataset.act === 'wi-target') { (ui.wi = ui.wi || {}).target = Number(el.value); render(); return; }
   if (el.dataset.act === 'wi-test') { (ui.wi = ui.wi || {}).test = Number(el.value); render(); return; }
   if (el.dataset.act === 'cls') ui.cls = el.value;
   if (el.dataset.act === 'subj') ui.subj = el.value;
   render();
 });
-document.addEventListener('submit', e => {
+document.addEventListener('submit', async e => {
   const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault();
   const fd = new FormData(f);
-  if (f.dataset.form === 'mail') { S.sendMail(fd.get('cat'), String(fd.get('text')).trim()); ui.mailOk = true; render(); setTimeout(() => { ui.mailOk = false; }, 100); toast(t('mail_ok'), 'ok'); }
-  if (f.dataset.form === 'student') { const name = String(fd.get('name')).trim(); const r = S.addStudent(name, ui.cls); ui.newCode = { name, code: r.code }; ui.lastSave = Date.now(); render(); scheduleFlush(); }
+  if (f.dataset.form === 'mail') { S.sendMail(fd.get('cat'), String(fd.get('text')).trim()); ui.mailOk = true; render(); setTimeout(() => { ui.mailOk = false; }, 100); toast(t('mail_ok'), 'ok'); scheduleFlush(); return; }
+  if (f.dataset.form === 'student') { const name = String(fd.get('name')).trim(); S.addStudent(name, ui.cls).then(r => { ui.newCode = { name, code: r.code }; ui.lastSave = Date.now(); render(); scheduleFlush(); }).catch(er => toast(er.message, 'warn')); return; }
+  if (await Auth.submit(f, fd)) return;
+  if (People.submit(f, fd)) return;
+  Admin.submit(f, fd);
 });
-window.addEventListener('hashchange', () => { ui.sheet = ui.pendingSheet || null; ui.pendingSheet = null; ui.mailOk = false; render(); window.scrollTo(0, 0); });
-window.addEventListener('online', () => { render(); scheduleFlush(); });
-window.addEventListener('offline', () => { render(); toast(t('offline_msg'), 'warn'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && ui.sheet) { ui.sheet = null; render(); } });
+window.addEventListener('hashchange', () => { ui.sheet = ui.pendingSheet || null; ui.pendingSheet = null; ui.mailOk = false; ui.menu = false; ui.codeBox = null; render(); window.scrollTo(0, 0); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (ui.photo) { ui.photo = null; render(); } else if (ui.sheet) { ui.sheet = null; render(); } else if (ui.menu) { ui.menu = false; render(); } } });
 
 // ---------- start ----------
 S.load();
-Tour.init({ S, ui, go, render, scheduleFlush });
+let recovering = false;
+if (location.hash.includes('access_token')) {
+  const type = API.sessionFromHash(location.hash); history.replaceState(null, '', location.pathname);
+  if (type === 'recovery') { recovering = true; S.switchMode('live'); ui.auth = { mode: 'recover-set', step: 1, d: {}, err: '', info: '' }; }
+}
+Tour.init({ S, ui, go, render, scheduleFlush, Net });
 S.on(() => render());
 setLang(S.state().prefs.lang);
 render();
+if (!recovering) S.restoreLive();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
-window.__sabak = { S, ui };
+window.__sabak = { S, ui, Net };
