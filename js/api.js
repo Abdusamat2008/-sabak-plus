@@ -13,7 +13,15 @@ export class ApiError extends Error { constructor(msg, status, body) { super(msg
 const RU = [[/invalid login credentials/i, 'Неверная почта или пароль'], [/already registered|already been registered/i, 'Эта почта уже зарегистрирована — войдите'], [/password should be at least/i, 'Пароль слишком короткий (минимум 8 символов)'],
   [/email not confirmed/i, 'Почта не подтверждена — введите код из письма'], [/token has expired|otp.*expired|invalid.*(token|otp)|token.*invalid/i, 'Код неверный или просрочен. Запросите новый'], [/rate limit|too many|after \d+ seconds/i, 'Слишком часто. Подождите минуту и повторите'], [/invalid email|unable to validate email|is invalid/i, 'Некорректная почта'], [/rate limit|too many/i, 'Слишком много попыток, подождите минуту'],
   [/signup.*disabled|signups not allowed/i, 'Регистрация отключена в настройках Supabase'], [/row-level security/i, 'Недостаточно прав для этого действия']];
-const human = m => { for (const [re, t] of RU) if (re.test(m || '')) return t; return m || 'Ошибка запроса'; };
+const MAILERR = [[/email_address_not_authorized|not authorized|only.*team members/i, 'Supabase не разрешает слать письма на этот адрес: подключите свой SMTP (Authentication → Emails → SMTP Settings)'],
+  [/over_email_send_rate_limit|email rate limit|rate limit exceeded|too many requests/i, 'Слишком много писем за короткое время. Подождите минуту (или увеличьте лимит в Authentication → Rate Limits)'],
+  [/error sending|sending (confirmation|recovery|magic)|smtp|unexpected_failure|535|authentication failed/i, 'Письмо не отправилось: проверьте настройки SMTP в Supabase (логин, ключ, подтверждённый адрес отправителя)']];
+const human = (m, status, code) => {
+  const raw = [m, code].filter(Boolean).join(' ');
+  for (const [re, t] of RU) if (re.test(raw)) return t;
+  for (const [re, t] of MAILERR) if (re.test(raw)) return t;
+  return m || `Ошибка запроса (${status || 'нет ответа'}${code ? ', ' + code : ''})`;
+};
 
 async function call(path, { method = 'GET', body, headers = {}, auth = true, raw = false, retry = true } = {}) {
   if (auth) await ensureFresh();
@@ -26,7 +34,7 @@ async function call(path, { method = 'GET', body, headers = {}, auth = true, raw
   if (res.status === 401 && auth && retry && sess) { try { await refresh(); } catch { throw new ApiError('Сессия истекла — войдите снова', 401); } return call(path, { method, body, headers, auth, raw, retry: false }); }
   if (raw) { if (!res.ok) throw new ApiError('Файл недоступен', res.status); return res; }
   const txt = await res.text(); let j = null; try { j = txt ? JSON.parse(txt) : null; } catch { j = txt; }
-  if (!res.ok) { const m = j && (j.message || j.msg || j.error_description || j.error) || res.statusText; throw new ApiError(human(m), res.status, j); }
+  if (!res.ok) { const m = j && (j.message || j.msg || j.error_description || j.error) || res.statusText; throw new ApiError(human(m, res.status, j && (j.error_code || j.code)), res.status, j); }
   return j;
 }
 

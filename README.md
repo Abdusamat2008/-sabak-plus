@@ -24,15 +24,8 @@ PWA на чистом HTML/CSS/JS (без сборки). Два режима:
 
 ## Подтверждение почты: включение (5 минут)
 1. Supabase → **Authentication → Sign In / Providers → Email** → **включите** «Confirm email».
-2. **Authentication → Email Templates → Confirm signup**: замените тело письма на
-   ```html
-   <h2>SABAK+</h2>
-   <p>Ваш код подтверждения:</p>
-   <h1 style="letter-spacing:6px">{{ .Token }}</h1>
-   <p>Код действует 1 час. Если вы не регистрировались — просто игнорируйте письмо.</p>
-   ```
-   (главное — переменная `{{ .Token }}`: именно её приложение просит ввести).
-3. Бесплатный встроенный почтовый сервис Supabase ограничен по числу писем в час. Для показа жюри хватит; для реальной школы подключите свой SMTP (Project Settings → Auth → SMTP; например Resend/Brevo).
+2. **Свой SMTP** (без него Supabase не даёт редактировать шаблон): Authentication → **Emails → SMTP Settings** (или Project Settings → Auth → SMTP) → включите «Enable custom SMTP». Для хакатона проще всего Brevo (300 писем/день бесплатно, достаточно подтвердить один адрес-отправитель) или Gmail (пароль приложения). Подробно — в сообщении ассистента / ниже.
+3. **Authentication → Emails → Templates → Confirm signup**: тема «Код подтверждения SABAK+», тело — содержимое `supabase/email/confirm-signup.html`. То же для **Reset password**: тема «Новый пароль SABAK+», тело — `supabase/email/recovery.html`. В письме обязательно должна остаться переменная `{{ .Token }}` (для кода) и `{{ .ConfirmationURL }}` (для ссылки смены пароля).
 4. Хотите без подтверждения (быстрее на хакатоне) — оставьте «Confirm email» выключенным: приложение работает и так.
 
 ## Серверная проверка фото: включение
