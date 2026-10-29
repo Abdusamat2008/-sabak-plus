@@ -1,5 +1,7 @@
 import * as S from './store.js';
 import { t, setLang, getLang, AFFIRMATIONS } from './i18n.js';
+import * as Ky from './ky.js';
+import * as Privacy from './privacy.js';
 import { TYPES, RULES_RU, wavg, finalGrade, fmt1, fmt2, dmy, todayISO, addDays, fiveStreak, sortGrades, mean, trend, isWeekend, gradesNeeded, whatIfTest } from './calc.js';
 import { advise, studentReport, subjectReport, isAtRisk, anonymousSummary, achievements } from './ai.js';
 import * as Tour from './tour.js';
@@ -61,6 +63,7 @@ function shell(content) {
           ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${['student', 'parent', 'teacher', 'admin'].map(x => `<option value="${x}" ${x === u.role ? 'selected' : ''}>${t('role_' + x)}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
           <button class="mi" data-act="scale">Размер текста <b>${Math.round(st.prefs.scale * 100)}%</b></button>
           <button class="mi" data-act="contrast" aria-pressed="${st.prefs.contrast}">Высокая контрастность <b>${st.prefs.contrast ? 'вкл' : 'выкл'}</b></button>
+          <button class="mi" data-act="privacy">Политика данных</button>
           <button class="mi" data-act="lang">Язык: <b>${L() === 'ru' ? 'Русский → Кыргызча' : 'Кыргызча → Русский'}</b></button>
           ${u.role === 'admin' ? '<a class="mi" href="#/admin/audit">Журнал аудита</a>' : ''}
           <button class="mi out" data-act="logout">${t('logout')}</button></div>` : ''}
@@ -428,6 +431,7 @@ document.addEventListener('click', async e => {
   if (act === 'demo-back') { ui.demoPick = false; render(); return; }
   if (act === 'logout') { ui.menu = false; S.logout(); location.hash = ''; ui.demoPick = false; render(); return; }
   if (act === 'to-live') { S.switchMode('live'); location.hash = ''; render(); return; }
+  if (act === 'privacy') { Privacy.open(); return; }
   if (act === 'lang') { S.setPrefs({ lang: st.prefs.lang === 'ru' ? 'ky' : 'ru' }); return; }
   if (act === 'scale') { S.setPrefs({ scale: st.prefs.scale >= 1.5 ? 1 : st.prefs.scale + 0.25 }); return; }
   if (act === 'contrast') { S.setPrefs({ contrast: !st.prefs.contrast }); return; }
@@ -494,7 +498,7 @@ if (location.hash.includes('access_token')) {
 }
 Tour.init({ S, ui, go, render, scheduleFlush, Net });
 S.on(() => render());
-setLang(S.state().prefs.lang);
+setLang(S.state().prefs.lang); Ky.init(); Ky.apply();
 render();
 if (!recovering) S.restoreLive();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});

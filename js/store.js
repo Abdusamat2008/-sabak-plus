@@ -178,7 +178,9 @@ export const isDirector = () => S.session && S.session.role === 'admin' && S.ses
 export const netOk = () => Net.isOnline();
 
 // ---- очередь: в demo — имитация, в live — настоящие запросы (по порядку; при обрыве ждём связь) ----
+let mut = 0;   // счётчик локальных изменений: если во время загрузки с сервера что-то изменилось, загруженный снимок устарел
 function logAndQueue(action, text, op) {
+  mut++;
   const ts = nowTs();
   S.log.unshift({ id: uid('l'), ts, who: who(), action, text });
   S.log = S.log.slice(0, 200);
@@ -332,9 +334,20 @@ export async function setPhoto(sid, blob, meta) {
   }
   if (!Net.isOnline()) throw new Error('Для загрузки фото нужен интернет');
   const path = `${S.school.id}/${sid}/avatar.jpg`;
+  if (S.school.photo_strict) {          // строгий режим: фото принимает только сервер (Edge Function), клиентский флаг «проверено» не нужен
+    let r;
+    try { r = await API.fn('verify-photo', blob, { 'Content-Type': 'image/jpeg', 'x-student-id': sid, 'x-client-meta': JSON.stringify(meta) }); }
+    catch (e) {
+      const j = e.body || {}; if (j.failed) throw new Error('Сервер отклонил фото: ' + j.failed.join(', ').toLowerCase() + '.');
+      throw new Error(e.status === 404 ? 'Серверная проверка не развёрнута (Edge Function verify-photo). Директор может отключить строгий режим.' : e.message);
+    }
+    delete photoUrls[path]; st.photo = { ok: true, path, ts: nowTs(), meta: { ...meta, server: true } };
+    S.notifs.forEach(n => { if (n.sid === sid && n.kind === 'photo_warning') n.read = true; });
+    save(); emit(); return;
+  }
   await API.upload('avatars', path, blob);
   const r = await API.rpc('set_student_photo', { p_student: sid, p_path: path, p_meta: meta });
-  if (!r.ok) throw new Error({ forbidden: 'Нет прав менять это фото', not_verified: 'Фото не прошло проверку', bad_path: 'Неверный путь' }[r.error] || r.error);
+  if (!r.ok) throw new Error({ forbidden: 'Нет прав менять это фото', not_verified: 'Фото не прошло проверку', bad_path: 'Неверный путь', server_required: 'Школа включила серверную проверку — обновите страницу и повторите' }[r.error] || r.error);
   delete photoUrls[path]; st.photo = { ok: true, path, ts: nowTs(), meta };
   S.notifs.forEach(n => { if (n.sid === sid && n.kind === 'photo_warning') n.read = true; });
   save(); emit();
@@ -461,7 +474,17 @@ export async function liveSignUp(email, password, profileCall) {
   if (!res.ok) { return { ok: false, error: res.error }; }
   await hydrate(); return { ok: true, res };
 }
+export async function liveVerify(email, code, profileCall) {   // после ввода кода из письма: сессия → профиль по приглашению
+  await API.verifyEmail(email, code);
+  setMode('live'); load();
+  if (!profileCall) { await hydrate(); return { ok: true }; }
+  const res = await profileCall();
+  if (!res.ok) return { ok: false, error: res.error };
+  await hydrate(); return { ok: true, res };
+}
+export const resendCode = email => API.resendCode(email);
 export async function completeProfile(profileCall) { const res = await profileCall(); if (res.ok) await hydrate(); return res; }
+export async function setPhotoStrict(on) { await online(); const r = await API.rpc('set_photo_strict', { p_on: !!on }); if (!r.ok) throw new Error('Только директор'); S.school.photo_strict = !!on; save(); emit(); }
 export const peekInvite = code => API.rpc('peek_invite', { p_code: code }, true);
 export const rpcRaw = (n, a) => API.rpc(n, a);
 
@@ -471,6 +494,7 @@ export async function hydrate() {
   if (!isLive() || !API.userId()) return;
   const uidv = API.userId();
   if (pending() && Net.isOnline()) await flushQueue();
+  const m0 = mut;
   const [prof] = await API.select('profiles', `id=eq.${uidv}&select=*`);
   if (!prof) { S.session = { id: uidv, role: null, needsProfile: true, name: '' }; save(); emit(); return; }
   const base = { id: uidv, name: prof.full_name, role: UIROLE[prof.role], level: prof.role, status: prof.status, phone: prof.phone, lang: prof.lang, email: API.session() && API.session().user.email };
@@ -489,7 +513,8 @@ export async function hydrate() {
     mail: adm ? API.select('anonymous_messages', 'select=*&order=created_at.desc&limit=100') : Promise.resolve([]),
   };
   const keys = Object.keys(jobs), vals = await Promise.all(keys.map(k => jobs[k])), R = Object.fromEntries(keys.map((k, i) => [k, vals[i]]));
-  const school = R.school[0]; S.school = { id: school.id, name: school.name, code: school.code, city: school.city };
+  if (mut !== m0) return;   // за время загрузки пользователь что-то изменил — снимок устарел, обновимся при следующей синхронизации
+  const school = R.school[0]; S.school = { id: school.id, name: school.name, code: school.code, city: school.city, photo_strict: !!school.photo_strict };
   const cname = Object.fromEntries(R.classes.map(c => [c.id, c.name]));
   S.classes = R.classes.map(c => ({ id: c.id, name: c.name, homeroom: c.homeroom_id, grade: c.grade }));
   S.students = R.students.map(s => ({ id: s.id, name: s.full_name, cls: cname[s.class_id] || '—', clsId: s.class_id, accId: s.profile_id, code: null, birth: s.birth_date, gender: s.gender, demo: s.is_demo,

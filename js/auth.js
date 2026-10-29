@@ -33,7 +33,7 @@ export function authView() {
   return shell(regView(a));
 }
 const msg = a => `${a.err ? `<p class="errmsg" role="alert">${esc(a.err)}</p>` : ''}${a.info ? `<p class="okmsg">${esc(a.info)}</p>` : ''}`;
-const shell = inner => `<div class="auth"><div class="auth-top"><button class="ibtn" data-act="lang" aria-label="Язык">${S.state().prefs.lang === 'ru' ? 'КЫ' : 'RU'}</button></div><div class="auth-grid">${brand()}<div class="auth-main">${inner}</div></div></div>`;
+const shell = inner => `<div class="auth"><div class="auth-top"><button class="ibtn" data-act="lang" aria-label="Язык">${S.state().prefs.lang === 'ru' ? 'КЫ' : 'RU'}</button></div><div class="auth-grid">${brand()}<div class="auth-main">${inner}<p class="alt foot"><button type="button" class="linkbtn" data-act="privacy">Политика данных</button></p></div></div></div>`;
 
 function loginForm(a) {
   return `<form class="auth-card" data-form="login" novalidate><h2>Вход</h2><p class="muted">С возвращением! Введите почту и пароль.</p>
@@ -48,13 +48,14 @@ function loginForm(a) {
 }
 
 function regView(a) {
-  const steps = ['Кто вы', 'Код', 'Данные', 'Аккаунт'];
+  const steps = ['Кто вы', 'Код', 'Данные', 'Аккаунт', 'Почта'];
   const bar = `<ol class="steps">${steps.map((s, i) => `<li class="${a.step === i + 1 ? 'on' : a.step > i + 1 ? 'done' : ''}"><i>${a.step > i + 1 ? '✓' : i + 1}</i><span>${s}</span></li>`).join('')}</ol>`;
   let body = '';
   if (a.step === 1) body = `<h2>Кто вы?</h2><p class="muted">Каждая роль подключается своим способом — так в систему не попадают случайные люди.</p><div class="role-pick">${ROLES.map(([r, e, n, d]) => `<button type="button" class="rp ${a.role === r ? 'on' : ''}" data-act="auth-role" data-v="${r}"><span class="em" aria-hidden="true">${e}</span><b>${n}</b><small>${d}</small></button>`).join('')}</div>`;
   else if (a.step === 2) body = codeStep(a);
   else if (a.step === 3) body = profileStep(false);
-  else body = accountStep(a);
+  else if (a.step === 4) body = accountStep(a);
+  else body = verifyStep(a);
   return `<div class="auth-card wide-card">${bar}${body}<p class="alt"><button type="button" class="link" data-act="auth-mode" data-v="login">← Уже есть аккаунт? Войти</button></p></div>`;
 }
 function codeStep(a) {
@@ -92,6 +93,16 @@ function accountStep(a) {
     ${msg(a)}
     <div class="nav-row"><button type="button" class="btn ghost" data-act="auth-back">← Назад</button><button class="btn blue" type="submit" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Создаём…' : 'Создать аккаунт'}</button></div></form>`;
 }
+function verifyStep(a) {
+  const left = Math.max(0, Math.ceil(((a.resendAt || 0) - Date.now()) / 1000));
+  return `<form data-form="verify" novalidate><h2>Подтвердите почту</h2>
+    <p class="muted">Мы отправили 6-значный код на <b>${esc(a.pendEmail || '')}</b>. Введите его — так мы убеждаемся, что почта ваша и к ней можно будет вернуть доступ.</p>
+    <label class="fld"><span>Код из письма <i>*</i></span><input name="otp" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required placeholder="000000" autofocus></label>
+    ${msg(a)}
+    <button class="btn blue wide" type="submit" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Проверяем…' : 'Подтвердить'}</button>
+    <p class="alt">Нет письма? Проверьте «Спам». <button type="button" class="link" data-act="auth-resend" ${left ? 'disabled' : ''}>${left ? `Отправить ещё раз (${left} с)` : 'Отправить ещё раз'}</button></p>
+    <p class="alt"><button type="button" class="link" data-act="auth-wrongmail">Указал(а) не ту почту</button></p></form>`;
+}
 function pendingView(u) {
   return `<div class="auth-card"><div class="pend">⏳</div><h2>Ждём подтверждения</h2><p>Здравствуйте, <b>${esc(u.name)}</b>! Аккаунт создан по приглашению, но доступ к журналам откроет директор или завуч после проверки. Это вторая ступень защиты школы.</p><p class="muted">Откройте приложение позже — страница обновится сама.</p><div class="btns"><button class="btn blue" data-act="auth-refresh">Проверить сейчас</button><button class="btn ghost" data-act="logout">Выйти</button></div></div>`;
 }
@@ -111,6 +122,8 @@ export async function act(name, el) {
   const a = A();
   switch (name) {
     case 'auth-mode': a.mode = el.dataset.v; a.err = ''; a.info = ''; if (a.mode === 'register') { a.step = 1; } rerender(); return true;
+    case 'auth-resend': try { await S.resendCode(a.pendEmail); a.info = 'Код отправлен ещё раз.'; a.err = ''; } catch (e) { a.err = e.message; a.info = ''; } a.resendAt = Date.now() + 60000; rerender(); setTimeout(rerender, 61000); return true;
+    case 'auth-wrongmail': a.step = 4; a.err = ''; a.info = ''; rerender(); return true;
     case 'auth-demo': S.switchMode('demo'); ui.demoPick = true; location.hash = ''; rerender(); return true;
     case 'auth-role': a.role = el.dataset.v; a.err = ''; a.peek = null; a.step = 2; rerender(); return true;
     case 'auth-back': a.err = ''; a.step = Math.max(1, a.step - 1); rerender(); return true;
@@ -125,7 +138,7 @@ export async function submit(form, fd) {
   if (f === 'login') {
     a.busy = true; a.err = ''; a.d.email = d.email; rerender();
     try { await S.liveSignIn(d.email, d.password); a.busy = false; a.err = ''; const u = S.me(); location.hash = u && u.role ? '#/' + u.role : ''; rerender(); }
-    catch (e) { return fail(e.message); } return true;
+    catch (e) { if (/не подтверждена/.test(e.message)) { a.mode = 'register'; a.step = 5; a.pendEmail = d.email; a.verifyOnly = true; a.err = ''; a.info = 'Почта ещё не подтверждена. Введите код из письма.'; a.busy = false; try { await S.resendCode(d.email); } catch {} a.resendAt = Date.now() + 60000; rerender(); return true; } return fail(e.message); } return true;
   }
   if (f === 'recover') { a.err = ''; try { await API.recover(d.email); a.info = 'Если такая почта зарегистрирована, письмо со ссылкой отправлено.'; } catch (e) { a.err = e.message; } rerender(); return true; }
   if (f === 'newpass') { try { await API.updatePassword(d.password); a.mode = 'login'; a.info = 'Пароль изменён. Теперь войдите.'; a.err = ''; await S.logout(); } catch (e) { a.err = e.message; } rerender(); return true; }
@@ -152,6 +165,16 @@ export async function submit(form, fd) {
     if (!(d.last && d.first)) return fail('Введите фамилию и имя.');
     a.err = ''; a.step = 4; rerender(); return true;
   }
+  if (f === 'verify') {
+    if (!/^\d{6,8}$/.test((d.otp || '').replace(/\D/g, ''))) return fail('Введите код из письма (6 цифр).');
+    a.busy = true; a.err = ''; rerender();
+    try {
+      const r = await S.liveVerify(a.pendEmail, d.otp, a.verifyOnly ? null : rpcFor(a));
+      a.busy = false;
+      if (!r.ok) return fail(errText(r.error) + ' Почта подтверждена — войдите и завершите регистрацию с верным кодом.');
+      a.d = {}; a.code = ''; a.step = 1; a.verifyOnly = false; const u = S.me(); location.hash = u && u.role ? '#/' + u.role : ''; rerender();
+    } catch (e) { return fail(e.message); } return true;
+  }
   if (f === 'regaccount') {
     if (d.password !== d.password2) return fail('Пароли не совпадают.');
     if (!d.consent) return fail('Нужно согласие на обработку персональных данных.');
@@ -159,7 +182,7 @@ export async function submit(form, fd) {
     try {
       const r = await S.liveSignUp(d.email, d.password, rpcFor(a));
       a.busy = false;
-      if (r.needConfirm) return fail('В Supabase включено подтверждение почты. Попросите владельца проекта выключить «Confirm email» (Authentication → Providers → Email).');
+      if (r.needConfirm) { a.pendEmail = d.email; a.step = 5; a.err = ''; a.info = ''; a.resendAt = Date.now() + 60000; rerender(); setTimeout(rerender, 61000); return true; }
       if (!r.ok) return fail(errText(r.error) + ' Аккаунт создан — войдите и завершите регистрацию с верным кодом.');
       a.d = {}; a.code = ''; a.step = 1; const u = S.me(); location.hash = u && u.role ? '#/' + u.role : ''; rerender();
     } catch (e) { return fail(e.message); } return true;

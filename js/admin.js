@@ -97,7 +97,8 @@ export function accessPage() {
     <li><b>Приглашения сверху вниз.</b> Директор → завуч и учителя; завуч → учителя; классный руководитель → родители и ученики <i>своего</i> класса. Код живёт 3–14 дней, одноразовый, можно привязать к последним цифрам телефона.</li>
     <li><b>Подтверждение человеком.</b> Учитель или завуч по коду попадает в статус «ожидает» — доступ к журналам открывает директор/завуч вручную.</li>
     <li><b>Защита от перебора и след.</b> 5 неверных кодов — пауза 15 минут; любое действие записывается в журнал аудита; доступ можно закрыть в один клик.</li></ol></section>
-  ${S.isLive() && st.school ? `<section class="card"><h2 class="tp">Ваша школа</h2><p><b>${esc(st.school.name)}</b> · код школы <code>${esc(st.school.code)}</code> ${S.isDirector() ? `</p><div class="btns"><button class="btn sm ghost" data-act="seed-demo">Загрузить демо-данные</button><button class="btn sm ghost" data-act="clear-demo">Удалить демо-данные</button></div>` : '</p>'}</section>` : ''}
+  ${S.isLive() && st.school ? `<section class="card"><h2 class="tp">Ваша школа</h2><p><b>${esc(st.school.name)}</b> · код школы <code>${esc(st.school.code)}</code> ${S.isDirector() ? `</p><div class="btns"><button class="btn sm ghost" data-act="seed-demo">Загрузить демо-данные</button><button class="btn sm ghost" data-act="clear-demo">Удалить демо-данные</button></div>
+    <div class="strict"><label class="chk"><input type="checkbox" data-act="photo-strict" ${st.school.photo_strict ? 'checked' : ''}><span><b>Серверная проверка фото</b> — фото принимает только сервер (Edge Function), а не любой клиент. Включайте после развёртывания функции <code>verify-photo</code>.</span></label></div>` : '</p>'}</section>` : ''}
   <div class="grid2">
    <section class="card"><h2 class="tp">Новое приглашение сотруднику</h2>
     <form data-form="invite" class="invform">
@@ -149,6 +150,7 @@ export async function act(name, el) {
     case 'staff-no': await guard(async () => { await S.setStaffStatus(el.dataset.id, 'blocked'); toast('Доступ закрыт', 'ok'); }); return true;
     case 'assign': await guard(async () => { const t = S.state().staff.find(x => x.id === el.dataset.t), on = !el.classList.contains('on'); await S.assign(el.dataset.t, el.dataset.cls, el.dataset.s, on); }); return true;
     case 'inv-revoke': await guard(async () => { await S.revokeInvite(el.dataset.id); toast('Приглашение отозвано', 'ok'); }); return true;
+    case 'photo-strict': await guard(async () => { await S.setPhotoStrict(el.checked); toast(el.checked ? 'Серверная проверка фото включена' : 'Серверная проверка фото выключена', 'ok'); }); return true;
     case 'seed-demo': await guard(async () => { toast('Загружаем демо-данные…'); const r = await S.seedDemoLive(); toast(`Готово: учеников ${r.students}`, 'ok'); }); return true;
     case 'clear-demo': if (confirm('Удалить демо-учеников и все их оценки?')) await guard(async () => { await S.clearDemoLive(); toast('Демо-данные удалены', 'ok'); }); return true;
   }

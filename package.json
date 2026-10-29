@@ -1,1 +1,16 @@
-{ "name": "sabak-plus", "version": "0.3.0", "private": true, "description": "SABAK+ MVP (NEXUS team)" }
+{
+  "name": "sabak-plus",
+  "version": "0.4.0",
+  "private": true,
+  "description": "SABAK+ — электронный дневник (команда NEXUS)",
+  "scripts": {
+    "serve": "python3 -m http.server 8765",
+    "test:smoke": "node tests/smoke.test.js",
+    "test:demo": "node tests/demo.test.js",
+    "test:privacy": "node tests/privacy.test.js",
+    "test:photo": "node tests/photo-core.test.mjs",
+    "test:offline": "node tests/offline.test.js",
+    "test:live": "node tests/live.test.js"
+  },
+  "devDependencies": { "playwright": "^1.45.0", "jpeg-js": "^0.4.4", "pg": "^8.11.0" }
+}

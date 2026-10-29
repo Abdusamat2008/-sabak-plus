@@ -645,6 +645,7 @@ create or replace function public.set_student_photo(p_student uuid, p_path text,
 language plpgsql security definer set search_path = public as $$
 begin
   if not public.can_edit_photo(p_student) then return public._err('forbidden'); end if;
+  if (select photo_strict from public.schools where id = public.my_school()) then return public._err('server_required'); end if;
   if coalesce(p_meta ->> 'verified', 'false') <> 'true' or coalesce((p_meta ->> 'faces')::int, 0) <> 1 then
     return public._err('not_verified');
   end if;
@@ -656,6 +657,36 @@ begin
   perform public.log_audit('photo.set', jsonb_build_object('student', p_student));
   return jsonb_build_object('ok', true);
 end $$;
+
+-- 4.9 Строгий режим фото: фото принимает только Edge Function verify-photo (service_role), а не любой клиент
+alter table public.schools add column if not exists photo_strict boolean not null default false;
+
+create or replace function public.can_edit_photo_check(p_student uuid) returns boolean
+language sql stable security definer set search_path = public as $$ select public.can_edit_photo(p_student) $$;
+
+create or replace function public.set_photo_strict(p_on boolean) returns jsonb
+language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_director() then return public._err('forbidden'); end if;
+  update public.schools set photo_strict = p_on where id = public.my_school();
+  perform public.log_audit('photo.strict', jsonb_build_object('on', p_on));
+  return jsonb_build_object('ok', true);
+end $$;
+
+create or replace function public.set_student_photo_server(p_student uuid, p_path text, p_meta jsonb, p_actor uuid) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare sc uuid;
+begin
+  select school_id into sc from public.students where id = p_student;
+  if sc is null then return public._err('not_found'); end if;
+  if split_part(p_path, '/', 1) <> sc::text or split_part(p_path, '/', 2) <> p_student::text then return public._err('bad_path'); end if;
+  update public.students set photo_path = p_path, photo_meta = p_meta, photo_at = now() where id = p_student;
+  update public.notifications set read = true where student_id = p_student and kind = 'photo_warning';
+  insert into public.audit_log (school_id, actor, action, details) values (sc, p_actor, 'photo.set', jsonb_build_object('student', p_student, 'server', true));
+  return jsonb_build_object('ok', true);
+end $$;
+revoke all on function public.set_student_photo_server(uuid, text, jsonb, uuid) from public, anon, authenticated;
+grant execute on function public.set_student_photo_server(uuid, text, jsonb, uuid) to service_role;
 
 -- ---------- 5. Демо-данные для жюри (только директор, только в пустой школе) -----
 create or replace function public.seed_demo_school() returns jsonb
@@ -726,6 +757,8 @@ grant execute on function public.set_profile_status(uuid, text) to authenticated
 grant execute on function public.send_photo_warning(uuid, text) to authenticated;
 grant execute on function public.send_photo_warnings_class(uuid) to authenticated;
 grant execute on function public.set_student_photo(uuid, text, jsonb) to authenticated;
+grant execute on function public.can_edit_photo_check(uuid) to authenticated;
+grant execute on function public.set_photo_strict(boolean) to authenticated;
 grant execute on function public.seed_demo_school() to authenticated;
 grant execute on function public.clear_demo_school() to authenticated;
 -- create_school_key — НЕ выдаётся никому: её запускает только владелец проекта в SQL Editor.

@@ -1,8 +1,8 @@
 // Service Worker: оболочка приложения кэшируется, поэтому SABAK+ открывается без интернета.
-const CACHE = 'sabak-shell-v5';
+const CACHE = 'sabak-shell-v7';
 const SHELL = [
   '/', '/index.html', '/css/app.css', '/css/paper.jpg',
-  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
+  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/privacy.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
   '/fonts/oswald-700.woff2', '/fonts/inter-400.woff2', '/fonts/inter-700.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest',
 ];

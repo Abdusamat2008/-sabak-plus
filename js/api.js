@@ -11,7 +11,7 @@ export const userId = () => sess && sess.user && sess.user.id;
 export class ApiError extends Error { constructor(msg, status, body) { super(msg); this.status = status; this.body = body; this.network = status === 0; } }
 
 const RU = [[/invalid login credentials/i, 'Неверная почта или пароль'], [/already registered|already been registered/i, 'Эта почта уже зарегистрирована — войдите'], [/password should be at least/i, 'Пароль слишком короткий (минимум 8 символов)'],
-  [/email not confirmed/i, 'Почта не подтверждена. Владелец проекта должен выключить «Confirm email» в Supabase'], [/invalid email|unable to validate email|is invalid/i, 'Некорректная почта'], [/rate limit|too many/i, 'Слишком много попыток, подождите минуту'],
+  [/email not confirmed/i, 'Почта не подтверждена — введите код из письма'], [/token has expired|otp.*expired|invalid.*(token|otp)|token.*invalid/i, 'Код неверный или просрочен. Запросите новый'], [/rate limit|too many|after \d+ seconds/i, 'Слишком часто. Подождите минуту и повторите'], [/invalid email|unable to validate email|is invalid/i, 'Некорректная почта'], [/rate limit|too many/i, 'Слишком много попыток, подождите минуту'],
   [/signup.*disabled|signups not allowed/i, 'Регистрация отключена в настройках Supabase'], [/row-level security/i, 'Недостаточно прав для этого действия']];
 const human = m => { for (const [re, t] of RU) if (re.test(m || '')) return t; return m || 'Ошибка запроса'; };
 
@@ -46,6 +46,13 @@ export async function signUp(email, password, data = {}) {
   if (r && r.access_token) { saveSess(norm(r)); return { session: sess }; }
   return { needConfirm: true };
 }
+// подтверждение почты 6-значным кодом из письма (в шаблоне Supabase стоит {{ .Token }})
+export async function verifyEmail(email, token) {
+  const r = await call('/auth/v1/verify', { method: 'POST', body: { type: 'signup', email, token: String(token).replace(/\D/g, '') }, auth: false });
+  if (!r || !r.access_token) throw new ApiError('Код не подошёл', 400);
+  saveSess(norm(r)); return sess;
+}
+export const resendCode = email => call('/auth/v1/resend', { method: 'POST', body: { type: 'signup', email }, auth: false });
 export async function signOut() { try { if (sess) await call('/auth/v1/logout', { method: 'POST' }); } catch {} saveSess(null); }
 
 // ---- данные ----
@@ -66,6 +73,9 @@ export const rpc = (name, args = {}, anon = false) => call(`/rest/v1/rpc/${name}
 export const upload = (bucket, path, blob) => call(`/storage/v1/object/${bucket}/${path}`, { method: 'POST', body: blob, headers: { 'Content-Type': blob.type || 'application/octet-stream', 'x-upsert': 'true' } });
 export async function download(bucket, path) { const r = await call(`/storage/v1/object/authenticated/${bucket}/${path}`, { raw: true }); return r.blob(); }
 export const removeFile = (bucket, path) => call(`/storage/v1/object/${bucket}/${path}`, { method: 'DELETE' });
+
+// ---- Edge Functions ----
+export const fn = (name, body, headers = {}) => call(`/functions/v1/${name}`, { method: 'POST', body, headers });
 
 // ---- восстановление пароля ----
 export const recover = email => call('/auth/v1/recover', { method: 'POST', body: { email }, auth: false });
