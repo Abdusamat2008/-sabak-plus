@@ -20,6 +20,7 @@ const human = (m, status, code) => {
   const raw = [m, code].filter(Boolean).join(' ');
   for (const [re, t] of RU) if (re.test(raw)) return t;
   for (const [re, t] of MAILERR) if (re.test(raw)) return t;
+  if (status === 504 || status === 502 || status === 503) return 'Сервер почты Supabase не ответил вовремя (' + status + '). Обычно это неверный хост или порт SMTP — проверьте Authentication → Emails → SMTP Settings';
   return m || `Ошибка запроса (${status || 'нет ответа'}${code ? ', ' + code : ''})`;
 };
 
@@ -48,19 +49,23 @@ export function refresh() {
   return refreshing;
 }
 const norm = r => ({ access_token: r.access_token, refresh_token: r.refresh_token, expires_at: r.expires_at || Math.floor(Date.now() / 1000) + (r.expires_in || 3600), user: { id: r.user.id, email: r.user.email } });
-export async function signIn(email, password) { const r = await call('/auth/v1/token?grant_type=password', { method: 'POST', body: { email, password }, auth: false }); saveSess(norm(r)); return sess; }
+const mail = e => String(e || '').trim().toLowerCase();
+export async function signIn(email, password) { email = mail(email); const r = await call('/auth/v1/token?grant_type=password', { method: 'POST', body: { email, password }, auth: false }); saveSess(norm(r)); return sess; }
 export async function signUp(email, password, data = {}) {
+  email = mail(email);
   const r = await call('/auth/v1/signup', { method: 'POST', body: { email, password, data }, auth: false });
   if (r && r.access_token) { saveSess(norm(r)); return { session: sess }; }
+  if (r && Array.isArray(r.identities) && r.identities.length === 0) throw new ApiError('Эта почта уже зарегистрирована — войдите (или восстановите пароль). Новый код для неё не отправляется', 422);
   return { needConfirm: true };
 }
 // подтверждение почты 6-значным кодом из письма (в шаблоне Supabase стоит {{ .Token }})
 export async function verifyEmail(email, token) {
+  email = mail(email);
   const r = await call('/auth/v1/verify', { method: 'POST', body: { type: 'signup', email, token: String(token).replace(/\D/g, '') }, auth: false });
   if (!r || !r.access_token) throw new ApiError('Код не подошёл', 400);
   saveSess(norm(r)); return sess;
 }
-export const resendCode = email => call('/auth/v1/resend', { method: 'POST', body: { type: 'signup', email }, auth: false });
+export const resendCode = email => call('/auth/v1/resend', { method: 'POST', body: { type: 'signup', email: mail(email) }, auth: false });
 export async function signOut() { try { if (sess) await call('/auth/v1/logout', { method: 'POST' }); } catch {} saveSess(null); }
 
 // ---- данные ----
@@ -86,7 +91,7 @@ export const removeFile = (bucket, path) => call(`/storage/v1/object/${bucket}/$
 export const fn = (name, body, headers = {}) => call(`/functions/v1/${name}`, { method: 'POST', body, headers });
 
 // ---- восстановление пароля ----
-export const recover = email => call('/auth/v1/recover', { method: 'POST', body: { email }, auth: false });
+export const recover = email => call('/auth/v1/recover', { method: 'POST', body: { email: mail(email) }, auth: false });
 export function sessionFromHash(hash) {            // ссылка из письма: #access_token=...&refresh_token=...&type=recovery
   const p = new URLSearchParams(hash.replace(/^#/, ''));
   if (!p.get('access_token')) return null;

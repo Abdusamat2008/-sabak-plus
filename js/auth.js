@@ -93,15 +93,26 @@ function accountStep(a) {
     ${msg(a)}
     <div class="nav-row"><button type="button" class="btn ghost" data-act="auth-back">← Назад</button><button class="btn blue" type="submit" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Создаём…' : 'Создать аккаунт'}</button></div></form>`;
 }
+let tick = null;
+function startTick() {
+  if (tick) return;
+  tick = setInterval(() => {
+    const b = document.querySelector('[data-act=auth-resend]'); if (!b) { clearInterval(tick); tick = null; return; }
+    const left = Math.max(0, Math.ceil(((A().resendAt || 0) - Date.now()) / 1000));
+    b.disabled = !!left; b.textContent = left ? `Отправить ещё раз (${left} с)` : 'Отправить ещё раз';
+  }, 500);
+}
 function verifyStep(a) {
+  setTimeout(startTick, 0);
   const left = Math.max(0, Math.ceil(((a.resendAt || 0) - Date.now()) / 1000));
   return `<form data-form="verify" novalidate><h2>Подтвердите почту</h2>
-    <p class="muted">Мы отправили 6-значный код на <b>${esc(a.pendEmail || '')}</b>. Введите его — так мы убеждаемся, что почта ваша и к ней можно будет вернуть доступ.</p>
-    <label class="fld"><span>Код из письма <i>*</i></span><input name="otp" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required placeholder="000000" autofocus></label>
+    <p class="muted">Мы отправили код на <b>${esc(a.pendEmail || '')}</b>. Введите его — так мы убеждаемся, что почта ваша и к ней можно будет вернуть доступ.</p>
+    <label class="fld"><span>Код из письма <i>*</i></span><input name="otp" class="otp" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required placeholder="••••••••" autofocus></label>
     ${msg(a)}
     <button class="btn blue wide" type="submit" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Проверяем…' : 'Подтвердить'}</button>
     <p class="alt">Нет письма? Проверьте «Спам». <button type="button" class="link" data-act="auth-resend" ${left ? 'disabled' : ''}>${left ? `Отправить ещё раз (${left} с)` : 'Отправить ещё раз'}</button></p>
-    <p class="alt"><button type="button" class="link" data-act="auth-wrongmail">Указал(а) не ту почту</button></p></form>`;
+    <p class="alt"><button type="button" class="link" data-act="auth-wrongmail">Указал(а) не ту почту</button></p>
+    <p class="alt muted">Работает только <b>самый последний</b> код: после «Отправить ещё раз» старые коды перестают действовать. Уже подтверждали эту почту? <button type="button" class="link" data-act="auth-mode" data-v="login">Войти с паролем</button></p></form>`;
 }
 function pendingView(u) {
   return `<div class="auth-card"><div class="pend">⏳</div><h2>Ждём подтверждения</h2><p>Здравствуйте, <b>${esc(u.name)}</b>! Аккаунт создан по приглашению, но доступ к журналам откроет директор или завуч после проверки. Это вторая ступень защиты школы.</p><p class="muted">Откройте приложение позже — страница обновится сама.</p><div class="btns"><button class="btn blue" data-act="auth-refresh">Проверить сейчас</button><button class="btn ghost" data-act="logout">Выйти</button></div></div>`;
@@ -122,7 +133,7 @@ export async function act(name, el) {
   const a = A();
   switch (name) {
     case 'auth-mode': a.mode = el.dataset.v; a.err = ''; a.info = ''; if (a.mode === 'register') { a.step = 1; } rerender(); return true;
-    case 'auth-resend': try { await S.resendCode(a.pendEmail); a.info = 'Код отправлен ещё раз.'; a.err = ''; } catch (e) { a.err = e.message; a.info = ''; } a.resendAt = Date.now() + 60000; rerender(); setTimeout(rerender, 61000); return true;
+    case 'auth-resend': { if (a.resending) return true; a.resending = true; a.err = ''; a.info = 'Отправляем…'; rerender(); try { await S.resendCode(a.pendEmail); a.info = 'Новый код отправлен на ' + a.pendEmail + '. Старые коды больше не действуют. Проверьте «Спам» и подождите до минуты.'; } catch (e) { a.err = e.message + (e.status ? ' [' + e.status + ']' : ''); a.info = ''; } a.resending = false; a.resendAt = Date.now() + 60000; rerender(); return true; }
     case 'auth-wrongmail': a.step = 4; a.err = ''; a.info = ''; rerender(); return true;
     case 'auth-demo': S.switchMode('demo'); ui.demoPick = true; location.hash = ''; rerender(); return true;
     case 'auth-role': a.role = el.dataset.v; a.err = ''; a.peek = null; a.step = 2; rerender(); return true;
@@ -166,7 +177,7 @@ export async function submit(form, fd) {
     a.err = ''; a.step = 4; rerender(); return true;
   }
   if (f === 'verify') {
-    if (!/^\d{6,8}$/.test((d.otp || '').replace(/\D/g, ''))) return fail('Введите код из письма (6 цифр).');
+    if (!/^\d{6,10}$/.test((d.otp || '').replace(/\D/g, ''))) return fail('Введите код из письма — только цифры, без пробелов.');
     a.busy = true; a.err = ''; rerender();
     try {
       const r = await S.liveVerify(a.pendEmail, d.otp, a.verifyOnly ? null : rpcFor(a));
