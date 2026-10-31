@@ -5,7 +5,7 @@ const calls=[]; await ctx.route('**/*.supabase.co/**',async r=>{ const u=new URL
   if(r.request().method()==='OPTIONS') return r.fulfill({status:204,headers:H});
   if(u.pathname.endsWith('/verify')) return r.fulfill({status:403,headers:H,body:JSON.stringify({msg:'Token has expired or is invalid'})});
   return r.fulfill({status:200,headers:H,body:'{}'}); });
-await pg.goto('http://localhost:8765/'); await pg.evaluate(()=>localStorage.clear()); await pg.reload(); await pg.waitForSelector('.auth');
+await pg.goto('http://localhost:8765/app.html'); await pg.evaluate(()=>localStorage.clear()); await pg.reload(); await pg.waitForSelector('.auth');
 await pg.evaluate(()=>{ const a=window.__sabak.ui.auth; a.mode='register'; a.role='director'; a.step=5; a.pendEmail='a@b.kg'; a.resendAt=Date.now()+1500; window.__render(); });
 const dis1=await pg.$eval('[data-act=auth-resend]',e=>e.disabled); await pg.waitForTimeout(2300);
 const dis2=await pg.$eval('[data-act=auth-resend]',e=>e.disabled); console.log('disabled at start/after wait:',dis1,dis2,'(ждём true,false)');

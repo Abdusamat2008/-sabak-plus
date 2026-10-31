@@ -5,7 +5,7 @@ const b=await chromium.launch(); const ctx=await b.newContext({viewport:{width:1
 const errs=[],ok=[]; const chk=(c,m)=>{ (c?ok:errs).push((c?'OK  ':'FAIL ')+m); };
 pg.on('pageerror',e=>errs.push('PAGEERR '+e.message)); pg.on('console',m=>{ if(m.type()==='error' && !/Failed to load resource/.test(m.text())) errs.push('CONSOLE '+m.text())});
 pg.on('dialog',d=>d.accept());
-await pg.goto('http://localhost:8765/'); await pg.waitForSelector('.auth'); await pg.click('[data-act=auth-demo]');
+await pg.goto('http://localhost:8765/app.html'); await pg.waitForSelector('.auth'); await pg.click('[data-act=auth-demo]');
 const login=async r=>{ if(await pg.$('.top')){ await pg.click('[data-act=menu]'); await pg.click('[data-act=logout]'); await pg.waitForSelector('.auth'); await pg.click('[data-act=auth-demo]'); } await pg.click(`[data-act=login][data-role=${r}]`); await pg.waitForSelector('.top'); };
 // --- admin: warn about photo
 await login('admin'); await pg.evaluate(()=>location.hash='#/admin/students'); await pg.waitForSelector('.stgrid');

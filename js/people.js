@@ -36,11 +36,19 @@ export async function onPhotoFile(input) {
 }
 
 // ================= Уведомления =================
+const NROUTE = { schedule_pending: () => 'admin/schedule', schedule_rejected: () => 'admin/schedule', schedule_comment: () => 'admin/schedule', schedule_approved: r => r + '/schedule', schedule_new: r => r + '/schedule', achievement: () => 'student/ach' };
+function notifLink(n) {
+  const u = S.me(); if (!u) return '';
+  if (n.kind === 'doc_request' && n.sid) return `<div><a class="btn sm ghost" href="#/dossier/${n.sid}">Открыть дело</a></div>`;
+  const f = NROUTE[n.kind]; if (!f) return '';
+  if (n.kind === 'achievement' && u.role !== 'student') return '';
+  return `<div><a class="btn sm ghost" href="#/${f(u.role)}">Открыть</a></div>`;
+}
 export function notifsPage() {
   const list = S.myNotifs().sort((a, b) => b.ts - a.ts), unread = list.filter(n => !n.read).length;
   return `${head('Уведомления', '', unread ? `Непрочитанных: ${unread}` : 'Всё прочитано', unread ? `<button class="ibtn" data-act="notif-all">Прочитать все</button>` : '')}
   <div class="card">${list.map(n => { const st = n.sid && S.student(n.sid), canFix = n.kind === 'photo_warning' && st && S.can.editPhoto(n.sid) && !(st.photo && st.photo.ok);
-    return `<div class="notif ${n.read ? '' : 'new'}" data-act="notif-read" data-id="${n.id}"><span class="dot2" aria-hidden="true"></span><div><b>${n.kind === 'photo_warning' ? '⚠ ' : ''}${esc(n.title)}</b><p>${esc(n.body || '')}</p><small>${dtFmt(n.ts)}</small>${canFix ? `<div><button class="btn blue sm" data-act="photo-open" data-sid="${n.sid}">Загрузить фото</button></div>` : ''}</div></div>`; }).join('') || '<p class="muted">Уведомлений нет.</p>'}</div>`;
+    return `<div class="notif ${n.read ? '' : 'new'}" data-act="notif-read" data-id="${n.id}"><span class="dot2" aria-hidden="true"></span><div><b>${n.kind === 'photo_warning' ? '⚠ ' : ''}${esc(n.title)}</b><p>${esc(n.body || '')}</p><small>${dtFmt(n.ts)}</small>${canFix ? `<div><button class="btn blue sm" data-act="photo-open" data-sid="${n.sid}">Загрузить фото</button></div>` : ''}${notifLink(n)}</div></div>`; }).join('') || '<p class="muted">Уведомлений нет.</p>'}</div>`;
 }
 export function photoBanner() {   // баннер на главной: «нужно фото»
   const u = S.me(); if (!u) return '';
@@ -95,6 +103,7 @@ export function dossierView(sid) {
   </div>
   <section class="card docs"><h2 class="tp">Документы дела</h2>
     <div class="prog"><div class="bar"><i style="width:${Math.round(have / must.length * 100)}%"></i></div><b>${have} из ${must.length}</b> <small>обязательных собрано</small></div>
+    ${docRequestBox(sid, must, docs, edit)}
     <div class="dtable">${applicable.map(x => { const v = docs[x.id] || { status: 'missing' };
       return `<div class="drow ${v.status}"><div class="dn"><b>${esc(x.ru)}</b><small class="req ${x.req}">${REQ_LABEL[x.req]}</small></div>
       <select data-doc="${x.id}" data-f="status" ${ro} aria-label="Статус"><option value="missing" ${v.status === 'missing' ? 'selected' : ''}>Нет</option><option value="have" ${v.status === 'have' ? 'selected' : ''}>Есть</option><option value="na" ${v.status === 'na' ? 'selected' : ''}>Не требуется</option></select>
@@ -143,7 +152,18 @@ export function onChange(el) {
   if (el.dataset.docfile) { const f = el.files[0]; if (f) S.uploadDocFile(sid, el.dataset.docfile, f).then(() => toast('Скан загружен', 'ok')).catch(e => toast(e.message, 'warn')); return true; }
   return false;
 }
+function docRequestBox(sid, must, docs, edit) {
+  const u = S.me(); if (!u || u.role !== 'admin') return '';
+  const miss = must.filter(x => !docs[x.id] || docs[x.id].status === 'missing'), hr = S.homeroomOf(sid);
+  if (!miss.length) return '<p class="okline">✓ Все обязательные документы собраны</p>';
+  return `<form class="docreq noprint" data-form="doc-request"><input type="hidden" name="sid" value="${sid}"><b>Не хватает: ${miss.map(x => esc(x.ru || x.name || x.id)).join(', ')}</b>
+    <small>${hr ? 'Классный руководитель: ' + esc(hr.name) : 'Классный руководитель не назначен'}. Вы не меняете дело — вы просите классного руководителя получить документы от семьи.</small>
+    <div class="inl"><input name="note" maxlength="300" placeholder="Комментарий (необязательно), например: «до пятницы»"><button class="btn blue sm" type="submit" ${hr ? '' : 'disabled'}>✉ Написать классному руководителю</button></div></form>`;
+}
 export function submit(form, fd) {
+  if (form.dataset.form === 'doc-request') { const sid = String(fd.get('sid')), docs = S.state().docs[sid] || {};
+    const miss = DOC_TYPES.filter(x => x.req === 'all' && (!docs[x.id] || docs[x.id].status === 'missing')).map(x => x.ru || x.name || x.id);
+    S.requestDocuments(sid, miss, String(fd.get('note') || '').trim()).then(r => toast('Сообщение отправлено: ' + r.to, 'ok')).catch(e => toast(e.message, 'warn')); return true; }
   if (form.dataset.form === 'record') { const sid = location.hash.split('/')[2]; S.addRecord(sid, { kind: fd.get('kind'), text: String(fd.get('text')).trim(), date: fd.get('date') }); S.flushQueue(); toast('Запись добавлена', 'ok'); return true; }
   return false;
 }

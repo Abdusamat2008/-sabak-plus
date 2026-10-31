@@ -5,12 +5,14 @@ import * as Privacy from './privacy.js';
 import { TYPES, RULES_RU, wavg, finalGrade, fmt1, fmt2, dmy, todayISO, addDays, fiveStreak, sortGrades, mean, trend, isWeekend, gradesNeeded, whatIfTest } from './calc.js';
 import { advise, studentReport, subjectReport, isAtRisk, anonymousSummary, achievements } from './ai.js';
 import * as Tour from './tour.js';
+import * as A11y from './a11y.js';
 import * as Net from './net.js';
 import * as API from './api.js';
 import { esc, ui, L, sjName, typeName, hhmm, first, plural, route, go, chip, toast, head, avatar, ROLE_RU, downloadBlob } from './common.js';
 import * as Auth from './auth.js';
 import * as People from './people.js';
 import * as Admin from './admin.js';
+import * as Sched from './schedui.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -31,9 +33,9 @@ const IC = {
 const ico = n => `<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const NAV = {
   student: [['student', 'nav_home', 'home'], ['student/subjects', 'nav_subjects', 'book'], ['student/schedule', 'nav_schedule', 'cal'], ['student/hw', 'nav_hw', 'check'], ['student/ach', 'nav_ach', 'star'], ['student/mail', 'nav_mail', 'mail']],
-  teacher: [['teacher', 'nav_journal', 'book'], ['teacher/class', 'nav_class', 'chart'], ['teacher/students', 'Ученики', 'users'], ['teacher/log', 'nav_log', 'list']],
-  parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/dossier', 'Дело', 'file']],
-  admin: [['admin', 'Обзор', 'chart'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
+  teacher: [['teacher', 'nav_journal', 'book'], ['teacher/class', 'nav_class', 'chart'], ['teacher/schedule', 'nav_schedule', 'cal'], ['teacher/students', 'Ученики', 'users'], ['teacher/log', 'nav_log', 'list']],
+  parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/dossier', 'Дело', 'file']],
+  admin: [['admin', 'Обзор', 'chart'], ['admin/schedule', 'Расписание', 'cal'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
 };
 const navLabel = k => (k.startsWith('nav_') ? t(k) : k);
 const isActive = (href, r, role) => r === href || (href !== role && r.startsWith(href + '/')) || (href === 'admin' && r.startsWith('admin/audit')) || (href === 'parent/dossier' && r.startsWith('dossier'));
@@ -56,13 +58,13 @@ function shell(content) {
     <nav class="nav" aria-label="Навигация">${items}</nav>
     <div class="tools">
       ${netPill()}
-      <a class="ibtn bell" href="#/notifs" aria-label="Уведомления${unread ? ': ' + unread : ''}">${ico('bell')}${unread ? `<b class="cnt">${unread}</b>` : ''}</a>
+      <button class="ibtn" data-act="a11y" aria-label="Специальные возможности" title="Специальные возможности (Alt+A)"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="4.5" r="1.8"/><path d="M4 8.5l8 1.5 8-1.5M12 10v5M12 15l-3.5 6M12 15l3.5 6"/></svg></button>
+      <a class="ibtn bell ${unread ? 'has-new' : ''}" href="#/notifs" aria-label="Уведомления${unread ? ': ' + unread : ''}">${ico('bell')}${unread ? `<b class="cnt">${unread}</b>` : ''}</a>
       <div class="usr">
         <button class="usr-b" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">${u.role === 'student' && me ? avatar(me, 32) : `<span class="av ini sm" style="width:32px;height:32px;border-color:var(--blue);color:var(--blue)">${esc((u.name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}<span class="usr-n"><b>${esc(first(u.name))}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}</small></span><span class="car" aria-hidden="true">▾</span></button>
         ${ui.menu ? `<div class="menu" role="menu"><div class="mh2"><b>${esc(u.name)}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}${st.school ? ' · ' + esc(st.school.name) : ''}</small></div>
-          ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${['student', 'parent', 'teacher', 'admin'].map(x => `<option value="${x}" ${x === u.role ? 'selected' : ''}>${t('role_' + x)}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
-          <button class="mi" data-act="scale">Размер текста <b>${Math.round(st.prefs.scale * 100)}%</b></button>
-          <button class="mi" data-act="contrast" aria-pressed="${st.prefs.contrast}">Высокая контрастность <b>${st.prefs.contrast ? 'вкл' : 'выкл'}</b></button>
+          ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${[['student', 'Ученик'], ['parent', 'Родитель'], ['teacher', 'Учитель'], ['admin', 'Директор'], ['deputy', 'Завуч']].map(([x, n]) => `<option value="${x}" ${(x === u.role || (u.level === 'deputy' && x === 'deputy') && true) && !(x === 'admin' && u.level === 'deputy') ? 'selected' : ''}>${n}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
+          <button class="mi" data-act="a11y">Специальные возможности <b>Alt+A</b></button>
           <button class="mi" data-act="privacy">Политика данных</button>
           <button class="mi" data-act="lang">Язык: <b>${L() === 'ru' ? 'Русский → Кыргызча' : 'Кыргызча → Русский'}</b></button>
           ${u.role === 'admin' ? '<a class="mi" href="#/admin/audit">Журнал аудита</a>' : ''}
@@ -76,15 +78,6 @@ function shell(content) {
 }
 
 // ---------- student ----------
-const SCHEDULE = {
-  1: [['08:30', 'math', '12'], ['09:25', 'rus', '12'], ['10:30', 'phys', '24'], ['11:25', 'eng', '18'], ['12:20', 'hist', '12']],
-  2: [['08:30', 'kyr', '14'], ['09:25', 'math', '12'], ['10:30', 'bio', '21'], ['11:25', 'inf', '30'], ['12:20', 'rus', '12']],
-  3: [['08:30', 'eng', '18'], ['09:25', 'hist', '12'], ['10:30', 'math', '12'], ['11:25', 'phys', '24'], ['12:20', 'kyr', '14']],
-  4: [['08:30', 'inf', '30'], ['09:25', 'bio', '21'], ['10:30', 'rus', '12'], ['11:25', 'math', '12'], ['12:20', 'eng', '18']],
-  5: [['08:30', 'phys', '24'], ['09:25', 'kyr', '14'], ['10:30', 'hist', '12'], ['11:25', 'bio', '21'], ['12:20', 'inf', '30']],
-};
-function lessonsFor(d) { let x = d; while (isWeekend(x)) x = addDays(x, 1); return { date: x, list: SCHEDULE[new Date(x + 'T12:00:00').getDay()] || [] }; }
-
 function sidOfSession() { const u = S.state().session; return u.role === 'parent' ? u.child : u.id; }
 
 function needText(r) {
@@ -103,7 +96,7 @@ function studentHome(sid) {
   const greet = hrs < 12 ? t('good_morning') : hrs < 18 ? t('good_day') : t('good_evening');
   const weak = [...rep.subs].filter(r => r.fin != null && r.fin < 5 && r.need != null && r.need <= 6).sort((a, b) => a.avg - b.avg).slice(0, 3);
   const events = st.events.filter(e => e.cls === me.cls && e.due >= 0 && e.due <= 2);
-  const tomorrow = lessonsFor(todayISO());
+  const tomorrow = S.lessonsOn(me.cls, todayISO());
   const aff = AFFIRMATIONS[Math.floor(Date.now() / 86400000) % AFFIRMATIONS.length];
   const streak = fiveStreak(S.gradesOf(sid));
   let next = null;
@@ -126,7 +119,7 @@ function studentHome(sid) {
     </section>
     <section class="card">
       <h2 class="tp">${t('schedule')} · ${tomorrow.date === todayISO() ? t('today') : dayFmt(tomorrow.date)}</h2>
-      ${tomorrow.list.map(([tm, s, rm]) => `<div class="row"><div><b>${sjName(s)}</b><small>${L() === 'ru' ? 'каб.' : 'каб.'} ${rm}</small></div><div class="big sm">${tm}</div></div>`).join('')}
+      ${tomorrow.list.map(l => `<div class="row"><div><b>${sjName(l.s)}</b><small>${l.r ? 'каб. ' + esc(l.r) : ''}</small></div><div class="big sm">${l.time ? l.time.s : ''}</div></div>`).join('') || `<p class="muted">${tomorrow.none ? 'Расписание ещё не опубликовано' : 'Занятий нет'}</p>`}
     </section>
     <section class="card">
       <h2 class="tp">${t('ach_title')}</h2>
@@ -182,13 +175,6 @@ function whatIf(sid, sj, r) {
     </div><small>${RULES_RU}</small></section>`;
 }
 
-function schedulePage(sid) {
-  const days = [1, 2, 3, 4, 5];
-  const names = { 1: 'Понедельник', 2: 'Вторник', 3: 'Среда', 4: 'Четверг', 5: 'Пятница' };
-  const todayW = new Date().getDay();
-  return `${head(t('schedule'), '', '')}<div class="grid3">${days.map(d => `<section class="card ${d === todayW ? 'hl' : ''}"><h2 class="tp">${names[d]}</h2>${SCHEDULE[d].map(([tm, s, rm]) => `<div class="row"><div><b>${sjName(s)}</b><small>каб. ${rm}</small></div><div class="big sm">${tm}</div></div>`).join('')}</section>`).join('')}</div>`;
-}
-
 function hwPage(sid, canToggle) {
   const hw = S.hwFor(sid).sort((a, b) => a.dueDate > b.dueDate ? 1 : -1);
   return `${head(t('hw'), '', '')}<div class="card">${hw.map(h => {
@@ -198,8 +184,12 @@ function hwPage(sid, canToggle) {
 }
 
 function achPage(sid) {
-  const A = achievements(sid);
-  return `${head(t('ach_title'), '', L() === 'ru' ? 'Награды за действия, а не только за оценки' : '')}<div class="grid2">${A.map(a => `<div class="card ach ${a.ok ? 'got' : ''}"><div class="em">${a.e}</div><div><b>${a.n}</b><div class="bar"><i style="width:${a.ok ? 100 : Math.round((a.pct || 0) * 100)}%"></i></div><small>${a.ok ? '✓ получено' : a.p}</small></div></div>`).join('')}</div>`;
+  const A = achievements(sid), got = A.filter(a => a.ok), earned = (S.state().ach[sid]) || {};
+  const cats = [...new Set(A.map(a => a.cat))], fresh = new Set(ui.freshAch || []);
+  const demoBtn = S.isLive() ? '' : `<div class="card deco"><b>Демо для жюри</b><p class="muted">Система следит за поведением ученика сама. Нажмите — и она «увидит» 30 учебных дней без «Н», выдаст достижение и отправит уведомление ученику и родителю.</p><button class="btn blue" data-act="ach-demo" data-sid="${sid}">▶ Смоделировать 30 дней без «Н»</button></div>`;
+  return `${head(t('ach_title'), '', `Получено ${got.length} из ${A.length}. Награды выдаёт система сама — по оценкам, посещаемости и заданиям`)}
+  ${cats.map(c => `<h2 class="tp" style="margin:18px 0 10px">${esc(c)}</h2><div class="grid2">${A.filter(a => a.cat === c).map(a => `<div class="card ach ${a.ok ? 'got' : ''} ${fresh.has(a.id) ? 'fresh' : ''}"><div class="em">${a.e}</div><div><b>${esc(a.n)}</b><small>${esc(a.d)}</small><div class="bar" role="progressbar" aria-valuenow="${Math.round(a.pct * 100)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(a.n)}"><i style="width:${Math.round(a.pct * 100)}%"></i></div><small>${a.ok ? '✓ получено' + (earned[a.id] ? ' ' + dmy(new Date(earned[a.id]).toISOString().slice(0, 10)) : '') : 'Прогресс: ' + a.p}</small></div></div>`).join('')}</div>`).join('')}
+  ${demoBtn}`;
 }
 
 function mailPage() {
@@ -349,7 +339,7 @@ function view() {
       if (S.isLive() && !S.student(sid)) return empty('Профиль ещё не привязан', 'Ваш аккаунт не связан с записью ученика. Попросите классного руководителя выдать новый код.');
       if (sub[1] === 'subjects') return subjectsList(sid, 'student');
       if (sub[1] === 'subject') return subjectDetail(sid, sub[2], 'student/subjects');
-      if (sub[1] === 'schedule') return schedulePage(sid);
+      if (sub[1] === 'schedule') return Sched.studentPage(sid);
       if (sub[1] === 'hw') return hwPage(sid, true);
       if (sub[1] === 'ach') return achPage(sid);
       if (sub[1] === 'mail') return mailPage();
@@ -358,20 +348,24 @@ function view() {
     case 'parent': {
       if (!u.child) return empty('Ребёнок не привязан', 'К вашему аккаунту пока не привязан ученик. Используйте код родителя от классного руководителя.');
       if (sub[1] === 'dossier') { go('dossier/' + u.child); return ''; }
+      if (sub[1] === 'schedule') return kidPicker() + Sched.studentPage(u.child);
       if (sub[1] === 'subjects') return kidPicker() + subjectsList(u.child, 'parent');
       if (sub[1] === 'subject') return subjectDetail(u.child, sub[2], 'parent/subjects');
       return parentWeek();
     }
     case 'teacher': {
+      if (sub[1] === 'schedule') return Sched.teacherPage();
       if (!(u.classes || []).length) return empty('Классы пока не назначены', 'Администрация ещё не назначила вам классы и предметы. Как только это произойдёт, журнал появится здесь.');
       if (!u.classes.includes(ui.cls)) ui.cls = u.classes[0];
       if (!u.subjects.includes(ui.subj)) ui.subj = u.subjects[0] || ui.subj;
       if (sub[1] === 'students') return People.studentsPage();
+      if (sub[1] === 'schedule') return Sched.teacherPage();
       if (sub[1] === 'class') return teacherClass();
       if (sub[1] === 'log') return logPage();
       return teacherJournal();
     }
     case 'admin': {
+      if (sub[1] === 'schedule') return Sched.adminPage();
       if (sub[1] === 'teachers') return Admin.teachersPage();
       if (sub[1] === 'students') return People.studentsPage();
       if (sub[1] === 'access') return Admin.accessPage();
@@ -384,22 +378,27 @@ function view() {
 }
 
 const isTyping = () => { const a = document.activeElement; return !!a && $app.contains(a) && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && !['checkbox', 'radio', 'file', 'button', 'submit'].includes(a.type))); };
+let lastRoute = null;
 function render() {
   const st = S.state();
   setLang(st.prefs.lang);
-  document.documentElement.style.fontSize = (st.prefs.scale * 100) + '%';
-  document.body.classList.toggle('hc', !!st.prefs.contrast);
+  A11y.apply(st.prefs);
   const v = view();
   if (v === '') return;
-  if (st.session && st.session.role === 'student' && st.session.status !== 'pending') {
-    const ach = achievements(st.session.id), ok = ach.filter(a => a.ok).map(a => a.id);
-    const fresh = S.claimAchievements(st.session.id, ok);
-    fresh.forEach(id => { const a = ach.find(x => x.id === id); setTimeout(() => toast(`🏆 ${a.e} ${a.n}`, 'ok'), 350); });
+  if (st.session && st.session.role === 'student' && st.session.status !== 'pending' && st.session.id) {
+    const sid = st.session.id, ids = S.unseenAch(sid);
+    if (ids.length) {
+      S.markSeenAch(sid, ids); ui.freshAch = ids;
+      const ach = achievements(sid);
+      ids.forEach((id, i) => { const a = ach.find(x => x.id === id); if (a) setTimeout(() => toast(`🏆 ${a.e} ${a.n}`, 'ok'), 350 + i * 700); });
+      setTimeout(() => A11y.confetti(S.state().prefs), 300); setTimeout(() => { ui.freshAch = []; }, 6000);
+    }
   }
   const y = window.scrollY, focusId = document.activeElement && document.activeElement.id;
   const sheetScroll = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
   const authLike = !st.session || st.session.needsProfile || (st.session.status && st.session.status !== 'active');
-  $app.innerHTML = authLike ? v : shell(v);
+  $app.innerHTML = (authLike ? v + A11y.fab() : shell(v)) + A11y.panel();
+  if (lastRoute !== route()) { lastRoute = route(); A11y.enter(st.prefs); }
   document.body.classList.toggle('is-auth', authLike);
   window.scrollTo(0, y);
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sheetScroll;
@@ -424,7 +423,7 @@ document.addEventListener('click', async e => {
   if (ui.menu && !e.target.closest('.usr')) { ui.menu = false; render(); }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, st = S.state();
-  if (['cls', 'subj', 'role', 'wi-target', 'wi-test', 'acls', 'homeroom'].includes(act)) return; // обрабатываются на change
+  if (['cls', 'subj', 'role', 'wi-target', 'wi-test', 'acls', 'homeroom'].includes(act) || el.tagName === 'SELECT') return; // обрабатываются на change
   if (act === 'menu') { ui.menu = !ui.menu; render(); return; }
   if (act === 'tour') { ui.menu = false; Tour.start(); return; }
   if (act === 'login') { S.login(el.dataset.role); ui.demoPick = false; go(el.dataset.role); return; }
@@ -433,8 +432,8 @@ document.addEventListener('click', async e => {
   if (act === 'to-live') { S.switchMode('live'); location.hash = ''; render(); return; }
   if (act === 'privacy') { Privacy.open(); return; }
   if (act === 'lang') { S.setPrefs({ lang: st.prefs.lang === 'ru' ? 'ky' : 'ru' }); return; }
-  if (act === 'scale') { S.setPrefs({ scale: st.prefs.scale >= 1.5 ? 1 : st.prefs.scale + 0.25 }); return; }
-  if (act === 'contrast') { S.setPrefs({ contrast: !st.prefs.contrast }); return; }
+  if (A11y.act(act, el)) return;
+  if (act === 'ach-demo') { const got = S.demoPerfectAttendance(el.dataset.sid, 30); if (!got.length) toast('Уже получено — сбросьте демо-данные в подвале, чтобы показать заново', 'warn'); return; }
   if (act === 'kid') { S.setChild(el.dataset.id); return; }
   if (act === 'clear-failed') { st.failed = []; render(); return; }
   if (act === 'reset') { if (confirm(t('reset_q'))) { S.resetDemo(); ui.sheet = null; toast('OK'); } return; }
@@ -464,13 +463,13 @@ document.addEventListener('click', async e => {
     } catch { ui.cloud[key] = t('ai_cloud_off'); }
     out.textContent = ui.cloud[key]; return;
   }
-  for (const m of [Auth, People, Admin]) if (await m.act(act, el)) return;
+  for (const m of [Auth, People, Admin, Sched]) if (await m.act(act, el)) return;
 });
 document.addEventListener('change', e => {
-  if (People.onChange(e.target) || Auth.onChange(e.target)) return;
+  if (People.onChange(e.target) || Auth.onChange(e.target) || Sched.onChange(e.target)) return;
   const el = e.target.closest('select[data-act]'); if (!el) return;
   if (Admin.onChange(el)) return;
-  if (el.dataset.act === 'role') { S.login(el.value); ui.menu = false; go(el.value); return; }
+  if (el.dataset.act === 'role') { S.login(el.value); ui.menu = false; go(el.value === 'deputy' ? 'admin' : el.value); return; }
   if (el.dataset.act === 'wi-target') { (ui.wi = ui.wi || {}).target = Number(el.value); render(); return; }
   if (el.dataset.act === 'wi-test') { (ui.wi = ui.wi || {}).test = Number(el.value); render(); return; }
   if (el.dataset.act === 'cls') ui.cls = el.value;
@@ -483,6 +482,7 @@ document.addEventListener('submit', async e => {
   if (f.dataset.form === 'mail') { S.sendMail(fd.get('cat'), String(fd.get('text')).trim()); ui.mailOk = true; render(); setTimeout(() => { ui.mailOk = false; }, 100); toast(t('mail_ok'), 'ok'); scheduleFlush(); return; }
   if (f.dataset.form === 'student') { const name = String(fd.get('name')).trim(); S.addStudent(name, ui.cls).then(r => { ui.newCode = { name, code: r.code }; ui.lastSave = Date.now(); render(); scheduleFlush(); }).catch(er => toast(er.message, 'warn')); return; }
   if (await Auth.submit(f, fd)) return;
+  if (await Sched.submit(f, fd)) return;
   if (People.submit(f, fd)) return;
   Admin.submit(f, fd);
 });
@@ -496,6 +496,7 @@ if (location.hash.includes('access_token')) {
   const type = API.sessionFromHash(location.hash); history.replaceState(null, '', location.pathname);
   if (type === 'recovery') { recovering = true; S.switchMode('live'); ui.auth = { mode: 'recover-set', step: 1, d: {}, err: '', info: '' }; }
 }
+if (new URLSearchParams(location.search).has('demo')) { if (!S.state().session) { S.switchMode('demo'); ui.demoPick = true; location.hash = ''; } history.replaceState(null, '', location.pathname); }
 Tour.init({ S, ui, go, render, scheduleFlush, Net });
 S.on(() => render());
 setLang(S.state().prefs.lang); Ky.init(); Ky.apply();

@@ -36,7 +36,7 @@ const errs=[],ok=[]; const chk=(c,m)=>{(c?ok:errs).push((c?'OK   ':'FAIL ')+m);}
 db=new Client({host:'127.0.0.1',port:5544,user:'postgres',database:'t2'}); await db.connect();
 const key=(await db.query("select public.create_school_key('test') k")).rows[0].k;
 const b=await chromium.launch();
-const mk=async(name)=>{ const ctx=await b.newContext({viewport:{width:1280,height:850}}); await ctx.route('**/*.supabase.co/**',mock); const pg=await ctx.newPage(); pg.on('pageerror',e=>errs.push(name+' PAGEERR '+e.message)); pg.on('console',m=>{ if(m.type()==='error'&&!/Failed to load resource/.test(m.text())) errs.push(name+' CONSOLE '+m.text())}); pg.on('dialog',d=>d.accept()); await pg.goto('http://localhost:8765/'); await pg.waitForSelector('.auth'); return {ctx,pg}; };
+const mk=async(name)=>{ const ctx=await b.newContext({viewport:{width:1280,height:850}}); await ctx.route('**/*.supabase.co/**',mock); const pg=await ctx.newPage(); pg.on('pageerror',e=>errs.push(name+' PAGEERR '+e.message)); pg.on('console',m=>{ if(m.type()==='error'&&!/Failed to load resource/.test(m.text())) errs.push(name+' CONSOLE '+m.text())}); pg.on('dialog',d=>d.accept()); await pg.goto('http://localhost:8765/app.html'); await pg.waitForSelector('.auth'); return {ctx,pg}; };
 const fill=async(pg,o)=>{ for(const [k,v] of Object.entries(o)){ const el=await pg.$(`[name=${k}]`); if(!el) throw new Error('no field '+k); const tag=await el.evaluate(e=>e.tagName); if(tag==='SELECT') await pg.selectOption(`[name=${k}]`,v); else await pg.fill(`[name=${k}]`,v);} };
 async function otp(pg,first){ if(!CONFIRM) return; await pg.waitForSelector('form[data-form=verify]',{timeout:8000}); if(first){ await pg.fill('[name=otp]','000000'); await pg.click('form[data-form=verify] button[type=submit]'); await pg.waitForSelector('.errmsg',{timeout:8000}); chk((await pg.$eval('.errmsg',e=>e.innerText)).includes('Код неверный'),'wrong otp rejected'); } await pg.fill('[name=otp]','123456'); await pg.click('form[data-form=verify] button[type=submit]'); }
 async function register(pg,role,code,prof,email){
@@ -54,7 +54,7 @@ await fill(dp,{last:'Бекова',first:'Нурзат',mid:'Айтматовн�
 await dp.waitForSelector('.errmsg',{timeout:10000}); chk((await dp.$eval('.errmsg',e=>e.innerText)).includes('Ключ школы неверный'),'bad school key rejected');
 // профиль не создан: теперь вход и завершение регистрации с верным ключом
 await dp.screenshot({path:'tests/out/60_bad_key.png'});
-await dp.goto('http://localhost:8765/'); await dp.waitForSelector('.auth');
+await dp.goto('http://localhost:8765/app.html'); await dp.waitForSelector('.auth');
 await dp.waitForSelector('form[data-form=regprofile]',{timeout:10000}); chk(true,'needsProfile screen after bad key');
 await dp.selectOption('[name=role]','director'); await fill(dp,{code:key,last:'Бекова',first:'Нурзат',phone:'+996700111222',school:'Школа №12',city:'Бишкек',birth:'1980-05-05'}); await dp.click('form[data-form=regprofile] button[type=submit]');
 await dp.waitForSelector('.top',{timeout:15000}); chk((await dp.$eval('.usr-b',e=>e.innerText)).includes('Директор'),'director registered & logged in');
@@ -115,6 +115,37 @@ await sp.evaluate(()=>location.hash='#/dossier/'+window.__sabak.S.me().id); awai
 const cnt=await sp.evaluate(()=>window.__sabak.S.state().students.length); chk(cnt===1,'student sees only himself ('+cnt+')');
 // reuse of one-time code
 const X=await mk('evil'); await X.pg.click('[data-act=auth-mode][data-v=register]'); await X.pg.click('[data-act=auth-role][data-v=student]'); await X.pg.fill('[name=code]',scode); await X.pg.click('form[data-form=regcode] button[type=submit]'); await X.pg.waitForSelector('.errmsg',{timeout:10000}); chk(true,'used code rejected on peek');
+
+// ===== v0.5: предметы, достижения, запрос документов, расписание =====
+const sidNew=(await db.query("select s.id from students s join profiles p on p.id=s.profile_id where p.full_name like '%Новый%' limit 1")).rows[0]; chk(!!sidNew,'v05: live student with account found');
+// достижения: сервер сам выдаёт «10 дней без Н» (триггер), ученик получает уведомление
+await db.query("insert into attendance(student_id,date,school_id,status) select $1, current_date-i, school_id, 'p' from students, generate_series(0,11) i where id=$1",[sidNew.id]);
+chk((await db.query("select count(*)::int c from student_achievements where student_id=$1 and ach_id='att10'",[sidNew.id])).rows[0].c===1,'v05: DB awarded att10 by trigger');
+await sp.reload(); await sp.waitForSelector('.top'); await sp.evaluate(()=>location.hash='#/notifs'); await sp.waitForFunction(()=>document.body.innerText.includes('Достижение'),null,{timeout:15000}); chk(true,'v05: student sees achievement notification (live)');
+await sp.evaluate(()=>location.hash='#/student/ach'); await sp.waitForSelector('.ach.got',{timeout:10000}); chk(true,'v05: achievements page shows earned (live)');
+// предметы школы
+await dp.reload(); await dp.waitForSelector('.top'); await dp.evaluate(()=>location.hash='#/admin/schedule'); await dp.waitForSelector('.flow',{timeout:15000});
+await dp.click('[data-act=sch-tab][data-tab=subjects]'); await dp.fill('input[name=ru]','Музыка'); await dp.click('[data-form=sub-add] button[type=submit]');
+await dp.waitForFunction(()=>window.__sabak.S.state().subjects.some(s=>s.ru==='Музыка'&&s.custom),null,{timeout:15000}); chk((await db.query("select count(*)::int c from subjects where ru='Музыка' and school_id is not null")).rows[0].c===1,'v05: custom subject stored per school');
+// расписание: создаём, расставляем уроки, публикуем
+await dp.click('[data-act=sch-tab][data-tab=versions]'); await dp.fill('input[name=title]','Живое расписание'); await dp.click('[data-form=sch-new] button[type=submit]'); await dp.waitForSelector('.subjgrid');
+await dp.click('[data-act=sch-tab][data-tab=build]'); await dp.waitForSelector('.pchip'); await dp.click('.pchip:has-text("Математика")');
+await dp.click('.cell[data-d="1"][data-n="1"]'); await dp.click('.pchip:has-text("Музыка")'); await dp.click('.cell[data-d="1"][data-n="2"]');
+await dp.waitForFunction(()=>window.__sabak.S.pending()===0,null,{timeout:15000});
+chk((await db.query("select jsonb_array_length(data->'lessons')::int n from schedule_versions where title='Живое расписание'")).rows[0].n===2,'v05: lessons saved to DB through queue');
+await dp.click('[data-act=sch-publish]'); await dp.waitForFunction(()=>window.__sabak.S.schedActive(),null,{timeout:15000});
+chk((await db.query("select count(*)::int c from schedule_versions where is_active")).rows[0].c===1,'v05: director published → active in DB');
+// ученик видит бумажный дневник, получает уведомление
+await sp.reload(); await sp.waitForSelector('.top'); await sp.evaluate(()=>location.hash='#/student/schedule'); await sp.waitForSelector('.diary',{timeout:15000}); chk(true,'v05: student sees paper diary (live)');
+chk((await db.query("select count(*)::int c from notifications where kind='schedule_new'")).rows[0].c>=3,'v05: schedule_new notifications broadcast');
+// учитель пишет комментарий (завуча нет → директору)
+await tp.reload(); await tp.waitForSelector('.top'); await tp.evaluate(()=>location.hash='#/teacher/schedule'); await tp.waitForSelector('textarea[name=text]',{timeout:15000}); await tp.fill('textarea[name=text]','Хочу убрать окно между уроками'); await tp.click('[data-form=sch-comment] button[type=submit]');
+await tp.waitForFunction(()=>true); await new Promise(r=>setTimeout(r,1200));
+chk((await db.query("select count(*)::int c from schedule_comments")).rows[0].c===1,'v05: teacher comment stored');
+// запрос документов классному руководителю
+await dp.evaluate(([id])=>location.hash='#/dossier/'+id,[sidNew.id]).catch(()=>{});
+await dp.evaluate(id=>{location.hash='#/dossier/'+id},sidNew.id); await dp.waitForSelector('.docreq',{timeout:15000}).catch(()=>{});
+if(await dp.$('.docreq button:not([disabled])')){ await dp.click('.docreq button[type=submit]'); await new Promise(r=>setTimeout(r,1500)); chk((await db.query("select count(*)::int c from notifications where kind='doc_request'")).rows[0].c===1,'v05: doc request notification to homeroom teacher'); } else chk(false,'v05: docreq box missing/disabled');
 // выход/вход
 await sp.click('[data-act=menu]'); await sp.click('[data-act=logout]'); await sp.waitForSelector('.auth'); if(await sp.$('[data-act=auth-mode][data-v=login]')) await sp.click('[data-act=auth-mode][data-v=login]'); await sp.fill('[name=email]','s@x.kg'); await sp.fill('[name=password]','bad'); await sp.click('form[data-form=login] button[type=submit]'); await sp.waitForSelector('.errmsg'); chk((await sp.$eval('.errmsg',e=>e.innerText)).includes('Неверная почта'),'bad password message');
 console.log(ok.join('\n')); console.log(errs.length?errs.join('\n'):'NO ERRORS'); await db.end(); await b.close();})().catch(e=>{console.log(ok.join('\n'));console.log('FATAL',e.message.split('\n').slice(0,25).join('\n'),'\n',errs.join('\n'));process.exit(1)});

@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 (async()=>{
 const b=await chromium.launch(); const ctx=await b.newContext({viewport:{width:1280,height:850}}); const pg=await ctx.newPage();
 const errs=[]; pg.on('pageerror',e=>errs.push('PAGEERR '+e.message)); pg.on('console',m=>{ if(m.type()==='error' && !/Failed to load resource/.test(m.text())) errs.push('CONSOLE '+m.text())});
-await pg.goto('http://localhost:8765/'); await pg.waitForSelector('.auth');
+await pg.goto('http://localhost:8765/app.html'); await pg.waitForSelector('.auth');
 await pg.screenshot({path:'tests/out/01_login.png'});
 await pg.click('[data-act=auth-mode][data-v=register]'); await pg.screenshot({path:'tests/out/02_reg1.png'});
 await pg.click('[data-act=auth-role][data-v=parent]'); await pg.screenshot({path:'tests/out/03_reg2.png'});
