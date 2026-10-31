@@ -1,8 +1,8 @@
 // Service Worker: оболочка приложения кэшируется, поэтому SABAK+ открывается без интернета.
-const CACHE = 'sabak-shell-v11';
+const CACHE = 'sabak-shell-v14';
 const SHELL = [
-  '/', '/index.html', '/css/app.css', '/css/paper.jpg',
-  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/privacy.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
+  '/', '/index.html', '/app.html', '/css/landing.css', '/js/landing.js', '/css/app.css', '/css/a11y.css', '/css/paper.jpg',
+  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/privacy.js', '/js/a11y.js', '/js/achv.js', '/js/sched.js', '/js/schedui.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
   '/fonts/oswald-700.woff2', '/fonts/inter-400.woff2', '/fonts/inter-700.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest',
 ];
@@ -15,7 +15,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/') || url.pathname === '/hb') return; // API — всегда в сеть
   // Навигация: сеть → кэш (чтобы обновления приходили), офлайн → закэшированная страница
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put('/index.html', c)); return r; }).catch(() => caches.match('/index.html')));
+    e.respondWith(fetch(req).then(r => { const c = r.clone(); if (r.ok) caches.open(CACHE).then(x => x.put(req, c)); return r; }).catch(() => caches.match(req).then(h => h || caches.match(url.pathname === '/' ? '/index.html' : '/app.html'))));
     return;
   }
   // Остальное: кэш, затем сеть (и обновляем кэш в фоне)

@@ -1,29 +1,194 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>SABAK+ — электронный дневник нового поколения</title>
-  <meta name="description" content="SABAK+ — прозрачное оценивание, ИИ-помощник для учителя и понятный дневник для учеников и родителей Кыргызстана. Команда NEXUS.">
-  <meta name="theme-color" content="#0B0B0B">
-  <meta property="og:title" content="SABAK+ — электронный дневник нового поколения">
-  <meta property="og:description" content="Прозрачное оценивание, ИИ-помощник для учителя, дайджест для родителей, работа без интернета. Команда NEXUS.">
-  <meta property="og:image" content="/icons/icon-512.png">
-  <meta property="og:type" content="website">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="SABAK+">
-  <link rel="preload" href="/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAK+ — электронный дневник для школ Кыргызстана</title>
+<meta name="description" content="SABAK+ — электронный дневник нового поколения: оценки без задержек, понятный расчёт четвертной, ИИ-советы учителю, расписание как в бумажном дневнике, работа без интернета. Попробуйте демо бесплатно. Команда NEXUS, Бишкек.">
+<meta name="keywords" content="SABAK+, сабак, электронный дневник, Кыргызстан, Бишкек, школа, оценки, расписание, Күндөлүк, э-күндөлүк, дневник онлайн">
+<link rel="canonical" href="https://sabak-plus.vercel.app/">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website"><meta property="og:site_name" content="SABAK+"><meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="SABAK+ — электронный дневник, который не мешает учиться">
+<meta property="og:description" content="Оценки без задержек. Понятно, за что поставлена каждая. Работает без интернета. Попробуйте демо за 10 секунд.">
+<meta property="og:url" content="https://sabak-plus.vercel.app/"><meta property="og:image" content="https://sabak-plus.vercel.app/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="SABAK+ — электронный дневник нового поколения"><meta name="twitter:image" content="https://sabak-plus.vercel.app/og.png">
+<link rel="manifest" href="/manifest.webmanifest"><link rel="icon" href="/icons/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="preload" href="/fonts/oswald-700.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/landing.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"SoftwareApplication","name":"SABAK+","alternateName":["Sabak Plus","САБАК+","Сабак плюс"],"applicationCategory":"EducationalApplication","operatingSystem":"Web, Android, iOS (PWA)","url":"https://sabak-plus.vercel.app/","description":"Электронный дневник для школ Кыргызстана: оценки, расписание, домашние задания, посещаемость, ИИ-советы учителю, работа без интернета.","inLanguage":["ru","ky"],"offers":{"@type":"Offer","price":"0","priceCurrency":"KGS"},"creator":{"@type":"Organization","name":"NEXUS"}},
+{"@type":"Organization","name":"NEXUS","url":"https://sabak-plus.vercel.app/","address":{"@type":"PostalAddress","addressLocality":"Бишкек","addressCountry":"KG"}},
+{"@type":"WebSite","name":"SABAK+","url":"https://sabak-plus.vercel.app/","inLanguage":"ru"},
+{"@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"Что такое SABAK+?","acceptedAnswer":{"@type":"Answer","text":"SABAK+ — электронный дневник для школ Кыргызстана с понятным расчётом оценок, расписанием, домашними заданиями, посещаемостью и ИИ-помощником для учителя."}},
+{"@type":"Question","name":"Нужно ли устанавливать приложение?","acceptedAnswer":{"@type":"Answer","text":"Нет. SABAK+ открывается в браузере и добавляется на экран телефона как приложение (PWA), без App Store и Google Play."}},
+{"@type":"Question","name":"Работает ли SABAK+ без интернета?","acceptedAnswer":{"@type":"Answer","text":"Да. Если связь пропала, система сама это замечает и сохраняет изменения, а когда интернет вернётся — отправляет их автоматически."}},
+{"@type":"Question","name":"ИИ ставит оценки?","acceptedAnswer":{"@type":"Answer","text":"Нет. ИИ-помощник только советует учителю и объясняет расчёт; оценки выставляет и утверждает только учитель."}}
+]}]}
+</script>
 </head>
 <body>
-  <a class="skip" href="#main">Перейти к содержимому</a>
-  <div id="app" aria-live="polite"></div>
-  <div id="toast" aria-live="polite"></div>
-  <noscript>Для работы SABAK+ нужен JavaScript.</noscript>
-  <script type="module" src="/js/app.js"></script>
+<a class="skip" href="#main">Перейти к содержимому</a>
+<div class="progress" aria-hidden="true"><i></i></div>
+
+<header class="nav" id="nav">
+  <a class="logo" href="/" aria-label="SABAK+">SABAK<b>+</b></a>
+  <nav aria-label="Разделы"><a href="#why">Зачем</a><a href="#story">Как работает</a><a href="#try">Попробовать</a><a href="#trust">Безопасность</a><a href="#faq">Вопросы</a></nav>
+  <a class="pill" href="/app?demo=1">Открыть демо</a>
+</header>
+
+<main id="main">
+<!-- ============ HERO ============ -->
+<section class="hero" id="hero">
+  <div class="hero-in">
+    <p class="eyebrow rv">Команда NEXUS · Logos Hackathon 2026</p>
+    <h1 class="mega"><span class="ln"><span>Дневник,</span></span><span class="ln"><span class="grad">который не мешает</span></span><span class="ln"><span>учиться.</span></span></h1>
+    <p class="lead rv d3">SABAK+ — это электронный дневник нового поколения для школ Кыргызстана. Оценки без задержек, понятно за что каждая, расписание как в бумажном дневнике — и всё работает даже без интернета.</p>
+    <div class="cta rv d4"><a class="btn primary" href="/app?demo=1">Попробовать бесплатно <span aria-hidden="true">→</span></a><a class="btn ghost" href="#story">Смотреть, как это работает</a></div>
+    <p class="micro rv d5">Без регистрации · открывается за секунды · на телефоне и компьютере</p>
+  </div>
+  <div class="stage" aria-hidden="true">
+    <div class="glow"></div>
+    <div class="phone hero-phone" id="heroPhone"><div class="bezel"><div class="island"></div><div class="screens"></div></div></div>
+    <div class="float f1">🔥 <b>30 дней</b><small>подряд пятёрки</small></div>
+    <div class="float f2">✓ <b>Оценка 5</b><small>Математика · контрольная</small></div>
+    <div class="float f3">🏆 <b>30 дней без «Н»</b><small>достижение получено</small></div>
+  </div>
+  <a class="scrollhint" href="#why" aria-label="Прокрутить вниз"><i></i></a>
+</section>
+
+<!-- ============ ЗАЯВЛЕНИЕ (слова загораются при прокрутке) ============ -->
+<section class="statement" id="why"><div class="wrap">
+  <p class="words" data-words>Школьный дневник должен помогать — а не заставлять ждать, входить по пять раз и гадать, откуда взялась четвёрка. Мы убрали трение. Осталось только то, что важно: ученик, оценка и понимание.</p>
+</div></section>
+
+<!-- ============ ЦИФРЫ ============ -->
+<section class="stats light"><div class="wrap">
+  <h2 class="h2 rv">Мы спросили людей.<br><span class="muted">Они ответили.</span></h2>
+  <div class="statgrid">
+    <div class="stat rv"><b><span data-count="97" data-suf="%">0</span></b><p>пользователей Э-Күндөлүк отметили хотя бы одну проблему (33 из 34)</p></div>
+    <div class="stat rv d1"><b><span data-count="85" data-suf="%">0</span></b><p>сталкиваются со сбоями минимум несколько раз в месяц</p></div>
+    <div class="stat rv d2"><b><span data-count="68" data-suf="%">0</span></b><p>жалуются, что оценки появляются с задержкой</p></div>
+    <div class="stat rv d3"><b><span data-count="37" data-suf=" из 40">0</span></b><p>готовы пользоваться дневником, который решает эти проблемы</p></div>
+  </div>
+  <div class="bars rv" id="bars">
+    <h3>С чем сталкиваются пользователи Э-Күндөлүк <small>n = 34</small></h3>
+    <div class="bar" data-v="68"><span>Оценки приходят с задержкой</span><i><u></u></i><em>68%</em></div>
+    <div class="bar" data-v="65"><span>Не удаётся войти в аккаунт</span><i><u></u></i><em>65%</em></div>
+    <div class="bar" data-v="62"><span>Регистрация и восстановление доступа</span><i><u></u></i><em>62%</em></div>
+    <div class="bar" data-v="50"><span>Проблемы при слабом интернете</span><i><u></u></i><em>50%</em></div>
+    <div class="bar" data-v="44"><span>Непонятно, как считается итоговая оценка</span><i><u></u></i><em>44%</em></div>
+  </div>
+  <p class="foot rv">Опрос команды NEXUS, 20.10.2026 · 40 ответов (27 учеников, 7 родителей, 4 учителя, 2 из администрации). Небольшая выборка, не репрезентативная. Рейтинги магазинов: App Store KG — 2,1/5 (969 оценок); Google Play — 3,9/5 (≈5,1 тыс. отзывов), данные на 20.10.2026.</p>
+</div></section>
+
+<!-- ============ ИСТОРИЯ: телефон закреплён, экраны меняются ============ -->
+<section class="story" id="story">
+  <div class="story-sticky"><div class="phone" id="storyPhone" aria-hidden="true"><div class="bezel"><div class="island"></div><div class="screens"></div></div></div><div class="story-glow" aria-hidden="true"></div></div>
+  <div class="story-steps">
+    <article class="step" data-s="0"><p class="eyebrow">01 · Учитель</p><h2 class="h2">Оценка — за три касания.</h2><p>Класс, ученик, оценка. Крупные кнопки, подсказки, автосохранение и откат одним нажатием. Никаких лишних экранов.</p></article>
+    <article class="step" data-s="1"><p class="eyebrow">02 · Прозрачность</p><h2 class="h2">Понятно, за что поставлена каждая.</h2><p>Домашняя работа, активность, самостоятельная, контрольная (вес ×2), доклад или реферат. Расчёт четвертной оценки виден целиком — и сколько пятёрок нужно до следующей.</p></article>
+    <article class="step" data-s="2"><p class="eyebrow">03 · Жардамчы AI</p><h2 class="h2">Помощник, который советует — а не решает.</h2><p>Видит динамику, замечает «хромающий» предмет, предупреждает о возможной ошибке ввода и предлагает поддержку. Оценки ставит только учитель.</p></article>
+    <article class="step" data-s="3"><p class="eyebrow">04 · Ученик и родитель</p><h2 class="h2">Расписание — как в бумажном дневнике.</h2><p>Знакомая страница в клетку: уроки, время, кабинет и домашнее задание рядом. Родитель получает короткую сводку недели, а не таблицы.</p></article>
+    <article class="step" data-s="4"><p class="eyebrow">05 · Мотивация</p><h2 class="h2">Система сама замечает успех.</h2><p>Нет «Н» все 30 дней? Система выдаст достижение и пришлёт уведомление ученику и родителям. Первая пятёрка, огонь из пятёрок, рывок вперёд — 13 наград за реальные действия.</p></article>
+    <article class="step" data-s="5"><p class="eyebrow">06 · Надёжность</p><h2 class="h2">Нет интернета? Не страшно.</h2><p>SABAK+ сам замечает пропажу связи, сохраняет изменения у себя и отправляет их, когда сеть вернётся. Открывается как приложение — без App Store.</p></article>
+  </div>
+</section>
+
+<!-- ============ ПОПРОБУЙ ПРЯМО ЗДЕСЬ ============ -->
+<section class="try light" id="try"><div class="wrap">
+  <p class="eyebrow rv">Прямо здесь</p><h2 class="h2 rv">Потрогайте расчёт оценки.</h2>
+  <p class="lead dark rv">Нажимайте на оценки. Контрольная весит вдвое больше — как и в SABAK+. Система сразу покажет итог и сколько пятёрок не хватает до следующей оценки.</p>
+  <div class="calc rv" id="calc">
+    <div class="calc-l">
+      <div class="seg" role="group" aria-label="Тип работы"><button class="on" data-type="hw">Домашняя ×1</button><button data-type="test">Контрольная ×2</button></div>
+      <div class="gbtns" role="group" aria-label="Поставить оценку"><button data-g="5" class="g5">5</button><button data-g="4" class="g4">4</button><button data-g="3" class="g3">3</button><button data-g="2" class="g2">2</button></div>
+      <div class="chips" id="chips" aria-live="polite"></div>
+      <button class="link" id="calcReset">Сбросить</button>
+    </div>
+    <div class="calc-r"><small>Среднее взвешенное</small><b id="cAvg">—</b><small>Предполагаемая четвертная</small><b class="big" id="cFin">—</b><p id="cNeed">Поставьте первую оценку</p></div>
+  </div>
+</div></section>
+
+<!-- ============ BENTO ============ -->
+<section class="bento-s"><div class="wrap">
+  <h2 class="h2 rv">Всё, что нужно школе.<br><span class="muted">В одном месте.</span></h2>
+  <div class="bento">
+    <article class="tile big spot rv"><span class="ic">📊</span><h3>Аналитика для администрации</h3><p>Успеваемость, качество знаний, связь посещаемости и оценок, тренд за 6 недель, выбросы. Математика вместо догадок. Экспорт в Excel, Word, PDF.</p></article>
+    <article class="tile spot rv d1"><span class="ic">🗓️</span><h3>Расписание под ключ</h3><p>Свои предметы, смены, звонки, перетаскивание уроков. Завуч предлагает — директор одобряет.</p></article>
+    <article class="tile spot rv d2"><span class="ic">♿</span><h3>Для всех</h3><p>4 темы контраста, крупный текст, облегчённый вид, шрифт для дислексии, озвучка.</p></article>
+    <article class="tile spot rv"><span class="ic">🇰🇬</span><h3>Кыргызча + Русский</h3><p>Переключение языка в один клик.</p></article>
+    <article class="tile spot rv d1"><span class="ic">📶</span><h3>Слабый интернет</h3><p>Работает офлайн, синхронизируется сама.</p></article>
+    <article class="tile spot rv d2"><span class="ic">✉️</span><h3>Анонимная почта</h3><p>Ученик может написать администрации — без имени.</p></article>
+    <article class="tile wide spot rv"><span class="ic">🗂️</span><h3>Цифровое «дело» ученика</h3><p>Документы, характеристика, записи, фото профиля с автопроверкой. Родители и классный руководитель редактируют; администрация видит и просит недостающее.</p></article>
+    <article class="tile spot rv d1"><span class="ic">🌅</span><h3>Аффирмации</h3><p>Тёплая фраза каждый день.</p></article>
+  </div>
+</div></section>
+
+<!-- ============ РОЛИ ============ -->
+<section class="roles"><div class="wrap">
+  <p class="eyebrow rv">Для каждого</p><h2 class="h2 rv">Четыре роли. Один продукт.</h2>
+  <div class="tabs rv" role="tablist" aria-label="Роли">
+    <button role="tab" aria-selected="true" data-r="0">Ученик</button><button role="tab" aria-selected="false" data-r="1">Родитель</button><button role="tab" aria-selected="false" data-r="2">Учитель</button><button role="tab" aria-selected="false" data-r="3">Администрация</button>
+  </div>
+  <div class="rolebox rv" id="rolebox">
+    <div class="rp on"><h3>Ученик</h3><ul><li>Видит каждую оценку и понимает, как получена итоговая</li><li>Знает, сколько пятёрок не хватает до следующей оценки</li><li>Расписание, домашние задания, достижения и аффирмации</li><li>Может написать администрации анонимно</li></ul></div>
+    <div class="rp"><h3>Родитель</h3><ul><li>Короткая сводка недели: всё хорошо или на что обратить внимание</li><li>Уведомления о новых оценках, заданиях и достижениях</li><li>Цифровое «дело» ребёнка и загрузка документов</li><li>Несколько детей — переключение в один тап</li></ul></div>
+    <div class="rp"><h3>Учитель</h3><ul><li>Журнал, где всё делается за несколько касаний</li><li>ИИ-подсказки: динамика, слабые темы, возможные ошибки</li><li>Автосохранение и откат любого действия</li><li>Пишет завучу предложения по расписанию</li></ul></div>
+    <div class="rp"><h3>Администрация</h3><ul><li>Аналитика школы, классов и педагогов</li><li>Расписание: директор одобряет предложения завуча</li><li>Приглашения по одноразовым кодам, журнал аудита</li><li>Закрыть доступ можно в один клик</li></ul></div>
+  </div>
+</div></section>
+
+<!-- ============ ДОСТУПНОСТЬ ============ -->
+<section class="a11y"><div class="wrap two">
+  <div><p class="eyebrow rv">Доступность</p><h2 class="h2 rv">Удобно каждому.<br><span class="muted">Без исключений.</span></h2><p class="lead rv">Слабое зрение, дислексия, чувствительность к движению — всё настраивается за секунду. Попробуйте переключить тему справа.</p>
+    <div class="themebtns rv" role="group" aria-label="Тема"><button class="on" data-t="std">Стандартная</button><button data-t="hcl">Контрастная</button><button data-t="dark">Тёмная</button><button data-t="yb">Жёлтое на чёрном</button></div></div>
+  <div class="demo-card rv" id="themeDemo" data-t="std"><small>МАТЕМАТИКА · 9А</small><h3>Контрольная работа</h3><div class="row"><span>Оценка за контрольную</span><b>5</b></div><div class="row"><span>Предполагаемая четвертная</span><b>4</b></div><div class="mini"><i></i></div><button class="fakebtn">Подробнее →</button></div>
+</div></section>
+
+<!-- ============ БЕЗОПАСНОСТЬ ============ -->
+<section class="trust" id="trust"><div class="wrap">
+  <p class="eyebrow rv">Закрытая школа</p><h2 class="h2 rv">Не каждый «левый человек»<br><span class="muted">попадёт в администрацию.</span></h2>
+  <div class="chain" id="chain">
+    <div class="node rv"><i>1</i><h3>Ключ школы</h3><p>Оператор выдаёт одноразовый ключ-печать. В базе лежит только его хэш.</p></div>
+    <div class="node rv d1"><i>2</i><h3>Директор</h3><p>Основывает школу по ключу. Ключ сгорает после первого использования.</p></div>
+    <div class="node rv d2"><i>3</i><h3>Завуч и учителя</h3><p>Только по одноразовому коду, привязанному к телефону. Доступ открывает человек.</p></div>
+    <div class="node rv d3"><i>4</i><h3>Родители и ученики</h3><p>Код выдаёт классный руководитель — он привязан к конкретному ребёнку.</p></div>
+    <span class="line" aria-hidden="true"><u></u></span>
+  </div>
+  <ul class="checks rv"><li>5 неверных кодов — пауза 15 минут</li><li>Все действия — в журнале аудита</li><li>Права закреплены в самой базе данных (RLS)</li><li>Фото и документы — в закрытом хранилище</li></ul>
+</div></section>
+
+<!-- ============ ЦИТАТА / ЦУР ============ -->
+<section class="finale"><div class="wrap">
+  <p class="words big" data-words>SABAK+ — не просто электронный дневник. Это инструмент, который помогает учителю лучше понимать ученика, родителю — видеть реальную картину обучения, а ученику — понимать собственный прогресс.</p>
+  <div class="sdg rv"><b>ЦУР ООН № 4</b><span>Качественное образование</span></div>
+</div></section>
+
+<!-- ============ FAQ ============ -->
+<section class="faq light" id="faq"><div class="wrap narrow">
+  <h2 class="h2 rv">Частые вопросы</h2>
+  <details class="rv"><summary>Что такое SABAK+?</summary><p>Электронный дневник для школ Кыргызстана: оценки, расписание, домашние задания, посещаемость, аналитика и ИИ-помощник для учителя. Прототип работает прямо сейчас — его можно открыть и попробовать.</p></details>
+  <details class="rv"><summary>Нужно ли что-то устанавливать?</summary><p>Нет. SABAK+ открывается в браузере. Чтобы он был «как приложение», нажмите «Добавить на главный экран» — это PWA, без App Store и Google Play.</p></details>
+  <details class="rv"><summary>Что, если пропадёт интернет?</summary><p>Система сама заметит это, сохранит изменения на устройстве и отправит их, когда связь вернётся.</p></details>
+  <details class="rv"><summary>ИИ будет ставить оценки?</summary><p>Никогда. ИИ-помощник только объясняет расчёт и даёт рекомендации. Выставляет и утверждает оценки учитель, он же несёт за них ответственность.</p></details>
+  <details class="rv"><summary>Где хранятся данные и кто их видит?</summary><p>Ученик видит свои данные, родитель — данные своих детей, учитель — свои классы, администрация — школу. Эти правила записаны в самой базе данных, а не только в интерфейсе. Подробнее — в политике данных внутри приложения.</p></details>
+  <details class="rv"><summary>На каких языках работает?</summary><p>Русский и кыргызский — переключение в один клик. Кыргызский слой проходит вычитку носителем языка.</p></details>
+  <details class="rv"><summary>Это официальный дневник Министерства?</summary><p>Нет. SABAK+ — независимая концепция и рабочий прототип команды NEXUS для Logos Hackathon 2026. Мы не критикуем существующие решения, а убираем трение, о котором рассказали сами пользователи.</p></details>
+</div></section>
+
+<!-- ============ ФИНАЛЬНЫЙ CTA ============ -->
+<section class="cta-end"><div class="wrap">
+  <h2 class="mega sm"><span class="grad">Попробуйте.</span><br>Это займёт десять секунд.</h2>
+  <div class="cta"><a class="btn primary xl" href="/app?demo=1">Открыть демо SABAK+ <span aria-hidden="true">→</span></a></div>
+  <p class="micro">Выберите роль — ученик, родитель, учитель, администрация — и посмотрите, как всё работает.</p>
+</div></section>
+</main>
+
+<footer class="foot"><div class="wrap"><div class="logo">SABAK<b>+</b></div><p>Электронный дневник нового поколения · Бишкек, Кыргызстан</p><p>Команда NEXUS · Logos Hackathon 2026 · ЦУР ООН № 4</p><p><a href="/app?demo=1">Демо</a> · <a href="/app">Войти</a></p></div></footer>
+<script src="/js/landing.js" defer></script>
 </body>
 </html>

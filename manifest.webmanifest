@@ -3,7 +3,7 @@
   "short_name": "SABAK+",
   "description": "Прозрачное оценивание, ИИ-помощник для учителя и понятный дневник для учеников и родителей.",
   "lang": "ru",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0B0B0B",

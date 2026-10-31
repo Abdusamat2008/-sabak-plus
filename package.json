@@ -1,6 +1,6 @@
 {
   "name": "sabak-plus",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "SABAK+ — электронный дневник (команда NEXUS)",
   "scripts": {
@@ -10,7 +10,8 @@
     "test:privacy": "node tests/privacy.test.js",
     "test:photo": "node tests/photo-core.test.mjs",
     "test:offline": "node tests/offline.test.js",
-    "test:live": "node tests/live.test.js"
+    "test:live": "node tests/live.test.js",
+    "test:v05": "node tests/v05.test.js"
   },
   "devDependencies": { "playwright": "^1.45.0", "jpeg-js": "^0.4.4", "pg": "^8.11.0" }
 }
