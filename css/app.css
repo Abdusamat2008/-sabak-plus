@@ -386,3 +386,70 @@ textarea{resize:vertical}
 @media(max-width:520px){html[lang=ky] .nav a span{font-size:.6rem;letter-spacing:-.02em}.nav a{padding-left:2px;padding-right:2px}}
 
 .modal-bg{position:fixed;inset:0;background:#0009;z-index:49}.priv h2{margin:0 0 4px}.priv h3{margin:16px 0 4px;font-size:1rem;color:var(--blue)}.priv p{margin:0 0 6px;line-height:1.5}.linkbtn{background:none;border:0;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;padding:2px 4px}
+
+/* ---------- архив ---------- */
+.archgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:14px 0}
+.card.yr{display:flex;flex-direction:column;gap:4px;text-decoration:none;color:inherit;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+.card.yr:hover{transform:translate(-2px,-3px);box-shadow:6px 6px 0 var(--ink)}
+.card.yr b{font:700 2rem/1 var(--head);color:var(--blue)}
+.crumbs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.85rem;margin:0 0 10px}.crumbs a{color:var(--blue);font-weight:700}.crumbs i{opacity:.5;font-style:normal}
+details.subj summary{display:flex;align-items:center;gap:12px;cursor:pointer;list-style:none;min-height:44px}details.subj summary b{flex:1}details.subj summary::-webkit-details-marker{display:none}
+.dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:0}.dl dt{font-weight:700}.dl dd{margin:0}
+.chips2{display:flex;flex-wrap:wrap;gap:6px}
+form.inline{display:grid;gap:10px;max-width:420px}form.inline input[type=text],form.inline input:not([type]){width:100%}
+@media(max-width:560px){.dl{grid-template-columns:1fr}.dl dt{margin-top:6px}}
+
+/* ---------- мобильная адаптация (v0.6) ---------- */
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{overscroll-behavior-y:none}
+input,select,textarea,button{font-family:inherit}
+.top{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}
+@media(max-width:700px){
+  /* крупные цели нажатия и ввод без автозума iOS */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]),select,textarea{font-size:16px;min-height:46px}
+  .btn,button.btn,.tag,.subtabs a{min-height:44px}
+  .btn{display:inline-flex;align-items:center;justify-content:center}
+  .ibtn{min-width:42px;min-height:42px}
+  main,.main,#app>main{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+  .hd h1{font-size:clamp(1.9rem,9vw,2.6rem)}
+  .card{padding:14px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:10px 12px}.kpi b{font-size:2rem}
+  .row{gap:10px}
+  .tbl{font-size:.82rem}
+  table{display:block;overflow-x:auto;max-width:100%}
+  .sheet{width:100vw;border-left:0}
+  .modal{width:calc(100vw - 16px);max-height:92dvh;padding:18px 14px}
+  .a11y-panel,.a11y-drawer,[class*=a11y-panel]{max-width:100vw}
+  .toast-host,#toast{left:10px;right:10px;bottom:calc(86px + env(safe-area-inset-bottom))}
+  .nav{left:6px;right:6px;border-radius:16px}
+  .nav a span{font-size:.62rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .subtabs{margin-left:-12px;margin-right:-12px;padding:0 12px 6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}.subtabs a{scroll-snap-align:start}
+  .frow2,.frow3,.recform{grid-template-columns:1fr}
+}
+/* вход и регистрация */
+@media(max-width:899px){
+  .auth{padding:max(10px,env(safe-area-inset-top)) 10px calc(18px + env(safe-area-inset-bottom))}
+  .auth-top{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}
+  .auth-side{padding:16px 18px;box-shadow:4px 4px 0 var(--blue);gap:4px}
+  .auth-side h1{font-size:clamp(2.6rem,15vw,3.6rem);margin:4px 0 0}
+  .auth-side .lead{margin:0;font-size:.95rem}
+  .auth-points,.auth-side .note{display:none}
+  .auth-grid{gap:14px}
+  .auth-card{padding:18px 16px;box-shadow:4px 4px 0 var(--ink)}
+  .auth-card h2{font-size:1.5rem}
+  .auth-card input{font-size:16px}
+  .role-pick{grid-template-columns:1fr}
+  .role-pick button,.role-pick .rp{min-height:64px}
+  .steps{gap:6px}
+  .otp input,input[name=code],input[autocomplete=one-time-code]{font-size:1.6rem;letter-spacing:.35em;text-align:center}
+}
+@media(max-width:380px){.nav a span{font-size:.56rem}.top .brand{font-size:1.25rem}}
+/* ландшафт на телефоне: нижнее меню не закрывает контент */
+@media(max-height:480px) and (orientation:landscape){.nav{position:static;margin:10px}.modal{max-height:96dvh}}
+@media(max-width:899px){
+  .auth-main{flex-direction:column;align-items:stretch;gap:10px}
+  .auth-main>p,.auth-main>a{text-align:center;align-self:center}
+  body.is-auth .a11y-fab{top:auto;bottom:calc(16px + env(safe-area-inset-bottom));right:14px;width:52px;height:52px}
+  .auth-card input[name=code]{letter-spacing:.04em;font-size:1.05rem;text-transform:uppercase}
+}
+@media(max-width:899px){.auth{padding-bottom:calc(84px + env(safe-area-inset-bottom))}}
