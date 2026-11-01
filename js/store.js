@@ -46,6 +46,7 @@ export const USERS = {
   teacher: { id: 't1', name: 'Гульнара Эсеновна', role: 'teacher', subjects: ['math', 'inf'], classes: ['9А', '9Б'], homeroom: '9А' },
   admin:   { id: 'a1', name: 'Бекова Нурзат Айтматовна', role: 'admin', level: 'director' },
   deputy:  { id: 'a2', name: 'Асанов Тимур Бакытович', role: 'admin', level: 'deputy' },
+  super:   { id: 'su1', name: 'Технический администратор', role: 'super', level: 'superadmin' },
 };
 
 export const SUBJ_TEACHER = { math: 't1', inf: 't1', rus: 't2', kyr: 't2', hist: 't2', eng: 't3', phys: 't3', bio: 't3' };
@@ -663,7 +664,7 @@ function hydrateSched(R) {
 }
 
 // ---- вход / регистрация (live) ----
-const UIROLE = { director: 'admin', deputy: 'admin', teacher: 'teacher', parent: 'parent', student: 'student' };
+const UIROLE = { director: 'admin', deputy: 'admin', teacher: 'teacher', parent: 'parent', student: 'student', superadmin: 'super' };
 export async function liveSignIn(email, password) { await API.signIn(email, password); setMode('live'); load(); await hydrate(); }
 export async function liveSignUp(email, password, profileCall) {
   const r = await API.signUp(email, password);
@@ -699,6 +700,7 @@ export async function hydrate() {
   if (!prof) { S.session = { id: uidv, role: null, needsProfile: true, name: '' }; save(); emit(); return; }
   const base = { id: uidv, name: prof.full_name, role: UIROLE[prof.role], level: prof.role, status: prof.status, phone: prof.phone, lang: prof.lang, email: API.session() && API.session().user.email };
   if (prof.status !== 'active') { S.session = base; save(); emit(); return; }
+  if (prof.role === 'superadmin') { S.session = base; S.school = null; save(); emit(); return; }   // суперадмин: без школы, только архив и сводка
   const adm = base.role === 'admin', today = todayISO();
   const q = (t, query = '') => API.selectAll(t, query);
   const jobs = {

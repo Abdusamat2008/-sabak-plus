@@ -34,6 +34,6 @@ export function avatar(st, size = 40, cls = '') {
   if (st.photo && st.photo.ph) return `<span class="av ph ${cls}" style="width:${size}px;height:${size}px;background:${hue}" aria-label="Фото: ${esc(st.name)}"><svg viewBox="0 0 40 40" width="${size * .7}" height="${size * .7}" aria-hidden="true"><circle cx="20" cy="15" r="7" fill="#fff" opacity=".9"/><path d="M5 38c1-9 7-13 15-13s14 4 15 13z" fill="#fff" opacity=".9"/></svg></span>`;
   return `<span class="av ini ${cls}" style="width:${size}px;height:${size}px;font-size:${size * .38}px;border-color:${hue};color:${hue}" aria-label="Нет фото: ${esc(st.name)}">${esc(ini)}</span>`;
 }
-export const ROLE_RU = { director: 'Директор', deputy: 'Завуч', teacher: 'Учитель', parent: 'Родитель', student: 'Ученик', admin: 'Администрация' };
+export const ROLE_RU = { superadmin: 'Суперадмин', director: 'Директор', deputy: 'Завуч', teacher: 'Учитель', parent: 'Родитель', student: 'Ученик', admin: 'Администрация' };
 export const downloadBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); };
 export const copyText = async t => { try { await navigator.clipboard.writeText(t); return true; } catch { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch {} ta.remove(); return true; } };

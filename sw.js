@@ -1,8 +1,8 @@
 // Service Worker: оболочка приложения кэшируется, поэтому SABAK+ открывается без интернета.
-const CACHE = 'sabak-shell-v15';
+const CACHE = 'sabak-shell-v16';
 const SHELL = [
-  '/', '/index.html', '/app.html', '/css/landing.css', '/js/landing.js', '/css/app.css', '/css/a11y.css', '/css/paper.jpg',
-  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/privacy.js', '/js/a11y.js', '/js/achv.js', '/js/sched.js', '/js/schedui.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
+  '/', '/index.html', '/app.html', '/css/landing.css', '/css/pages.css', '/js/landing.js', '/js/site.js', '/css/app.css', '/css/a11y.css', '/css/paper.jpg',
+  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/privacy.js', '/js/a11y.js', '/js/achv.js', '/js/sched.js', '/js/schedui.js', '/js/archive.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
   '/fonts/oswald-700.woff2', '/fonts/inter-400.woff2', '/fonts/inter-700.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest',
 ];

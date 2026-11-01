@@ -20,6 +20,8 @@ let heroI=0;const show=(s,i)=>$$('.scr',s).forEach((e,k)=>e.classList.toggle('on
 show(heroS,0);show(storyS,0);
 if(!RM)setInterval(()=>{if(scrollY<innerHeight*1.2){heroI=(heroI+1)%SCREENS.length;show(heroS,heroI)}},3200);
 
+/* ---- мобильное меню ---- */
+{const nav=$('#nav'),bg=$('#burger');if(bg){const set=o=>{nav.classList.toggle('open',o);bg.setAttribute('aria-expanded',o)};bg.addEventListener('click',()=>set(!nav.classList.contains('open')));$$('#menu a').forEach(a=>a.addEventListener('click',()=>set(false)));addEventListener('keydown',e=>{if(e.key==='Escape')set(false)});addEventListener('scroll',()=>{if(nav.classList.contains('open'))set(false)},{passive:true})}}
 /* ---- загрузка ---- */
 requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.add('loaded')));
 document.documentElement.classList.contains('loaded');

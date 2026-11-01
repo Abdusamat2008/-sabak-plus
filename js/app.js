@@ -13,6 +13,7 @@ import * as Auth from './auth.js';
 import * as People from './people.js';
 import * as Admin from './admin.js';
 import * as Sched from './schedui.js';
+import * as Archive from './archive.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -37,6 +38,7 @@ const NAV = {
   parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/dossier', 'Дело', 'file']],
   admin: [['admin', 'Обзор', 'chart'], ['admin/schedule', 'Расписание', 'cal'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
 };
+NAV.super = [['super', 'Школы', 'chart']];
 const navLabel = k => (k.startsWith('nav_') ? t(k) : k);
 const isActive = (href, r, role) => r === href || (href !== role && r.startsWith(href + '/')) || (href === 'admin' && r.startsWith('admin/audit')) || (href === 'parent/dossier' && r.startsWith('dossier'));
 
@@ -63,7 +65,7 @@ function shell(content) {
       <div class="usr">
         <button class="usr-b" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">${u.role === 'student' && me ? avatar(me, 32) : `<span class="av ini sm" style="width:32px;height:32px;border-color:var(--blue);color:var(--blue)">${esc((u.name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}<span class="usr-n"><b>${esc(first(u.name))}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}</small></span><span class="car" aria-hidden="true">▾</span></button>
         ${ui.menu ? `<div class="menu" role="menu"><div class="mh2"><b>${esc(u.name)}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}${st.school ? ' · ' + esc(st.school.name) : ''}</small></div>
-          ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${[['student', 'Ученик'], ['parent', 'Родитель'], ['teacher', 'Учитель'], ['admin', 'Директор'], ['deputy', 'Завуч']].map(([x, n]) => `<option value="${x}" ${(x === u.role || (u.level === 'deputy' && x === 'deputy') && true) && !(x === 'admin' && u.level === 'deputy') ? 'selected' : ''}>${n}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
+          ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${[['student', 'Ученик'], ['parent', 'Родитель'], ['teacher', 'Учитель'], ['admin', 'Директор'], ['deputy', 'Завуч'], ['super', 'Суперадмин']].map(([x, n]) => `<option value="${x}" ${(x === u.role || (u.level === 'deputy' && x === 'deputy') && true) && !(x === 'admin' && u.level === 'deputy') ? 'selected' : ''}>${n}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
           <button class="mi" data-act="a11y">Специальные возможности <b>Alt+A</b></button>
           <button class="mi" data-act="privacy">Политика данных</button>
           <button class="mi" data-act="lang">Язык: <b>${L() === 'ru' ? 'Русский → Кыргызча' : 'Кыргызча → Русский'}</b></button>
@@ -364,6 +366,7 @@ function view() {
       if (sub[1] === 'log') return logPage();
       return teacherJournal();
     }
+    case 'super': return Archive.superPage(sub.slice(1));
     case 'admin': {
       if (sub[1] === 'schedule') return Sched.adminPage();
       if (sub[1] === 'teachers') return Admin.teachersPage();
@@ -371,6 +374,7 @@ function view() {
       if (sub[1] === 'access') return Admin.accessPage();
       if (sub[1] === 'mail') return Admin.mailPage();
       if (sub[1] === 'audit') return Admin.auditPage();
+      if (sub[1] === 'archive') return Archive.adminPage(sub.slice(2));
       return Admin.overview();
     }
   }
@@ -463,7 +467,7 @@ document.addEventListener('click', async e => {
     } catch { ui.cloud[key] = t('ai_cloud_off'); }
     out.textContent = ui.cloud[key]; return;
   }
-  for (const m of [Auth, People, Admin, Sched]) if (await m.act(act, el)) return;
+  for (const m of [Auth, People, Admin, Sched, Archive]) if (await m.act(act, el)) return;
 });
 document.addEventListener('change', e => {
   if (People.onChange(e.target) || Auth.onChange(e.target) || Sched.onChange(e.target)) return;
@@ -483,6 +487,7 @@ document.addEventListener('submit', async e => {
   if (f.dataset.form === 'student') { const name = String(fd.get('name')).trim(); S.addStudent(name, ui.cls).then(r => { ui.newCode = { name, code: r.code }; ui.lastSave = Date.now(); render(); scheduleFlush(); }).catch(er => toast(er.message, 'warn')); return; }
   if (await Auth.submit(f, fd)) return;
   if (await Sched.submit(f, fd)) return;
+  if (Archive.submit(f, fd)) return;
   if (People.submit(f, fd)) return;
   Admin.submit(f, fd);
 });
@@ -498,6 +503,7 @@ if (location.hash.includes('access_token')) {
 }
 if (new URLSearchParams(location.search).has('demo')) { if (!S.state().session) { S.switchMode('demo'); ui.demoPick = true; location.hash = ''; } history.replaceState(null, '', location.pathname); }
 Tour.init({ S, ui, go, render, scheduleFlush, Net });
+if (S.isLive()) setTimeout(() => { const u = S.state().session; if (u && u.level === 'director') Archive.autoClose(); }, 4000);
 S.on(() => render());
 setLang(S.state().prefs.lang); Ky.init(); Ky.apply();
 render();
