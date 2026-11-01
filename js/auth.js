@@ -16,7 +16,7 @@ const ROLES = [
 const field = (name, label, o = {}) => `<label class="fld ${o.cls || ''}"><span>${label}${o.req ? ' <i>*</i>' : ''}</span><input name="${name}" type="${o.type || 'text'}" ${o.req ? 'required' : ''} ${o.ph ? `placeholder="${esc(o.ph)}"` : ''} ${o.auto ? `autocomplete="${o.auto}"` : ''} ${o.min ? `minlength="${o.min}"` : ''} ${o.attrs || ''} value="${esc(A().d[name] ?? '')}"></label>`;
 
 function brand() {
-  return `<aside class="auth-side"><div class="tape">NEXUS · LOGOS HACKATHON 2026</div><h1>SABAK<span>+</span></h1>
+  return `<aside class="auth-side"><div class="tape">SABAK+ · ЭЛЕКТРОННЫЙ ДНЕВНИК</div><h1>SABAK<span>+</span></h1>
     <p class="lead">Электронный дневник нового поколения</p>
     <ul class="auth-points"><li><b>Прозрачные оценки</b><span>ученик видит, как получена каждая</span></li><li><b>Работает без интернета</b><span>данные не теряются, синхронизация автоматическая</span></li><li><b>Закрытая школа</b><span>войти можно только по приглашению администрации</span></li></ul></aside>`;
 }

@@ -7,7 +7,7 @@ import * as API from './api.js';
 import * as Net from './net.js';
 import { DOC_TYPES } from './docs.js';
 
-// Два режима: demo (всё в браузере, для показа жюри) и live (Supabase). Данные в обоих хранятся в одной форме,
+// Два режима: demo (всё в браузере, для знакомства с продуктом) и live (Supabase). Данные в обоих хранятся в одной форме,
 // поэтому все экраны работают одинаково; в live-режиме изменения дополнительно уходят на сервер (с очередью при обрыве связи).
 const MODE_KEY = 'sabak.mode', PREF_KEY = 'sabak.prefs';
 export const getMode = () => { try { return localStorage.getItem(MODE_KEY) || 'demo'; } catch { return 'demo'; } };
@@ -334,7 +334,7 @@ export function unseenAch(sid) {
   return have.filter(id => !seen.includes(id));
 }
 export function markSeenAch(sid, ids) { S.achSeen[sid] = [...new Set([...(S.achSeen[sid] || []), ...ids])]; save(); }
-// демо-сценарий для жюри: «30 учебных дней без Н»
+// демо-сценарий: «30 учебных дней без Н»
 export function demoPerfectAttendance(sid, days = 30) {
   schoolDaysBack(days).forEach(d => { if (d === todayISO()) return; (S.att[d] = S.att[d] || {})[sid] = 'p'; });
   const got = awardFor(sid); save(); emit(); return got;

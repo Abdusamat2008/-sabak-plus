@@ -186,7 +186,7 @@ function hwPage(sid, canToggle) {
 function achPage(sid) {
   const A = achievements(sid), got = A.filter(a => a.ok), earned = (S.state().ach[sid]) || {};
   const cats = [...new Set(A.map(a => a.cat))], fresh = new Set(ui.freshAch || []);
-  const demoBtn = S.isLive() ? '' : `<div class="card deco"><b>Демо для жюри</b><p class="muted">Система следит за поведением ученика сама. Нажмите — и она «увидит» 30 учебных дней без «Н», выдаст достижение и отправит уведомление ученику и родителю.</p><button class="btn blue" data-act="ach-demo" data-sid="${sid}">▶ Смоделировать 30 дней без «Н»</button></div>`;
+  const demoBtn = S.isLive() ? '' : `<div class="card deco"><b>Попробуйте сами</b><p class="muted">Система следит за поведением ученика сама. Нажмите — и она «увидит» 30 учебных дней без «Н», выдаст достижение и отправит уведомление ученику и родителю.</p><button class="btn blue" data-act="ach-demo" data-sid="${sid}">▶ Смоделировать 30 дней без «Н»</button></div>`;
   return `${head(t('ach_title'), '', `Получено ${got.length} из ${A.length}. Награды выдаёт система сама — по оценкам, посещаемости и заданиям`)}
   ${cats.map(c => `<h2 class="tp" style="margin:18px 0 10px">${esc(c)}</h2><div class="grid2">${A.filter(a => a.cat === c).map(a => `<div class="card ach ${a.ok ? 'got' : ''} ${fresh.has(a.id) ? 'fresh' : ''}"><div class="em">${a.e}</div><div><b>${esc(a.n)}</b><small>${esc(a.d)}</small><div class="bar" role="progressbar" aria-valuenow="${Math.round(a.pct * 100)}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(a.n)}"><i style="width:${Math.round(a.pct * 100)}%"></i></div><small>${a.ok ? '✓ получено' + (earned[a.id] ? ' ' + dmy(new Date(earned[a.id]).toISOString().slice(0, 10)) : '') : 'Прогресс: ' + a.p}</small></div></div>`).join('')}</div>`).join('')}
   ${demoBtn}`;
@@ -321,7 +321,7 @@ function demoPicker() {
   const roles = [['student', '🎓'], ['parent', '👪'], ['teacher', '📘'], ['admin', '🏫']];
   return `<div class="auth"><div class="auth-top"><button class="ibtn" data-act="lang">${L() === 'ru' ? 'КЫ' : 'RU'}</button></div><div class="auth-grid"><aside class="auth-side"><div class="tape">ДЕМО-РЕЖИМ</div><h1>SABAK<span>+</span></h1><p class="lead">${t('app_tag')}</p><p class="note">Данные демо хранятся только в вашем браузере. Настоящая работа школы — после входа по приглашению.</p></aside>
     <div class="auth-main"><div class="auth-card wide-card"><h2>${t('pick_role')}</h2><div class="roles">${roles.map(([r, e], i) => `<button class="role-card ${i % 2 ? 'dark' : ''}" data-act="login" data-role="${r}"><span class="em" aria-hidden="true">${e}</span><b>${t('role_' + r)}</b><small>${t('role_' + r + '_d')}</small></button>`).join('')}</div>
-    <p class="tourcta"><button class="btn blue" data-act="tour">▶ Демо-сценарий для жюри (2 минуты)</button></p><p class="alt"><button class="link" data-act="demo-back">← Ко входу</button></p></div></div></div></div>`;
+    <p class="tourcta"><button class="btn blue" data-act="tour">▶ Показать, как это работает (2 минуты)</button></p><p class="alt"><button class="link" data-act="demo-back">← Ко входу</button></p></div></div></div></div>`;
 }
 function view() {
   const st = S.state(), u = st.session, r = route();

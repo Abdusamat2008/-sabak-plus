@@ -1,6 +1,6 @@
 // Автоопределение связи: события браузера + «пульс» (реальный запрос), потому что navigator.onLine врёт
 // (Wi-Fi есть, а интернета нет). Никаких ручных переключателей: система сама понимает, что связь пропала/вернулась.
-let forced = null; // только для демо-сценария жюри: имитация обрыва связи
+let forced = null; // только для демо-сценария: имитация обрыва связи
 let online = typeof navigator === 'undefined' ? true : navigator.onLine !== false;
 const subs = new Set();
 export const isOnline = () => online;
