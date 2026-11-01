@@ -147,7 +147,19 @@ drop trigger if exists ach_hw on public.homework_done;
 create trigger ach_grades after insert or update on public.grades for each row execute function public.trg_ach_student();
 create trigger ach_att after insert or update on public.attendance for each row execute function public.trg_ach_student();
 create trigger ach_hw after insert on public.homework_done for each row execute function public.trg_ach_student();
-alter function public.seed_demo_school() set "sabak.no_ach" = '1';      -- при загрузке демо-данных не шлём лавину уведомлений
+-- При загрузке демо-данных не шлём лавину уведомлений. ALTER FUNCTION ... SET "sabak.no_ach" в Supabase запрещён (42501),
+-- поэтому оборачиваем: исходная функция -> seed_demo_school_inner, а внешняя ставит флаг через set_config (только на время транзакции).
+do $w$
+begin
+  if position('seed_demo_school_inner' in (select prosrc from pg_proc where oid = 'public.seed_demo_school()'::regprocedure)) = 0 then
+    execute 'drop function if exists public.seed_demo_school_inner()';
+    execute 'alter function public.seed_demo_school() rename to seed_demo_school_inner';
+    execute $f$create function public.seed_demo_school() returns jsonb language plpgsql security definer set search_path = public as $b$
+      begin perform set_config('sabak.no_ach', '1', true); return public.seed_demo_school_inner(); end $b$$f$;
+  end if;
+end $w$;
+revoke execute on function public.seed_demo_school_inner() from public, anon, authenticated;
+grant execute on function public.seed_demo_school() to authenticated;
 
 -- Клиент может попросить проверку (например, при входе ученика): результат всё равно считает сервер.
 create or replace function public.check_achievements(p_student uuid) returns jsonb

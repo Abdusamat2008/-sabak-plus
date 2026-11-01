@@ -688,7 +688,7 @@ end $$;
 revoke all on function public.set_student_photo_server(uuid, text, jsonb, uuid) from public, anon, authenticated;
 grant execute on function public.set_student_photo_server(uuid, text, jsonb, uuid) to service_role;
 
--- ---------- 5. Демо-данные для жюри (только директор, только в пустой школе) -----
+-- ---------- 5. Демо-данные (чтобы посмотреть продукт) (только директор, только в пустой школе) -----
 create or replace function public.seed_demo_school() returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare sc uuid := public.my_school(); c9a uuid; c9b uuid; names text[] := array[

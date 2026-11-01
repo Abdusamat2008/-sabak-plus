@@ -1,7 +1,7 @@
 # SABAK+ v0.5 — электронный дневник (команда NEXUS)
 
 PWA на чистом HTML/CSS/JS (без сборки). Два режима:
-- **Демо** — данные в браузере, переключатель ролей, кнопка «▶ Демо» (сценарий для жюри).
+- **Демо** — данные в браузере, переключатель ролей, кнопка «▶ Демо» (показывает, как работает продукт).
 - **Живой** — реальная база Supabase: вход, регистрация, приглашения, фото, «дела», аналитика.
 
 ## Что нового в 0.3
@@ -35,9 +35,9 @@ Supabase → SQL Editor → вставить **весь** файл `supabase/sch
 
 ## Подтверждение почты: включение (5 минут)
 1. Supabase → **Authentication → Sign In / Providers → Email** → **включите** «Confirm email».
-2. **Свой SMTP** (без него Supabase не даёт редактировать шаблон): Authentication → **Emails → SMTP Settings** (или Project Settings → Auth → SMTP) → включите «Enable custom SMTP». Для хакатона проще всего Brevo (300 писем/день бесплатно, достаточно подтвердить один адрес-отправитель) или Gmail (пароль приложения). Подробно — в сообщении ассистента / ниже.
+2. **Свой SMTP** (без него Supabase не даёт редактировать шаблон): Authentication → **Emails → SMTP Settings** (или Project Settings → Auth → SMTP) → включите «Enable custom SMTP». Проще всего Brevo (300 писем/день бесплатно, достаточно подтвердить один адрес-отправитель) или Gmail (пароль приложения). Подробно — в сообщении ассистента / ниже.
 3. **Authentication → Emails → Templates → Confirm signup**: тема «Код подтверждения SABAK+», тело — содержимое `supabase/email/confirm-signup.html`. То же для **Reset password**: тема «Новый пароль SABAK+», тело — `supabase/email/recovery.html`. В письме обязательно должна остаться переменная `{{ .Token }}` (для кода) и `{{ .ConfirmationURL }}` (для ссылки смены пароля).
-4. Хотите без подтверждения (быстрее на хакатоне) — оставьте «Confirm email» выключенным: приложение работает и так.
+4. Хотите без подтверждения (быстрее для старта) — оставьте «Confirm email» выключенным: приложение работает и так.
 
 ## Серверная проверка фото: включение
 1. Supabase → **Edge Functions → Deploy a new function** → имя `verify-photo` → вставьте `supabase/functions/verify-photo/index.ts` и файл `core.js` рядом (или через CLI: `supabase functions deploy verify-photo`).
@@ -70,4 +70,4 @@ Supabase → SQL Editor → вставить **весь** файл `supabase/sch
 ## Лендинг и SEO (v0.5.1)
 - `/` — маркетинговая страница (`index.html`, `css/landing.css`, `js/landing.js`), Apple‑стиль анимаций; `/app` — само приложение (`app.html`, `noindex`).
 - «Открыть демо» ведёт на `/app?demo=1` (сразу демо‑режим). `og.png` — превью для соцсетей; `robots.txt`, `sitemap.xml`, JSON‑LD уже добавлены.
-- Чтобы попасть в поиск: Google Search Console → добавить сайт → отправить `sitemap.xml` → «Проверка URL» → «Запросить индексирование»; то же в Bing Webmaster Tools; ссылки на сайт с GitHub/соцсетей/страницы хакатона; по возможности свой домен (.kg / .com).
+- Чтобы попасть в поиск: Google Search Console → добавить сайт → отправить `sitemap.xml` → «Проверка URL» → «Запросить индексирование»; то же в Bing Webmaster Tools; ссылки на сайт с GitHub/соцсетей/школьных чатов; по возможности свой домен (.kg / .com).
