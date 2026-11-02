@@ -14,6 +14,7 @@ import * as People from './people.js';
 import * as Admin from './admin.js';
 import * as Sched from './schedui.js';
 import * as Archive from './archive.js';
+import * as Super from './super.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -38,7 +39,7 @@ const NAV = {
   parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/dossier', 'Дело', 'file']],
   admin: [['admin', 'Обзор', 'chart'], ['admin/schedule', 'Расписание', 'cal'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
 };
-NAV.super = [['super', 'Школы', 'chart']];
+NAV.super = [['super', 'Обзор', 'chart'], ['super/schools', 'Школы', 'home'], ['super/directors', 'Директора', 'users'], ['super/inbox', 'Входящие', 'bell'], ['super/system', 'Система', 'shield']];
 const navLabel = k => (k.startsWith('nav_') ? t(k) : k);
 const isActive = (href, r, role) => r === href || (href !== role && r.startsWith(href + '/')) || (href === 'admin' && r.startsWith('admin/audit')) || (href === 'parent/dossier' && r.startsWith('dossier'));
 
@@ -325,8 +326,15 @@ function demoPicker() {
     <div class="auth-main"><div class="auth-card wide-card"><h2>${t('pick_role')}</h2><div class="roles">${roles.map(([r, e], i) => `<button class="role-card ${i % 2 ? 'dark' : ''}" data-act="login" data-role="${r}"><span class="em" aria-hidden="true">${e}</span><b>${t('role_' + r)}</b><small>${t('role_' + r + '_d')}</small></button>`).join('')}</div>
     <p class="tourcta"><button class="btn blue" data-act="tour">▶ Показать, как это работает (2 минуты)</button></p><p class="alt"><button class="link" data-act="demo-back">← Ко входу</button></p></div></div></div></div>`;
 }
+function suspendedView(u) {
+  return `<div class="auth"><div class="auth-grid"><aside class="auth-side"><div class="tape">SABAK+</div><h1>SABAK<span>+</span></h1><p class="lead">Доступ школы приостановлен</p></aside>
+  <div class="auth-main"><div class="auth-card"><div class="pend">⏸</div><h2>Школа «${esc(u.schoolName || '')}» приостановлена</h2>
+  <p>${u.suspendedReason ? 'Причина: <b>' + esc(u.suspendedReason) + '</b>.' : 'Доступ временно закрыт администратором платформы.'} Данные школы сохранены и вернутся сразу после возобновления.</p>
+  <p><a class="btn blue" href="https://wa.me/996709250243" target="_blank" rel="noopener">Написать в WhatsApp</a></p><p><button class="btn" data-act="logout">Выйти</button></p></div></div></div></div>`;
+}
 function view() {
   const st = S.state(), u = st.session, r = route();
+  if (u && u.suspended) return suspendedView(u);
   if (!u || u.needsProfile || (u.status && u.status !== 'active') || (ui.auth && ui.auth.mode === 'recover-set')) {
     if (!S.isLive() && ui.demoPick && !u) return demoPicker();
     return Auth.authView();
@@ -366,7 +374,7 @@ function view() {
       if (sub[1] === 'log') return logPage();
       return teacherJournal();
     }
-    case 'super': return Archive.superPage(sub.slice(1));
+    case 'super': return Super.page(sub.slice(1));
     case 'admin': {
       if (sub[1] === 'schedule') return Sched.adminPage();
       if (sub[1] === 'teachers') return Admin.teachersPage();
@@ -375,6 +383,7 @@ function view() {
       if (sub[1] === 'mail') return Admin.mailPage();
       if (sub[1] === 'audit') return Admin.auditPage();
       if (sub[1] === 'archive') return Archive.adminPage(sub.slice(2));
+      if (sub[1] === 'support') return Super.supportPage();
       return Admin.overview();
     }
   }
@@ -400,7 +409,7 @@ function render() {
   }
   const y = window.scrollY, focusId = document.activeElement && document.activeElement.id;
   const sheetScroll = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
-  const authLike = !st.session || st.session.needsProfile || (st.session.status && st.session.status !== 'active');
+  const authLike = !st.session || st.session.suspended || st.session.needsProfile || (st.session.status && st.session.status !== 'active');
   $app.innerHTML = (authLike ? v + A11y.fab() : shell(v)) + A11y.panel();
   if (lastRoute !== route()) { lastRoute = route(); A11y.enter(st.prefs); }
   document.body.classList.toggle('is-auth', authLike);
@@ -467,10 +476,10 @@ document.addEventListener('click', async e => {
     } catch { ui.cloud[key] = t('ai_cloud_off'); }
     out.textContent = ui.cloud[key]; return;
   }
-  for (const m of [Auth, People, Admin, Sched, Archive]) if (await m.act(act, el)) return;
+  for (const m of [Auth, People, Admin, Sched, Archive, Super]) if (await m.act(act, el)) return;
 });
 document.addEventListener('change', e => {
-  if (People.onChange(e.target) || Auth.onChange(e.target) || Sched.onChange(e.target)) return;
+  if (People.onChange(e.target) || Auth.onChange(e.target) || Sched.onChange(e.target) || Super.onChange(e.target)) return;
   const el = e.target.closest('select[data-act]'); if (!el) return;
   if (Admin.onChange(el)) return;
   if (el.dataset.act === 'role') { S.login(el.value); ui.menu = false; go(el.value === 'deputy' ? 'admin' : el.value); return; }
@@ -487,7 +496,7 @@ document.addEventListener('submit', async e => {
   if (f.dataset.form === 'student') { const name = String(fd.get('name')).trim(); S.addStudent(name, ui.cls).then(r => { ui.newCode = { name, code: r.code }; ui.lastSave = Date.now(); render(); scheduleFlush(); }).catch(er => toast(er.message, 'warn')); return; }
   if (await Auth.submit(f, fd)) return;
   if (await Sched.submit(f, fd)) return;
-  if (Archive.submit(f, fd)) return;
+  if (Archive.submit(f, fd) || Super.submit(f, fd) || Super.dirSubmit(f, fd)) return;
   if (People.submit(f, fd)) return;
   Admin.submit(f, fd);
 });

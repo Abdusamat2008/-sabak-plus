@@ -19,9 +19,10 @@ await p.fill('input[name=label]','2025/2026');await p.click('button:has-text("С
 await p.fill('input[name=label]','2025-26');await p.click('button:has-text("Сохранить в архив")');await p.waitForTimeout(300);ok(await p.evaluate(()=>!document.querySelector('input[name=label]').checkValidity()),'bad label refused');
 // суперадмин
 await p.click('.usr-b');await p.selectOption('select.roleSel','super');await p.waitForTimeout(700);t=await p.innerText('body');
-ok(/школы платформы/i.test(t)&&/Гимназия №5/i.test(t)&&/Алатоо/i.test(t),'superadmin sees all schools');
+ok(/центр управления/i.test(t),'superadmin lands on control center');
+await p.evaluate(()=>location.hash='#/super/schools');await p.waitForTimeout(700);t=await p.innerText('body');ok(/Гимназия №5/i.test(t)&&/Алатоо/i.test(t),'superadmin sees all schools');
 await p.screenshot({path:'tests/out/arch-3.png'});
-await p.click('a.yr:has-text("Гимназия №5")');await p.waitForTimeout(500);await p.click('a.yr:has-text("2024/2025")');await p.waitForTimeout(500);await p.click('a.yr:has-text("10А")');await p.waitForTimeout(500);await p.click('.row >> nth=0');await p.waitForTimeout(500);
+await p.click('a.sch:has-text("Гимназия №5")');await p.waitForTimeout(600);await p.click('.subtabs a:has-text("Архив")');await p.waitForTimeout(600);await p.click('a.yr:has-text("2024/2025")');await p.waitForTimeout(500);await p.click('a.yr:has-text("10А")');await p.waitForTimeout(500);await p.click('.row >> nth=0');await p.waitForTimeout(500);
 ok(/Дневник за год/.test(await p.innerText('body')),'superadmin opens other school student diary');
 ok(await p.evaluate(()=>!/Закрыть год|Завершить учебный год/.test(document.body.innerText)),'superadmin has no close-year form');
 // родитель не видит архив

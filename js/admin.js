@@ -7,7 +7,7 @@ import { fmt1, fmt2, todayISO, dmy } from './calc.js';
 
 const rerender = () => window.__render && window.__render();
 const tabs = (cur, items) => `<nav class="subtabs" aria-label="Разделы">${items.map(([h, n]) => `<a href="#/${h}" class="${cur === h ? 'on' : ''}">${n}</a>`).join('')}</nav>`;
-export const ADMIN_TABS = [['admin', 'Обзор'], ['admin/teachers', 'Педагоги'], ['admin/students', 'Ученики'], ['admin/access', 'Доступ и роли'], ['admin/mail', 'Обращения'], ['admin/archive', 'Архив'], ['admin/audit', 'Журнал']];
+export const ADMIN_TABS = [['admin', 'Обзор'], ['admin/teachers', 'Педагоги'], ['admin/students', 'Ученики'], ['admin/access', 'Доступ и роли'], ['admin/mail', 'Обращения'], ['admin/archive', 'Архив'], ['admin/support', 'Поддержка'], ['admin/audit', 'Журнал']];
 const pctF = x => x == null ? '—' : Math.round(x * 100) + '%';
 const kpi = (l, v, sub = '', cls = '') => `<div class="kpi ${cls}"><small>${l}</small><b>${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
 const concl = list => `<ul class="concl">${list.map(c => `<li class="${c.level}"><i aria-hidden="true">${c.level === 'ok' ? '✓' : c.level === 'warn' ? '!' : 'i'}</i><span>${esc(c.text)}</span></li>`).join('')}</ul>`;

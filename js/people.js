@@ -36,7 +36,7 @@ export async function onPhotoFile(input) {
 }
 
 // ================= Уведомления =================
-const NROUTE = { schedule_pending: () => 'admin/schedule', schedule_rejected: () => 'admin/schedule', schedule_comment: () => 'admin/schedule', schedule_approved: r => r + '/schedule', schedule_new: r => r + '/schedule', achievement: () => 'student/ach' };
+const NROUTE = { schedule_pending: () => 'admin/schedule', schedule_rejected: () => 'admin/schedule', schedule_comment: () => 'admin/schedule', schedule_approved: r => r + '/schedule', schedule_new: r => r + '/schedule', achievement: () => 'student/ach', support: () => 'admin/support', platform: () => 'admin/support' };
 function notifLink(n) {
   const u = S.me(); if (!u) return '';
   if (n.kind === 'doc_request' && n.sid) return `<div><a class="btn sm ghost" href="#/dossier/${n.sid}">Открыть дело</a></div>`;

@@ -84,11 +84,6 @@ const yearsOf = schoolId => load('y:' + schoolId, async () => live()
 const classesOf = yearId => load('c:' + yearId, async () => live()
   ? API.select('archive_classes', `year_id=eq.${yearId}&select=id,class_name,grade,homeroom,students&order=grade.asc.nullslast,class_name.asc`)
   : (demoStore().years.find(y => y.id === yearId) || { classes: [] }).classes);
-const overview = () => load('ov', async () => {
-  if (live()) { const r = await API.rpc('super_overview'); if (!r.ok) throw new Error('Нет доступа'); return r.schools; }
-  const d = demoStore(); return d.schools.map(s => ({ ...s, years: d.years.filter(y => y.school_id === s.id).sort((a, b) => b.label.localeCompare(a.label)).map(y => ({ id: y.id, label: y.label, at: y.closed_at, auto: y.auto, stats: { classes: y.classes.length, students: y.classes.reduce((n, c) => n + c.students.length, 0) } })) }));
-});
-
 // ---------- действия ----------
 export async function closeYear(label, clear, schoolId) {
   if (live()) {
@@ -172,23 +167,16 @@ export function adminPage(parts) {
     return studentView(base, yearId, y.label, +ci, +si, back); }
   return yearsView(base, mySchoolId(), sc, (st.session.level || 'director') === 'director');
 }
-export function superPage(parts) {
-  const [schoolId, yearId, ci, si] = parts;
-  if (!schoolId) {
-    const ov = overview(), w = wait(ov);
-    return `${head('Школы платформы', 'SABAK+', 'Технический администратор: список школ, архив и состояние данных.')}${w || `<div class="kpis">${stat(ov.length, 'Школ')}${stat(ov.reduce((n, s) => n + (+s.students || 0), 0), 'Учеников')}${stat(ov.reduce((n, s) => n + (s.years || []).length, 0), 'Учебных годов в архиве')}</div>
-      <div class="archgrid">${ov.map(s => `<a class="card yr" href="#/super/${s.id}"><small>${esc(s.city || '')}</small><b>${esc(s.name)}</b><span>${s.students || 0} учеников · ${s.staff || 0} сотрудников</span><small class="muted">В архиве: ${(s.years || []).map(y => y.label).join(', ') || 'пока пусто'}</small></a>`).join('')}</div>
-      <div class="card"><h3>Техническая справка</h3><p class="muted">Новые школы подключаются по одноразовому ключу (раздел «Как подключить школу» на сайте). Архивы нельзя менять или удалять из приложения — только читать.</p></div>`}`;
-  }
-  const ov = overview(), w = wait(ov), sch = Array.isArray(ov) && ov.find(s => s.id === schoolId);
-  if (!sch) return w || '<div class="card"><p>Школа не найдена.</p></div>';
-  const base = `super/${schoolId}`, back = [['super', 'Школы'], [base, sch.name]];
-  if (yearId) { const y = (sch.years || []).find(x => x.id === yearId); if (!y) return '<div class="card"><p>Год не найден.</p></div>';
+// Архив одной школы для суперадмина (base — префикс маршрута, parts — [yearId, classIdx, studentIdx])
+export function schoolArchive(base, schoolId, schoolName, parts, back) {
+  const [yearId, ci, si] = parts || [];
+  if (yearId) { const ys = yearsOf(schoolId); const y = Array.isArray(ys) && ys.find(x => x.id === yearId); if (!y) return wait(ys) || '<div class="card"><p>Год не найден.</p></div>';
     if (ci === undefined) return classesView(base, yearId, y.label, back);
     if (si === undefined) return classView(base, yearId, y.label, +ci, back);
     return studentView(base, yearId, y.label, +ci, +si, back); }
-  return `${crumbs([['super', 'Школы'], [null, sch.name]])}${yearsView(base, schoolId, sch.name, false)}`;
+  return yearsView(base, schoolId, schoolName, false);
 }
+export const refresh = fresh;
 
 export async function act(name, el) {
   if (name === 'arch-print') { window.print(); return true; }
@@ -202,3 +190,5 @@ export function submit(form, fd) {
   closeYear(label, clear).then(r => { toast(`Сохранено: ${r.classes} кл., ${r.students} уч.`, 'ok'); rerender(); }).catch(e => toast(e.message, 'warn'));
   return true;
 }
+export const demoYears = schoolId => demoStore().years.filter(y => y.school_id === schoolId).sort((a, b) => b.label.localeCompare(a.label))
+  .map(y => ({ id: y.id, label: y.label, at: y.closed_at, auto: y.auto, stats: { classes: y.classes.length, students: y.classes.reduce((n, c) => n + c.students.length, 0), grades: y.classes.reduce((n, c) => n + c.students.reduce((m, s) => m + s.g.length, 0), 0) } }));
