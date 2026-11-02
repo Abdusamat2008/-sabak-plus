@@ -40,3 +40,11 @@
 .jump{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.jump a{border:1px solid var(--line);border-radius:99px;padding:7px 14px;font-size:.85rem;text-decoration:none;color:#d2d2d7;transition:background .25s}.jump a:hover{background:#ffffff14}
 @media(max-width:560px){.tl{padding-left:20px}.rel{padding:20px 18px}.rel::before{left:-20px}.rel.latest::after{position:static;display:inline-block;margin-top:8px}}
 .foot .wrap a+a{margin-left:12px}
+
+.reqform{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px;background:#141416;border:1px solid var(--line);border-radius:28px;padding:24px}
+.reqform label{display:grid;gap:6px;font-size:.85rem;color:#c7c7cc;font-weight:700}.reqform .wide,.reqform button,.reqform .reqmsg{grid-column:1/-1}
+.reqform input,.reqform textarea{font:400 16px var(--body);color:#fff;background:#0b0b0d;border:1px solid #ffffff33;border-radius:14px;padding:13px 14px;min-height:48px;width:100%}
+.reqform input:focus,.reqform textarea:focus{outline:2px solid var(--blue2);border-color:transparent}
+.reqform .hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+.reqmsg{min-height:1.4em;margin:0;font-size:.95rem;color:#c7c7cc}.reqmsg.ok{color:#5ee0a0}.reqmsg.err{color:#ff9d96}.reqmsg a{color:var(--blue3)}
+@media(max-width:620px){.reqform{grid-template-columns:1fr;padding:18px}}

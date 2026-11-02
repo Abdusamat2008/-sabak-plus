@@ -453,3 +453,19 @@ input,select,textarea,button{font-family:inherit}
   .auth-card input[name=code]{letter-spacing:.04em;font-size:1.05rem;text-transform:uppercase}
 }
 @media(max-width:899px){.auth{padding-bottom:calc(84px + env(safe-area-inset-bottom))}}
+
+/* ---------- центр управления (суперадмин) ---------- */
+.sbars{width:100%;height:90px;display:block}.sbars rect{fill:var(--blue)}.sbars rect:hover{fill:var(--ink)}
+.hb{display:grid;grid-template-columns:minmax(110px,1.2fr) 2fr auto;gap:10px;align-items:center;margin:8px 0;font-size:.9rem}.hb i{display:block;height:12px;background:#0b0b0b14;border:1.5px solid var(--ink);border-radius:99px;overflow:hidden}.hb u{display:block;height:100%;background:var(--blue)}.hb em{font-style:normal;font-weight:700;min-width:2.5ch;text-align:right}
+.card.sch{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:inherit;transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}.card.sch:hover{transform:translate(-2px,-3px);box-shadow:6px 6px 0 var(--ink)}
+.sch-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.sch-h b{font-size:1.1rem}
+.sch-m{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.88rem}
+.cbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.btn.sm{padding:6px 12px;min-height:36px;font-size:.85rem}.btn.wa{background:#25D366;color:#06210f;border-color:#06210f}
+.dir{display:flex;flex-direction:column;gap:6px}
+.ppl{align-items:flex-start;flex-wrap:wrap}
+.thread{display:grid;gap:8px;margin:10px 0}.msg{background:#0b0b0b0d;border-left:4px solid var(--ink);padding:8px 12px}.msg.me{background:#2352D814;border-left-color:var(--blue)}.msg p{margin:4px 0 0;white-space:pre-wrap}
+.keyv{font:700 1.5rem/1.2 ui-monospace,Menlo,Consolas,monospace;background:var(--ink);color:#fff;padding:14px 16px;margin:10px 0;overflow-wrap:anywhere;letter-spacing:.03em}
+.keybox{border-color:var(--blue);box-shadow:5px 5px 0 var(--blue)}
+.note{white-space:pre-wrap}
+textarea{width:100%;font:inherit;padding:10px;border:2px solid var(--ink);background:var(--fld,#fff);color:inherit}
+@media(max-width:600px){.hb{grid-template-columns:1fr auto}.hb i{grid-column:1/-1;grid-row:2}}

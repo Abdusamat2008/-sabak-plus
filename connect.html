@@ -58,6 +58,20 @@
   <p class="note rv">Что подготовить заранее: список классов, фамилии учителей и их предметы, время звонков и смены. Данные учеников можно добавлять постепенно — вручную или по приглашениям.</p>
 </div></section>
 
+<section class="sec" id="request"><div class="wrap narrow">
+  <p class="eyebrow rv">Заявка на сайте</p><h2 class="h2 rv">Или оставьте заявку здесь</h2>
+  <p class="lead rv">Мы получим её в центре управления SABAK+ и свяжемся с вами в WhatsApp.</p>
+  <form class="reqform rv" id="reqForm" novalidate>
+    <label>Название школы<input name="school" required maxlength="200" autocomplete="organization" placeholder="Например: Школа №7"></label>
+    <label>Город или район<input name="city" maxlength="100" autocomplete="address-level2" placeholder="Бишкек"></label>
+    <label>Ваше имя<input name="name" maxlength="120" autocomplete="name" placeholder="Фамилия Имя"></label>
+    <label>Телефон (WhatsApp)<input name="phone" required maxlength="40" inputmode="tel" autocomplete="tel" placeholder="0709 250 243"></label>
+    <label class="wide">Комментарий<textarea name="note" rows="3" maxlength="1000" placeholder="Сколько учеников, когда хотите начать"></textarea></label>
+    <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn primary" type="submit">Отправить заявку</button>
+    <p class="reqmsg" id="reqMsg" role="status" aria-live="polite"></p>
+  </form>
+</div></section>
 <section class="sec" id="contact"><div class="wrap">
   <p class="eyebrow rv">Связаться</p><h2 class="h2 rv">Оператор SABAK+</h2>
   <div class="contact">
@@ -78,6 +92,25 @@
 </div></section>
 </main>
 <footer class="foot"><div class="wrap"><div class="logo">SABAK<b>+</b></div><p>Электронный дневник нового поколения · Бишкек, Кыргызстан</p><p>Команда NEXUS · ЦУР ООН № 4</p><p><a href="/app?demo=1">Демо</a><a href="/app">Войти</a><a href="/connect">Подключить школу</a><a href="/updates">Обновления</a></p></div></footer>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from '/js/config.js';
+const f = document.getElementById('reqForm'), m = document.getElementById('reqMsg'), WA = 'https://wa.me/996709250243';
+f.addEventListener('submit', async e => {
+  e.preventDefault(); const d = Object.fromEntries(new FormData(f));
+  if (d.website) return;                                   // ловушка для ботов
+  if ((d.school || '').trim().length < 2 || (d.phone || '').trim().length < 5) { m.textContent = 'Укажите название школы и телефон.'; m.className = 'reqmsg err'; return; }
+  const btn = f.querySelector('button'); btn.disabled = true; m.className = 'reqmsg'; m.textContent = 'Отправляем…';
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/submit_school_request', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ p_school: d.school, p_city: d.city, p_name: d.name, p_phone: d.phone, p_note: d.note }) });
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) { f.reset(); m.className = 'reqmsg ok'; m.textContent = 'Спасибо! Заявка принята — мы напишем вам в WhatsApp.'; }
+    else if (j && j.error === 'busy') { m.className = 'reqmsg err'; m.innerHTML = 'Сейчас много заявок. Напишите нам в <a href="' + WA + '">WhatsApp</a>.'; }
+    else throw new Error('fail');
+  } catch { m.className = 'reqmsg err'; m.innerHTML = 'Не получилось отправить. Напишите нам в <a href="' + WA + '" target="_blank" rel="noopener">WhatsApp</a>: +996 709 250 243.'; }
+  btn.disabled = false;
+});
+</script>
 <script src="/js/site.js" defer></script>
 </body>
 </html>
