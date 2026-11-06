@@ -5,7 +5,7 @@ import * as API from './api.js';
 import { esc, ui, toast, go } from './common.js';
 
 const A = () => (ui.auth = ui.auth || { mode: 'login', step: 1, role: null, code: '', peek: null, d: {}, busy: false, err: '', info: '' });
-const ERR = { bad_key: 'Ключ школы неверный или уже использован. Ключ выдаёт оператор SABAK+ один раз для каждой школы.', bad_code: 'Код приглашения не найден, отозван или не подходит.', expired: 'Срок действия приглашения истёк — попросите новый.', used: 'Это приглашение уже использовано.', phone_mismatch: 'Телефон не совпадает с тем, к которому привязано приглашение.', too_many: 'Слишком много неудачных попыток. Подождите 15 минут.', already: 'У этого аккаунта уже есть профиль — просто войдите.', fields: 'Заполните обязательные поля.', auth: 'Нужно войти.' };
+const ERR = { bad_key: 'Такого ключа не существует. Ключ выдаёт оператор SABAK+ один раз для каждой школы.', key_used: 'Этот ключ уже использован: школа по нему уже зарегистрирована.', bad_code: 'Код приглашения не найден, отозван или не подходит.', expired: 'Срок действия приглашения истёк — попросите новый.', used: 'Это приглашение уже использовано.', phone_mismatch: 'Телефон не совпадает с тем, к которому привязано приглашение.', too_many: 'Слишком много неудачных попыток. Подождите 15 минут.', already: 'У этого аккаунта уже есть профиль — просто войдите.', fields: 'Заполните обязательные поля.', auth: 'Нужно войти.' };
 export const errText = e => ERR[e] || e || 'Ошибка';
 const ROLES = [
   ['director', '🏫', 'Директор школы', 'Основать школу по ключу SABAK+'],
@@ -155,7 +155,15 @@ export async function submit(form, fd) {
   if (f === 'newpass') { try { await API.updatePassword(d.password); a.mode = 'login'; a.info = 'Пароль изменён. Теперь войдите.'; a.err = ''; await S.logout(); } catch (e) { a.err = e.message; } rerender(); return true; }
   if (f === 'regcode') {
     a.code = norm(d.code); a.err = ''; a.peek = null;
-    if (a.role === 'director') { if (!/^SABAK-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(a.code)) return fail('Ключ выглядит так: SABAK-XXXX-XXXX-XXXX'); a.step = 3; rerender(); return true; }
+    if (a.role === 'director') { if (!/^SABAK-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(a.code)) return fail('Ключ выглядит так: SABAK-XXXX-XXXX-XXXX');
+      a.busy = true; rerender();
+      try {
+        const r = await API.rpc('peek_school_key', { p_key: a.code }, true); a.busy = false;
+        if (r && r.state === 'missing') return fail('Такого ключа не существует. Проверьте символы или попросите оператора SABAK+ выдать ключ заново (WhatsApp +996 709 250 243).');
+        if (r && r.state === 'used') return fail('Этот ключ уже использован: по нему школа уже зарегистрирована. Если это вы — войдите в аккаунт.');
+        if (r && r.note) a.keyNote = r.note;
+      } catch { a.busy = false; }   // нет связи или функция не развёрнута — окончательно проверит сервер при регистрации
+      a.step = 3; rerender(); return true; }
     if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(a.code)) return fail('Код выглядит так: XXXX-XXXX-XXXX');
     a.busy = true; rerender();
     try {

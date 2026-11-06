@@ -229,12 +229,15 @@ export function logout() { if (isLive()) { API.signOut(); S.session = null; S.st
 export function setPrefs(p) { Object.assign(S.prefs, p); try { localStorage.setItem(PREF_KEY, JSON.stringify(S.prefs)); } catch {} emit(); }
 
 // ---- оценки, посещаемость, ученики ----
-export function addGrade({ sid, subj: sj, value, type }) {
-  const g = { id: isLive() ? gid() : uid('g'), sid, subj: sj, value, type, date: todayISO(), by: S.session ? S.session.id : 't1' };
+export function addGrade({ sid, subj: sj, value, type, reason = null, note = null, date = null }) {
+  if (value <= 2 && !reason) throw new Error('Для оценки «2» укажите причину');
+  if (reason === 'other' && String(note || '').trim().length < 3) throw new Error('Опишите причину');
+  const g = { id: isLive() ? gid() : uid('g'), sid, subj: sj, value, type, date: date || todayISO(), by: S.session ? S.session.id : 't1' };
+  if (value <= 2) { g.reason = reason; g.note = note ? String(note).trim().slice(0, 300) : null; }
   S.grades.push(g);
   S.undo.push({ kind: 'delGrade', id: g.id });
   const st = S.students.find(s => s.id === sid);
-  logAndQueue('grade', `Оценка «${value}» · ${st ? st.name : sid} · ${subj(sj).ru}`, { m: 'POST', t: 'grades', b: { id: g.id, school_id: S.school && S.school.id, student_id: sid, subject_id: sj, value, type, date: g.date, by: g.by } });
+  logAndQueue('grade', `Оценка «${value}» · ${st ? st.name : sid} · ${subj(sj).ru}`, { m: 'POST', t: 'grades', b: { id: g.id, school_id: S.school && S.school.id, student_id: sid, subject_id: sj, value, type, date: g.date, by: g.by, ...(g.reason ? { reason: g.reason, note: g.note } : {}) } });
   if (!isLive()) awardFor(sid);
   save(); emit(); return g;
 }
@@ -301,6 +304,10 @@ export function markMailRead(id) { const m = S.mail.find(x => x.id === id); if (
 
 // ---- выборки ----
 export const studentsOf = cls => S.students.filter(s => s.cls === cls);
+export function addLesson({ cls, subj: sj, topic, hw, due }) {   // демо: домашнее задание из плана урока
+  if (!isLive() && hw) S.homework.push({ id: uid('h'), cls, subj: sj, title: hw, dueDate: due || addDays(todayISO(), 2) });
+  save(); emit();
+}
 export const gradesOf = (sid, sj) => sortGrades(S.grades.filter(g => g.sid === sid && (!sj || g.subj === sj)));
 export const hwFor = sid => { const st = S.students.find(s => s.id === sid); return S.homework.filter(h => h.cls === (st && st.cls)).map(h => ({ ...h, dueDate: h.dueDate || addDays(todayISO(), h.due), done: !!(S.hwDone[h.id] && S.hwDone[h.id][sid]) })); };
 export const attOf = (sid, n = 10) => schoolDaysBack(n).map(d => ({ date: d, v: (S.att[d] && S.att[d][sid]) || null }));
@@ -709,7 +716,7 @@ export async function hydrate() {
   const q = (t, query = '') => API.selectAll(t, query);
   const jobs = {
     school: API.select('schools', `id=eq.${prof.school_id}`), classes: q('classes', 'select=*&order=name'), students: q('students', 'select=*&order=full_name'),
-    grades: q('grades', 'select=id,student_id,subject_id,value,type,date,by&order=date'), att: q('attendance', `select=student_id,date,status&date=gte.${addDays(today, -60)}`),
+    grades: q('grades', 'select=id,student_id,subject_id,value,type,date,by,reason,note&order=date'), att: q('attendance', `select=student_id,date,status&date=gte.${addDays(today, -60)}`),
     hw: q('homework', 'select=*'), hwd: q('homework_done', 'select=*'), notifs: API.select('notifications', 'select=*&order=created_at.desc&limit=100'),
     ta: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : q('teacher_assignments', 'select=*'),
     staff: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : API.select('profiles', 'select=id,full_name,role,status,phone,created_at&role=in.(director,deputy,teacher)'),
@@ -728,7 +735,7 @@ export async function hydrate() {
   S.classes = R.classes.map(c => ({ id: c.id, name: c.name, homeroom: c.homeroom_id, grade: c.grade }));
   S.students = R.students.map(s => ({ id: s.id, name: s.full_name, cls: cname[s.class_id] || '—', clsId: s.class_id, accId: s.profile_id, code: null, birth: s.birth_date, gender: s.gender, demo: s.is_demo,
     photo: s.photo_path && s.photo_meta && s.photo_meta.verified ? { ok: true, path: s.photo_path, ts: Date.parse(s.photo_at), meta: s.photo_meta } : null }));
-  S.grades = R.grades.map(g => ({ id: g.id, sid: g.student_id, subj: g.subject_id, value: g.value, type: g.type, date: g.date, by: g.by }));
+  S.grades = R.grades.map(g => ({ id: g.id, sid: g.student_id, subj: g.subject_id, value: g.value, type: g.type, date: g.date, by: g.by, reason: g.reason || null, note: g.note || null }));
   S.att = {}; R.att.forEach(a => { (S.att[a.date] = S.att[a.date] || {})[a.student_id] = a.status; });
   S.homework = R.hw.map(h => ({ id: h.id, cls: cname[h.class_id], subj: h.subject_id, title: h.title, dueDate: h.due_date }));
   S.hwDone = {}; R.hwd.forEach(x => { (S.hwDone[x.homework_id] = S.hwDone[x.homework_id] || {})[x.student_id] = true; });

@@ -89,7 +89,7 @@ export async function call(name, args = {}) {
     case 'super_tickets': return { ok: true, tickets: d.tickets };
     case 'super_requests': return { ok: true, requests: d.requests };
     case 'super_request_set': { const r = d.requests.find(x => x.id === args.p_id); if (r) { r.status = args.p_status; if (args.p_note != null) r.admin_note = args.p_note; r.updated = new Date().toISOString(); save(); } return { ok: true }; }
-    case 'super_issue_key': { const k = 'SABAK-' + [0, 1, 2].map(() => Math.random().toString(36).slice(2, 6).toUpperCase()).join('-'); d.keys.unshift({ id: nid(), note: args.p_note || '', created: new Date().toISOString(), used: null, school: null }); logd(null, 'super.key_issued', { note: args.p_note }); save(); return { ok: true, key: k }; }
+    case 'super_issue_key': { const k = 'SABAK-' + [0, 1, 2].map(() => Math.random().toString(36).slice(2, 6).toUpperCase()).join('-'); d.keys.unshift({ id: nid(), note: args.p_note || '', created: new Date().toISOString(), used: null, school: null, key: k }); logd(null, 'super.key_issued', { note: args.p_note }); save(); return { ok: true, key: k }; }
     case 'super_keys': return { ok: true, keys: d.keys };
     case 'super_key_revoke': d.keys = d.keys.filter(k => k.id !== args.p_id || k.used); save(); return { ok: true };
     case 'super_audit': { const rows = [...d.audit, ...d.schools.flatMap(s => s.audit.map(a => ({ ...a, school: s.name, school_id: s.id })))].filter(a => (!args.p_school || a.school_id === args.p_school) && (!args.p_action || a.action.startsWith(args.p_action))).sort((a, b) => b.at.localeCompare(a.at)); return { ok: true, rows: rows.slice(0, args.p_limit || 100) }; }

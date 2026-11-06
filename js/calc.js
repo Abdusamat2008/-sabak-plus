@@ -73,3 +73,9 @@ export function schoolDaysBack(n, from = todayISO()) {
   return out; // от новых к старым
 }
 export const dmy = isoStr => { const [y, m, d] = isoStr.split('-'); return `${d}.${m}`; };
+
+// Причины низких оценок: «2» без причины не ставится (и на сервере тоже)
+export const REASONS = {
+  no_hw: ['📘', 'Не выполнил(а) домашнее задание'], discipline: ['🔔', 'Нарушение дисциплины'], unprepared: ['🎒', 'Не готов(а) к уроку'], weak_answer: ['🗣', 'Слабый ответ у доски'],
+  test_fail: ['📝', 'Не усвоил(а) тему (контрольная)'], cheating: ['🚫', 'Списывание'], no_supplies: ['✏️', 'Нет принадлежностей'], not_submitted: ['📭', 'Не сдал(а) работу'], other: ['💬', 'Другое (опишите)'],
+};
