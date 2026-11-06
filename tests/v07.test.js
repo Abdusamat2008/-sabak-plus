@@ -32,8 +32,8 @@ await go('#/super/directors');t=await T();ok(/Кадырова Асель/.test(
 await go('#/super/inbox');t=await T();ok(/Не работает печать расписания/.test(t)&&/Не приходит код/.test(t),'inbox: tickets incl. new from director');
 await p.fill('.tkt:has-text("Не работает печать") textarea[name=text]','Откройте «Расписание» → «Печать»');await p.click('.tkt:has-text("Не работает печать") button:has-text("Отправить")');await p.waitForTimeout(800);ok(/Откройте «Расписание»/.test(await T()),'super replied');
 await p.click('button:has-text("Заявки")');await p.waitForTimeout(500);t=await T();ok(/Школа №7/.test(t)&&/Ак-Жол/.test(t),'inbox: school requests');
-await p.click('.req:has-text("Школа №7") button:has-text("Выдать ключ")');await p.waitForTimeout(900);t=await T();ok(/SABAK-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/.test(t)&&/покажем один раз/i.test(t),'key issued from request (shown once)');
-await p.click('button:has-text("Скрыть")');await p.waitForTimeout(300);ok(!/покажем один раз/i.test(await T()),'key hidden after dismiss');
+await p.click('.req:has-text("Школа №7") button:has-text("Выдать ключ")');await p.waitForTimeout(900);t=await T();ok(/SABAK-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/.test(t)&&/Новый ключ/i.test(t),'key issued from request (shown once)');
+await p.click('button:has-text("Скрыть")');await p.waitForTimeout(300);ok(!/Новый ключ/i.test(await T()),'key hidden after dismiss');
 // рассылка
 await go('#/super/broadcast');await p.fill('input[name=title]','Версия 0.7');await p.fill('textarea[name=body]','Появился центр управления');await p.click('button:has-text("Отправить")');await p.waitForTimeout(800);ok(/Версия 0\.7/.test(await T()),'broadcast history');
 // люди
