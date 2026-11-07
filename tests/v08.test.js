@@ -7,9 +7,9 @@ const as=async r=>{await p.evaluate(r=>{__sabak.S.login(r)},r);await p.waitForTi
 await p.goto(URL);await p.waitForTimeout(700);
 // --- ученик: алтыны
 await as('student');await go('#/student/coins');let t=await T();
-ok(/магазин/i.test(t)&&/Отпроситься с урока/.test(t),'coins page + shop');
-const bal0=Number(await p.innerText('#bal'));ok(bal0>=90,'start balance '+bal0);
-await p.click('button[data-act=coin-open][data-id=skip_lesson]');await p.waitForTimeout(300);
+ok(/Платежи/.test(t)&&/Доступно/.test(t),'coins page mBank-style');await p.click('.mb-tabs button[data-v=pay]');await p.waitForTimeout(300);ok(/Отпроситься с урока/.test(await T()),'payments tab lists services');await p.click('.mb-tabs button[data-v=home]');await p.waitForTimeout(200);
+const balN=async()=>Number((await p.innerText('.mb-bal')).replace(/\D/g,''));const bal0=await balN();ok(bal0>=90,'start balance '+bal0);
+await p.click('.mb-tabs button[data-v=pay]');await p.waitForTimeout(300);await p.click('button[data-act=coin-open][data-id=skip_lesson]');await p.waitForTimeout(300);
 await p.selectOption('select[name=subj]','math');
 const d=new Date(Date.now()+864e5);while([0,6].includes(d.getDay()))d.setDate(d.getDate()+1);
 await p.fill('input[name=date]',d.toISOString().slice(0,10));
@@ -17,8 +17,8 @@ await p.fill('textarea[name=reason]','коротко');await p.click('.modal but
 ok(/хотя бы|10 символов|не короче/i.test(await T())||await p.locator('.modal').count()===1,'short reason rejected');
 await p.fill('textarea[name=reason]','Запись к врачу в 11:30, справка будет');
 await p.evaluate(()=>document.querySelector('.modal form').requestSubmit());await p.waitForTimeout(600);
-const bal1=Number(await p.innerText('#bal'));ok(bal1===bal0-40,'balance reduced by 40 -> '+bal1);
-ok(/ждёт решения/.test(await T()),'request pending');
+const bal1=await balN();ok(bal1===bal0-40,'balance reduced by 40 -> '+bal1);
+await p.click('.mb-tabs button[data-v=home]');await p.waitForTimeout(300);ok(/ждёт решения/.test(await T()),'request pending');
 // --- учитель: одобряет
 await as('teacher');await go('#/teacher/requests');t=await T();
 ok(/Запись к врачу/.test(t),'teacher sees request with reason');
@@ -56,9 +56,19 @@ ok(!/класс/i.test(await p.innerText('.un-wrap')),'profile does not show cla
 await p.click('[data-act=un-anon]');await p.waitForTimeout(300);
 await p.fill('#un-body','Привет из профиля!');await p.evaluate(()=>document.querySelector('form[data-form=un-post]').requestSubmit());await p.waitForTimeout(700);
 ok(/@abu_test/.test(await T()),'post with @username');
-const lk=p.locator('.echo[data-k=p] >> nth=0');const n0=Number(await lk.locator('b').innerText());await lk.click();await p.waitForTimeout(500);
-ok(Number(await p.locator('.echo[data-k=p] >> nth=0').locator('b').innerText())===n0+1||Number(await p.locator('.echo[data-k=p] >> nth=0').locator('b').innerText())===n0-1,'like toggles');
-await p.click('.cmt >> nth=0');await p.waitForTimeout(400);await p.fill('.ucf input','Согласен!');await p.evaluate(()=>document.querySelector('form[data-form=un-comment]').requestSubmit());await p.waitForTimeout(700);
+const rx0=await p.locator('.post >> nth=0').locator('.rx:not(.add)').count();
+await p.locator('.post >> nth=0').locator('.rx.add').click();await p.waitForTimeout(300);
+ok(await p.locator('.palette:visible').count()===1,'reaction palette opens');
+await p.locator('.palette:visible .pe >> nth=1').click();await p.waitForTimeout(600);
+ok(await p.locator('.post >> nth=0').locator('.rx.mine').count()===1,'reaction set (mine)');
+await p.locator('.post >> nth=0').locator('.rx.mine').click();await p.waitForTimeout(500);
+ok(await p.locator('.post >> nth=0').locator('.rx.mine').count()===0,'same reaction toggles off');
+await p.locator('.post >> nth=0').locator('[data-act=un-menu][data-key^="r:"]').click();await p.waitForTimeout(200);
+await p.click('[data-act=un-repost]');await p.waitForTimeout(700);
+ok(await p.locator('.rp').count()>=1,'repost shows quoted block');
+await p.locator('[data-act=un-cm] >> nth=0').click();await p.waitForTimeout(300);
+await p.click('[data-act=un-cm] >> nth=0');
+await p.click('[data-act=un-cm] >> nth=0');await p.waitForTimeout(400);await p.fill('.ucf input','Согласен!');await p.evaluate(()=>document.querySelector('form[data-form=un-comment]').requestSubmit());await p.waitForTimeout(700);
 ok(/Согласен!/.test(await T()),'comment posted');
 // опросы, теги, поиск, закладки, вкладки
 await p.click('[data-act=un-poll]');await p.fill('#un-body','Что выбрать? #опрос');
@@ -73,7 +83,7 @@ await p.click('[data-act=un-tag-x]');await p.waitForTimeout(300);
 await p.fill('#un-q','волейбол');await p.waitForTimeout(700);
 ok(await p.locator('.post').count()===1,'search narrows feed');
 await p.fill('#un-q','');await p.waitForTimeout(600);
-await p.locator('[data-act=un-save]').first().click();await p.waitForTimeout(300);
+await p.locator('[data-act=un-menu][data-key^="m:"]').first().click();await p.waitForTimeout(200);await p.locator('[data-act=un-save]').first().click();await p.waitForTimeout(300);
 await p.click('[data-act=un-tab][data-v=saved]');await p.waitForTimeout(400);
 ok(await p.locator('.post').count()===1,'saved tab shows bookmark');
 await p.click('[data-act=un-tab][data-v=honest]');await p.waitForTimeout(400);
@@ -81,6 +91,15 @@ ok(await p.locator('.post.anon').count()>=1&&await p.locator('.post:not(.anon)')
 await p.click('[data-act=un-tab][data-v=new]');await p.waitForTimeout(300);
 await p.click('[data-act=un-day] >> visible=true');await p.waitForTimeout(400);
 ok((await p.inputValue('#un-body')).startsWith('#тема_дня'),'daily prompt fills composer');
+await p.click('[data-act=un-vt-menu]');await p.click('[data-act=un-vtheme][data-v=graphite]');await p.waitForTimeout(300);
+ok(await p.evaluate(()=>document.body.dataset.uth)==='graphite','viewer theme switches');
+const lum=c=>{const m=c.match(/\d+/g).map(Number);return(m[0]*299+m[1]*587+m[2]*114)/1000};
+const pair=await p.evaluate(()=>{const e=document.querySelector('.post .pb')||document.querySelector('.post');const c=getComputedStyle(e).color;const bgc=getComputedStyle(document.querySelector('.post')).backgroundColor;return[c,bgc]});
+ok(Math.abs(lum(pair[0])-lum(pair[1]))>100,'graphite theme: text readable '+pair.join(' on '));
+for(const m of['hcl','dark','yb']){await p.evaluate(m=>{document.documentElement.dataset.contrast=m},m);await p.waitForTimeout(150);
+const bad=await p.evaluate(()=>{const o=[];document.querySelectorAll('.un-wrap .pb,.un-wrap .an b,.un-wrap .rx,.un-wrap .un-btn,.un-wrap .act,.un-wrap .tab,.un-wrap .un-tabs button,.un-wrap .day p').forEach(e=>{const cs=getComputedStyle(e);let n=e,b='transparent';while(n&&/rgba\(\d+, \d+, \d+, 0(\.\d+)?\)|transparent/.test(b)){b=getComputedStyle(n).backgroundColor;n=n.parentElement}const f=cs.color.match(/\d+/g).map(Number),g=b.match(/\d+/g).map(Number);const L=(f[0]*299+f[1]*587+f[2]*114)/1000,K=(g[0]*299+g[1]*587+g[2]*114)/1000;if(Math.abs(L-K)<90)o.push(e.className+':'+cs.color+' on '+b)});return o});
+ok(bad.length===0,'a11y '+m+' Үн text readable '+bad.slice(0,3).join(' | '))}
+await p.evaluate(()=>{document.documentElement.dataset.contrast='none'});
 // дубль username
 await as('teacher');await as('student');
 const dup=await p.evaluate(async()=>{const V=await import('/js/v8data.js');return V.call('th_username_check',{p_name:'abu_test'})});

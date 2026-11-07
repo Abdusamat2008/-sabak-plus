@@ -15,6 +15,19 @@ select public.th_vote((select (r->>'id')::uuid from jsonb_array_elements(public.
 select public.th_vote((select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'), 7)->>'error' as bad_opt_expect_poll;
 select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
 select public.th_vote((select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'), 1)->'poll'->'counts' as counts_expect_0_2;
+\echo ===== R1. реакции, репосты, правка
+select pg_temp.as_user('00000000-0000-0000-0000-000000000004');
+select public.th_react('p',(select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'),'🔥')->'react' as react_fire;
+select public.th_react('p',(select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'),'😂')->'react' as switched_to_laugh;
+select public.th_react('p',(select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'),'🤡')->>'error' as bad_emoji_expect_emoji;
+select public.th_react('p',(select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'),'😂')->'react' as toggled_off;
+select public.th_post('',false,null,null,null,(select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'))->>'ok' as plain_repost;
+select public.th_post('Согласен!',false,null,null,null,(select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%'))->>'ok' as quote_repost;
+select public.th_post('',false)->>'error' as empty_expect_body;
+select r->'repost'->>'body' as reposted_body, r->>'reposts' as repost_count from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' like 'Какой урок%' or r->>'body' = 'Согласен!';
+select public.th_edit((select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' = 'Согласен!'),'Полностью согласен')->>'ok' as edit_ok;
+select pg_temp.as_user('00000000-0000-0000-0000-000000000003');
+select public.th_edit((select (r->>'id')::uuid from jsonb_array_elements(public.th_feed('new')->'rows') r where r->>'body' = 'Полностью согласен'),'взлом')->>'error' as edit_other_expect_forbidden;
 \echo ===== P2. школа Б не голосует
 reset role;
 select id as pid from thread_posts where poll is not null limit 1 \gset
