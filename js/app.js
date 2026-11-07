@@ -454,6 +454,7 @@ function render() {
   $app.innerHTML = (authLike ? v + A11y.fab() : shell(v)) + A11y.panel();
   if (lastRoute !== route()) { lastRoute = route(); A11y.enter(st.prefs); }
   document.body.classList.toggle('is-auth', authLike);
+  document.body.classList.toggle('un-on', !authLike && /(^|\/)un(\/|$)/.test(route()));
   window.scrollTo(0, y);
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sheetScroll;
   if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }

@@ -25,7 +25,7 @@ const ANIMALS = ['🐆 Анонимный барс', '🦊 Анонимная л
 
 function seed() {
   return {
-    v: 1,
+    v: 2,
     coins: { items: ITEMS, ledger: {}, requests: [] },
     news: [
       { id: nid(), title: 'Добро пожаловать в SABAK+', body: 'Здесь администрация и учителя публикуют новости только вашей школы. Другие школы их не видят.', kind: 'news', audience: 'all', pinned: true, event_date: null, author: 'Администрация школы', author_role: 'director', at: ago(60 * 20), platform: false, readers: [] },
@@ -36,8 +36,9 @@ function seed() {
     th: {
       enabled: true, reveal: false, profiles: {}, banned: {}, words: ['дурак', 'идиот'],
       posts: [
-        { id: 'p1', uid: 'seed1', anon: false, official: false, alias: null, body: 'Кто идёт на школьный турнир по волейболу в пятницу? Нужны болельщики 📣', at: ago(180), likes: ['x1', 'x2', 'x3'], hidden: false, reports: [], media: null },
-        { id: 'p2', uid: 'seed2', anon: true, official: false, alias: ANIMALS[0], body: 'Честно: в столовой на третьем этаже всегда холодно, и никто ничего не делает. Можно поднять вопрос?', at: ago(95), likes: ['x1', 'x2', 'x4', 'x5'], hidden: false, reports: [], media: null },
+        { id: 'p1', uid: 'seed1', anon: false, official: false, alias: null, body: 'Кто идёт на школьный турнир по волейболу в пятницу? Нужны болельщики 📣 #волейбол #школа', at: ago(180), likes: ['x1', 'x2', 'x3'], hidden: false, reports: [], media: null },
+        { id: 'p2', uid: 'seed2', anon: true, official: false, alias: ANIMALS[0], body: 'Честно: в столовой на третьем этаже всегда холодно, и никто ничего не делает. Можно поднять вопрос? #честно #столовая', at: ago(95), likes: ['x1', 'x2', 'x4', 'x5'], hidden: false, reports: [], media: null },
+        { id: 'p4', uid: 'seed1', anon: false, official: false, alias: null, body: 'Какой кружок открыть после уроков? #опрос #школа', at: ago(25), likes: ['x1'], hidden: false, reports: [], media: null, poll: { opts: ['Робототехника', 'Шахматы', 'Театр', 'Футзал'], votes: { x1: 0, x2: 0, x3: 3, x4: 1, x5: 0 } } },
         { id: 'p3', uid: 'seed3', anon: false, official: true, alias: null, body: 'Принято. Администрация проверит отопление в столовой на этой неделе и напишет в новостях.', at: ago(40), likes: ['x1'], hidden: false, reports: [], media: null },
       ],
       comments: [
@@ -47,7 +48,7 @@ function seed() {
   };
 }
 let mem = null;
-function D() { if (mem) return mem; try { const r = JSON.parse(localStorage.getItem(KEY) || 'null'); if (r && r.v === 1) { mem = r; return mem; } } catch {} mem = seed(); save(); return mem; }
+function D() { if (mem) return mem; try { const r = JSON.parse(localStorage.getItem(KEY) || 'null'); if (r && r.v === 2) { mem = r; return mem; } } catch {} mem = seed(); save(); return mem; }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(mem)); } catch {} };
 export const resetDemo = () => { mem = null; try { localStorage.removeItem(KEY); } catch {} };
 
@@ -213,7 +214,8 @@ function thProfileSave(a) {
   Object.assign(th.profiles[u.id], { name: a.p_name.trim(), bio: (a.p_bio || '').trim() || null, emoji: a.p_emoji, theme: a.p_theme, accent: a.p_accent });
   save(); return { ok: true };
 }
-const postOut = (p, u, m) => ({ id: p.id, body: p.body, media: p.media, media_kind: p.media ? 'image' : null, at: p.at, author: card(p.uid, p.anon, p.alias, p.official), likes: p.likes.length, comments: D().th.comments.filter(c => c.post === p.id).length, liked: p.likes.includes(u.id), mine: p.uid === u.id, hidden: p.hidden, reports: m ? p.reports.length : null });
+const pollOut = (p, u) => p.poll ? { opts: p.poll.opts, counts: p.poll.opts.map((_, i) => Object.values(p.poll.votes).filter(v => v === i).length), mine: p.poll.votes[u.id] ?? null } : null;
+const postOut = (p, u, m) => ({ id: p.id, poll: pollOut(p, u), body: p.body, media: p.media, media_kind: p.media ? 'image' : null, at: p.at, author: card(p.uid, p.anon, p.alias, p.official), likes: p.likes.length, comments: D().th.comments.filter(c => c.post === p.id).length, liked: p.likes.includes(u.id), mine: p.uid === u.id, hidden: p.hidden, reports: m ? p.reports.length : null });
 function thFeed(a) {
   const u = sess(), bad = thOk(); if (bad) return bad; const m = isOfficial(), th = D().th; thP();
   const target = a.p_username ? Object.entries(th.profiles).find(([, p]) => p.username.toLowerCase() === String(a.p_username).toLowerCase()) : null;
@@ -231,13 +233,21 @@ function thPost(a) {
   const body = (a.p_body || '').trim(); if (!body || body.length > 600) return err('body');
   if (!a.p_anon && !off && !th.profiles[u.id]) return err('need_profile');
   const c = clean(body); if (c) return err(c);
+  let poll = null;
+  if (a.p_poll) { const o = a.p_poll.map(x => String(x || '').trim()); if (o.length < 2 || o.length > 5 || o.some(x => !x || x.length > 40)) return err('poll'); for (const x of o) { const e2 = clean(x); if (e2) return err(e2); } poll = { opts: o, votes: {} }; }
   if (th.posts.filter(p => p.uid === u.id && Date.now() - Date.parse(p.at) < 36e5).length >= 8) return err('rate');
-  const id = nid(); th.posts.unshift({ id, uid: u.id, anon: off ? false : !!a.p_anon, official: off, alias: ANIMALS[Math.floor(Math.random() * ANIMALS.length)], body, at: nowIso(), likes: [], hidden: false, reports: [], media: a.p_media || null });
+  const id = nid(); th.posts.unshift({ id, uid: u.id, anon: off ? false : !!a.p_anon, official: off, alias: ANIMALS[Math.floor(Math.random() * ANIMALS.length)], body, at: nowIso(), likes: [], hidden: false, reports: [], media: a.p_media || null, poll });
   save(); return { ok: true, id };
 }
 function thLike(a) {
   const u = sess(), bad = thOk(); if (bad) return bad; const th = D().th, o = (a.p_kind === 'p' ? th.posts : th.comments).find(x => x.id === a.p_id); if (!o) return err('not_found');
   const i = o.likes.indexOf(u.id); if (i >= 0) o.likes.splice(i, 1); else o.likes.push(u.id); save(); return { ok: true, liked: i < 0, n: o.likes.length };
+}
+function thVote(a) {
+  const u = sess(), bad = thOk(); if (bad) return bad; if (isBanned(u.id)) return err('banned');
+  const p = D().th.posts.find(x => x.id === a.p_post); if (!p || !p.poll) return err('not_found');
+  if (a.p_opt == null || a.p_opt < 0 || a.p_opt >= p.poll.opts.length) return err('poll');
+  if (!(u.id in p.poll.votes)) p.poll.votes[u.id] = a.p_opt; save(); return { ok: true, poll: pollOut(p, u) };
 }
 function thComments(a) {
   const u = sess(), bad = thOk(); if (bad) return bad; const th = D().th, m = isOfficial(), post = th.posts.find(p => p.id === a.p_post); if (!post) return err('not_found');
@@ -293,7 +303,7 @@ const DEMO = {
   news_list: newsList, news_post: newsPost, news_set: newsSet, news_read: newsRead, super_news_post: superNewsPost,
   th_username_check: a => { const bad = thOk(); if (bad) return bad; const e = usernameOk(a.p_name, sess().id); return { ok: true, available: !e, reason: e }; },
   th_me: thMe, th_profile_save: thProfileSave, th_cover_set: a => { const p = D().th.profiles[sess().id]; if (!p) return err('need_profile'); p.cover = a.p_path; save(); return { ok: true }; },
-  th_feed: thFeed, th_profile_get: thProfileGet, th_post: thPost, th_like: thLike, th_comments: thComments, th_comment: thComment, th_report: thReport, th_delete: thDelete,
+  th_feed: thFeed, th_profile_get: thProfileGet, th_post: thPost, th_like: thLike, th_vote: thVote, th_comments: thComments, th_comment: thComment, th_report: thReport, th_delete: thDelete,
   th_mod_queue: thModQueue, th_mod_decide: thModDecide, th_ban: thBan, th_unban: thUnban, th_reveal: thReveal, th_settings: thSettings, lesson_set: lessonSet,
 };
 
