@@ -112,3 +112,5 @@ Supabase → SQL Editor → вставить **весь** файл `supabase/sch
 - `/` — маркетинговая страница (`index.html`, `css/landing.css`, `js/landing.js`), Apple‑стиль анимаций; `/app` — само приложение (`app.html`, `noindex`).
 - «Открыть демо» ведёт на `/app?demo=1` (сразу демо‑режим). `og.png` — превью для соцсетей; `robots.txt`, `sitemap.xml`, JSON‑LD уже добавлены.
 - Чтобы попасть в поиск: Google Search Console → добавить сайт → отправить `sitemap.xml` → «Проверка URL» → «Запросить индексирование»; то же в Bing Webmaster Tools; ссылки на сайт с GitHub/соцсетей/школьных чатов; по возможности свой домен (.kg / .com).
+
+Для v0.12 выполните `supabase/schema_v9.sql` (индексы, быстрые правила чтения, `sync_stamp`). Тесты: `supabase/tests_v9.sql`. Подробности про нагрузку и офлайн: `docs/SCALING_OFFLINE.md`.
