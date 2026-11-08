@@ -39,7 +39,7 @@ await p.click('[data-act=lesson-open]');await p.fill('input[name=topic]','Ква
 ok(/План урока сохранён|Квадратные/.test(await T())||true,'lesson plan saved');
 // --- новости
 await go('#/teacher/news');await p.click('[data-act=news-compose]');await p.waitForTimeout(200);
-await p.fill('input[name=title]','Контрольная в пятницу');await p.fill('textarea[name=body]','Повторите главу 4');await p.evaluate(()=>document.querySelector('form[data-form=news-post]').requestSubmit());await p.waitForTimeout(600);
+await p.fill('input[name=title]','Контрольная в пятницу');await p.click('#ed-body');await p.keyboard.type('Повторите главу 4');await p.evaluate(()=>document.querySelector('form[data-form=news-post]').requestSubmit());await p.waitForTimeout(600);
 ok(/Контрольная в пятницу/.test(await T()),'teacher posted news');
 await as('student');await go('#/student/news');t=await T();ok(/Добро пожаловать в SABAK\+/.test(t)&&/SABAK\+ 0.8/.test(t),'student sees school + platform news');
 // --- Үн

@@ -19,6 +19,11 @@ import * as Coins from './coins.js';
 import * as News from './news.js';
 import * as Un from './un.js';
 import * as V from './v8data.js';
+import * as V9 from './v9data.js';
+import * as Term from './termcal.js';
+import * as Cal from './cal.js';
+import * as Reports from './reports.js';
+import * as IdCard from './idcard.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -39,12 +44,12 @@ const IC = {
 };
 const ico = n => `<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 const NAV = {
-  student: [['student', 'nav_home', 'home'], ['student/subjects', 'nav_subjects', 'book'], ['student/schedule', 'nav_schedule', 'cal'], ['student/hw', 'nav_hw', 'check'], ['student/coins', 'Алтын', 'coin'], ['student/un', 'Үн', 'voice'], ['student/news', 'Новости', 'news'], ['student/ach', 'nav_ach', 'star'], ['student/mail', 'nav_mail', 'mail']],
-  teacher: [['teacher', 'nav_journal', 'book'], ['teacher/class', 'nav_class', 'chart'], ['teacher/schedule', 'nav_schedule', 'cal'], ['teacher/students', 'Ученики', 'users'], ['teacher/requests', 'Заявки', 'coin'], ['teacher/news', 'Новости', 'news'], ['teacher/log', 'nav_log', 'list']],
-  parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/coins', 'Алтын', 'coin'], ['parent/news', 'Новости', 'news'], ['parent/dossier', 'Дело', 'file']],
-  admin: [['admin', 'Обзор', 'chart'], ['admin/schedule', 'Расписание', 'cal'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/news', 'Новости', 'news'], ['admin/un', 'Үн', 'voice'], ['admin/requests', 'Алтыны', 'coin'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
+  student: [['student', 'nav_home', 'home'], ['student/subjects', 'nav_subjects', 'book'], ['student/schedule', 'nav_schedule', 'cal'], ['student/hw', 'nav_hw', 'check'], ['student/coins', 'Алтын', 'coin'], ['student/un', 'Үн', 'voice'], ['student/news', 'Новости', 'news'], ['student/history', 'Табель', 'list'], ['student/id', 'Удостоверение', 'user'], ['student/ach', 'nav_ach', 'star'], ['student/mail', 'nav_mail', 'mail']],
+  teacher: [['teacher', 'nav_journal', 'book'], ['teacher/class', 'nav_class', 'chart'], ['teacher/schedule', 'nav_schedule', 'cal'], ['teacher/students', 'Ученики', 'users'], ['teacher/reports', 'Отчёты', 'file'], ['teacher/past', 'Прошлые годы', 'list'], ['teacher/requests', 'Заявки', 'coin'], ['teacher/news', 'Новости', 'news'], ['teacher/log', 'nav_log', 'list']],
+  parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/coins', 'Алтын', 'coin'], ['parent/news', 'Новости', 'news'], ['parent/history', 'Табель', 'list'], ['parent/id', 'Удостоверение', 'user'], ['parent/dossier', 'Дело', 'file']],
+  admin: [['admin', 'Обзор', 'chart'], ['admin/schedule', 'Расписание', 'cal'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/reports', 'Отчёты', 'file'], ['admin/past', 'Прошлые годы', 'list'], ['admin/calendar', 'Четверти', 'cal'], ['admin/news', 'Новости', 'news'], ['admin/un', 'Үн', 'voice'], ['admin/requests', 'Алтыны', 'coin'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
 };
-NAV.super = [['super', 'Обзор', 'chart'], ['super/schools', 'Школы', 'home'], ['super/directors', 'Директора', 'users'], ['super/inbox', 'Входящие', 'bell'], ['super/news', 'Новости', 'news'], ['super/system', 'Система', 'shield']];
+NAV.super = [['super', 'Обзор', 'chart'], ['super/schools', 'Школы', 'home'], ['super/directors', 'Директора', 'users'], ['super/inbox', 'Входящие', 'bell'], ['super/calendar', 'Четверти', 'cal'], ['super/news', 'Новости', 'news'], ['super/system', 'Система', 'shield']];
 const navLabel = k => (k.startsWith('nav_') ? t(k) : k);
 const isActive = (href, r, role) => r === href || (href !== role && r.startsWith(href + '/')) || (href === 'admin' && r.startsWith('admin/audit')) || (href === 'parent/dossier' && r.startsWith('dossier'));
 
@@ -242,7 +247,7 @@ function teacherJournal() {
   </div>
   ${ui.newCode ? `<p class="okmsg">✓ ${esc(ui.newCode.name)} добавлен(а)${ui.newCode.code ? ` · ${t('code_hint')}: <b>${ui.newCode.code}</b>` : ' · код появится после синхронизации (раздел «Ученики»)'}</p>` : ''}
   ${journalStrip(students, att, today)}
-  <div class="reason"><span>${t('reason')}:</span>${typeBtns}<label class="gdate">Дата оценки <input type="date" data-act="gdate" value="${gdate}" min="${addDays(today, -45)}" max="${today}"></label><button class="ibtn" data-act="all-present">✓ Все присутствуют</button><button class="ibtn" data-act="lesson-open">📖 План урока</button></div>
+  <div class="reason"><span>${t('reason')}:</span>${typeBtns}<label class="gdate">Дата оценки <input type="date" data-act="gdate" value="${gdate}" min="${addDays(today, -45)}" max="${today}"></label><label class="gtopic">Тема <input data-gtopic maxlength="120" value="${esc(ui.gtopic || '')}" placeholder="Тема урока (необязательно)"></label><button class="ibtn" data-act="all-present">✓ Все присутствуют</button><button class="ibtn" data-act="lesson-open">📖 План урока</button></div>
   <div class="jtable">${rows}</div>
   ${sheetView()}${reasonModal()}${lessonModal()}`;
 }
@@ -378,6 +383,9 @@ function view() {
     case 'student': {
       const sid = u.id;
       if (S.isLive() && !S.student(sid)) return empty('Профиль ещё не привязан', 'Ваш аккаунт не связан с записью ученика. Попросите классного руководителя выдать новый код.');
+      if (sub[1] === 'calendar') return Cal.page();
+      if (sub[1] === 'history') return Reports.historyPage(sid);
+      if (sub[1] === 'id') return IdCard.page();
       if (sub[1] === 'subjects') return subjectsList(sid, 'student');
       if (sub[1] === 'subject') return subjectDetail(sid, sub[2], 'student/subjects');
       if (sub[1] === 'schedule') return Sched.studentPage(sid);
@@ -392,6 +400,9 @@ function view() {
     case 'parent': {
       if (!u.child) return empty('Ребёнок не привязан', 'К вашему аккаунту пока не привязан ученик. Используйте код родителя от классного руководителя.');
       if (sub[1] === 'dossier') { go('dossier/' + u.child); return ''; }
+      if (sub[1] === 'calendar') return Cal.page();
+      if (sub[1] === 'history') return kidPicker() + Reports.historyPage(u.child);
+      if (sub[1] === 'id') return IdCard.page();
       if (sub[1] === 'coins') return kidPicker() + Coins.studentPage();
       if (sub[1] === 'news') return News.page();
       if (sub[1] === 'schedule') return kidPicker() + Sched.studentPage(u.child);
@@ -401,6 +412,9 @@ function view() {
     }
     case 'teacher': {
       if (sub[1] === 'schedule') return Sched.teacherPage();
+      if (sub[1] === 'calendar') return Cal.page();
+      if (sub[1] === 'reports') return Reports.reportsPage();
+      if (sub[1] === 'past') return Reports.pastPage();
       if (sub[1] === 'news') return News.page();
       if (sub[1] === 'requests') return Coins.staffPage();
       if (!(u.classes || []).length) return empty('Классы пока не назначены', 'Администрация ещё не назначила вам классы и предметы. Как только это произойдёт, журнал появится здесь.');
@@ -412,9 +426,12 @@ function view() {
       if (sub[1] === 'log') return logPage();
       return teacherJournal();
     }
-    case 'super': if (sub[1] === 'news') return News.superPage(); return Super.page(sub.slice(1));
+    case 'super': if (sub[1] === 'calendar') return Cal.page(); if (sub[1] === 'news') return News.superPage(); return Super.page(sub.slice(1));
     case 'admin': {
       if (sub[1] === 'schedule') return Sched.adminPage();
+      if (sub[1] === 'calendar') return Cal.page();
+      if (sub[1] === 'reports') return Reports.reportsPage();
+      if (sub[1] === 'past') return Reports.pastPage();
       if (sub[1] === 'teachers') return Admin.teachersPage();
       if (sub[1] === 'students') return People.studentsPage();
       if (sub[1] === 'access') return Admin.accessPage();
@@ -437,6 +454,8 @@ function render() {
   const st = S.state();
   setLang(st.prefs.lang);
   A11y.apply(st.prefs);
+  if (st.session && !st.session.suspended && !Term.cache.loaded && !Term.cache.loading) V9.boot().then(() => render());
+  if (!st.session && Term.cache.loaded) { V9.reset(); [Cal, Reports, IdCard].forEach(m => m.refresh()); }
   const v = view();
   if (v === '') return;
   if (st.session && st.session.role === 'student' && st.session.status !== 'pending' && st.session.id) {
@@ -451,7 +470,7 @@ function render() {
   const y = window.scrollY, focusId = document.activeElement && document.activeElement.id;
   const sheetScroll = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
   const authLike = !st.session || st.session.suspended || st.session.needsProfile || (st.session.status && st.session.status !== 'active');
-  $app.innerHTML = (authLike ? v + A11y.fab() : shell(v)) + A11y.panel();
+  $app.innerHTML = (authLike ? v + A11y.fab() : shell(Cal.strip() + v)) + (authLike ? '' : Reports.modal()) + A11y.panel();
   if (lastRoute !== route()) { lastRoute = route(); A11y.enter(st.prefs); }
   document.body.classList.toggle('is-auth', authLike);
   document.body.classList.toggle('un-on', !authLike && /(^|\/)un(\/|$)/.test(route()));
@@ -496,7 +515,7 @@ document.addEventListener('click', async e => {
   if (act === 'grade') {
     const sid = el.dataset.sid, v = Number(el.dataset.v);
     if (v <= 2) { ui.gr = { sid, v, reason: null }; render(); return; }
-    try { S.addGrade({ sid, subj: ui.subj, value: v, type: ui.type, date: ui.gdate || null }); } catch (er) { toast(er.message, 'warn'); return; }
+    try { S.addGrade({ sid, subj: ui.subj, value: v, type: ui.type, date: ui.gdate || null, topic: (ui.gtopic || '').trim() || null }); } catch (er) { toast(er.message, 'warn'); return; }
     ui.lastSave = Date.now(); render(); scheduleFlush(); return;
   }
   if (act === 'gr-cancel') { ui.gr = null; render(); return; }
@@ -525,11 +544,11 @@ document.addEventListener('click', async e => {
     } catch { ui.cloud[key] = t('ai_cloud_off'); }
     out.textContent = ui.cloud[key]; return;
   }
-  for (const m of [Auth, People, Admin, Sched, Archive, Super, Coins, News, Un]) if (await m.act(act, el)) return;
+  for (const m of [Auth, People, Admin, Sched, Archive, Super, Coins, News, Un, Cal, Reports, IdCard]) if (await m.act(act, el)) return;
 });
 document.addEventListener('change', e => {
   if (e.target.dataset && e.target.dataset.act === 'gdate') { ui.gdate = e.target.value; render(); return; }
-  if (People.onChange(e.target) || Auth.onChange(e.target) || Sched.onChange(e.target) || Super.onChange(e.target)) return;
+  if (People.onChange(e.target) || Auth.onChange(e.target) || Sched.onChange(e.target) || Super.onChange(e.target) || Cal.onChange(e.target) || Reports.onChange(e.target) || IdCard.onChange(e.target)) return;
   if (e.target.type === 'file' || e.target.type === 'checkbox') { Un.onChange(e.target); }
   const el = e.target.closest('select[data-act]'); if (!el) return;
   if (Admin.onChange(el)) return;
@@ -547,7 +566,7 @@ document.addEventListener('submit', async e => {
   if (f.dataset.form === 'student') { const name = String(fd.get('name')).trim(); S.addStudent(name, ui.cls).then(r => { ui.newCode = { name, code: r.code }; ui.lastSave = Date.now(); render(); scheduleFlush(); }).catch(er => toast(er.message, 'warn')); return; }
   if (f.dataset.form === 'gr-save') {
     const g = ui.gr; if (!g || !g.reason) return;
-    try { S.addGrade({ sid: g.sid, subj: ui.subj, value: g.v, type: ui.type, reason: g.reason, note: String(fd.get('note') || '').trim(), date: ui.gdate || null }); } catch (er) { toast(er.message, 'warn'); return; }
+    try { S.addGrade({ sid: g.sid, subj: ui.subj, value: g.v, type: ui.type, reason: g.reason, note: String(fd.get('note') || '').trim(), date: ui.gdate || null, topic: (ui.gtopic || '').trim() || null }); } catch (er) { toast(er.message, 'warn'); return; }
     ui.gr = null; ui.lastSave = Date.now(); render(); scheduleFlush(); return;
   }
   if (f.dataset.form === 'lesson') {
@@ -555,14 +574,14 @@ document.addEventListener('submit', async e => {
     if (S.isLive()) { const r = await V.call('lesson_set', { p_class: c && c.id, p_subj: ui.subj, p_date: todayISO(), p_topic: topic, p_hw: hw || null, p_due: hw ? due : null }); if (!r.ok) { toast('Не сохранено: ' + (r.error || ''), 'warn'); return; } }
     S.addLesson({ cls: ui.cls, subj: ui.subj, topic, hw, due }); ui.lesson = false; render(); toast('План урока сохранён', 'ok'); return;
   }
-  if (await Coins.submit(f, fd) || await News.submit(f, fd) || await Un.submit(f, fd)) return;
+  if (await Coins.submit(f, fd) || await News.submit(f, fd) || await Un.submit(f, fd) || await Cal.submit(f, fd) || await Reports.submit(f, fd)) return;
   if (await Auth.submit(f, fd)) return;
   if (await Sched.submit(f, fd)) return;
   if (Archive.submit(f, fd) || Super.submit(f, fd) || Super.dirSubmit(f, fd)) return;
   if (People.submit(f, fd)) return;
   Admin.submit(f, fd);
 });
-document.addEventListener('input', e => { Un.onInput(e.target); });
+document.addEventListener('input', e => { if (e.target.dataset && 'gtopic' in e.target.dataset) { ui.gtopic = e.target.value; return; } if (News.onInput(e.target)) return; if (Cal.onInput(e.target)) return; Un.onInput(e.target); });
 window.addEventListener('hashchange', () => { ui.sheet = ui.pendingSheet || null; ui.pendingSheet = null; ui.mailOk = false; ui.menu = false; ui.codeBox = null; render(); window.scrollTo(0, 0); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (ui.photo) { ui.photo = null; render(); } else if (ui.sheet) { ui.sheet = null; render(); } else if (ui.menu) { ui.menu = false; render(); } } });
 

@@ -164,12 +164,18 @@ function newsPost(a) {
   const u = sess(); if (!['teacher', 'admin', 'deputy', 'director'].includes(u.role)) return err('forbidden');
   if ((a.p_title || '').trim().length < 3) return err('short'); if ((a.p_body || '').trim().length < 3) return err('short');
   if (u.role === 'teacher' && !String(a.p_audience).startsWith('class:')) return err('teacher_class_only'); if (u.role === 'teacher' && a.p_pinned) return err('forbidden');
-  D().news.unshift({ id: nid(), title: a.p_title.trim(), body: a.p_body.trim(), kind: a.p_kind || 'news', audience: a.p_audience || 'all', pinned: !!a.p_pinned, event_date: a.p_event || null, author: u.name || 'Педагог', author_role: u.role, author_id: u.id, at: nowIso(), platform: false, readers: [] });
+  D().news.unshift({ id: nid(), title: a.p_title.trim(), body: a.p_body.trim(), kind: a.p_kind || 'news', audience: a.p_audience || 'all', pinned: !!a.p_pinned, event_date: a.p_event || null, fmt: a.p_fmt === 'html' ? 'html' : 'text', author: u.name || 'Педагог', author_role: u.role === 'admin' ? (u.level === 'deputy' ? 'deputy' : 'director') : u.role, author_id: u.id, at: nowIso(), platform: false, readers: [] });
   save(); return { ok: true };
 }
 function newsSet(a) {
   const n = D().news.find(x => x.id === a.p_id); if (!n || n.platform) return err('not_found');
   if (a.p_delete) D().news = D().news.filter(x => x !== n); else if (a.p_pinned != null) n.pinned = a.p_pinned; save(); return { ok: true };
+}
+function newsEdit(a) {
+  const u = sess(), n = D().news.find(x => x.id === a.p_id); if (!n) return err('not_found');
+  const ok = n.platform ? (u.role === 'super') : (u.role === 'admin' || n.author_id === u.id); if (!ok) return err('forbidden');
+  if ((a.p_title || '').trim().length < 3 || (a.p_body || '').trim().length < 3) return err('short');
+  n.title = a.p_title.trim(); n.body = a.p_body.trim(); n.fmt = a.p_fmt === 'text' ? 'text' : 'html'; n.edited = nowIso(); save(); return { ok: true };
 }
 function newsRead(a) { const u = sess(); D().news.forEach(n => { if ((!a.p_id || n.id === a.p_id) && !n.readers.includes(u.id)) n.readers.push(u.id); }); save(); return { ok: true }; }
 
@@ -313,12 +319,12 @@ function thSettings(a) {
   if ((a.p_del || '').trim()) th.words = th.words.filter(w => w !== a.p_del.trim().toLowerCase());
   save(); return { ok: true, enabled: th.enabled, reveal: th.reveal, words: th.words.slice().sort(), stats: { posts_7d: th.posts.length, anon_7d: th.posts.filter(p => p.anon).length, profiles: Object.keys(thP()).length, reported: th.posts.filter(p => p.hidden || p.reports.length).length } };
 }
-export function superNewsPost(a) { if ((a.p_title || '').trim().length < 3) return err('short'); D().news.unshift({ id: nid(), title: a.p_title.trim(), body: a.p_body.trim(), kind: 'platform', audience: 'all', pinned: !!a.p_pinned, event_date: null, author: 'SABAK+', author_role: 'super', at: nowIso(), platform: true, readers: [] }); save(); return { ok: true }; }
+export function superNewsPost(a) { if ((a.p_title || '').trim().length < 3) return err('short'); D().news.unshift({ id: nid(), title: a.p_title.trim(), body: a.p_body.trim(), kind: 'platform', audience: 'all', pinned: !!a.p_pinned, event_date: null, fmt: a.p_fmt === 'html' ? 'html' : 'text', author: 'SABAK+', author_role: 'super', at: nowIso(), platform: true, readers: [] }); save(); return { ok: true }; }
 function lessonSet() { return { ok: true }; }
 
 const DEMO = {
   coin_state: coinState, coin_request: coinRequest, coin_cancel: coinCancel, coin_staff: coinStaff, coin_decide: coinDecide, coin_award: coinAward, coin_award_class: coinAwardClass, coin_admin: coinAdmin, coin_item_set: coinItemSet, coin_item_add: coinItemAdd, coin_transfer: coinTransfer,
-  news_list: newsList, news_post: newsPost, news_set: newsSet, news_read: newsRead, super_news_post: superNewsPost,
+  news_list: newsList, news_edit: newsEdit, news_post: newsPost, news_set: newsSet, news_read: newsRead, super_news_post: superNewsPost,
   th_username_check: a => { const bad = thOk(); if (bad) return bad; const e = usernameOk(a.p_name, sess().id); return { ok: true, available: !e, reason: e }; },
   th_me: thMe, th_profile_save: thProfileSave, th_cover_set: a => { const p = D().th.profiles[sess().id]; if (!p) return err('need_profile'); p.cover = a.p_path; save(); return { ok: true }; },
   th_feed: thFeed, th_profile_get: thProfileGet, th_post: thPost, th_like: thLike, th_react: thReact, th_edit: thEdit, th_vote: thVote, th_comments: thComments, th_comment: thComment, th_report: thReport, th_delete: thDelete,

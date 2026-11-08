@@ -15,7 +15,7 @@ export const first = n => String(n || '').split(' ')[0];
 export const plural = (n, a, b, c) => { const m = n % 100, k = n % 10; return (m > 10 && m < 20) ? c : k === 1 ? a : (k >= 2 && k <= 4) ? b : c; };
 export const route = () => (location.hash || '').replace(/^#\/?/, '');
 export const go = r => { location.hash = '#/' + r; };
-export const chip = g => `<span class="g g${g.value}${g.reason ? ' why' : ''}" title="${esc(typeName(g.type))} · ${dmy(g.date)}${g.reason ? ' · причина: ' + esc((REASONS[g.reason] || [])[1] || g.reason) + (g.note ? ' — ' + esc(g.note) : '') : ''}">${g.value}</span>`;
+export const chip = g => `<${g.id ? 'button type="button" data-act="gdetail" data-id="' + esc(g.id) + '"' : 'span'} class="g g${g.value}${g.reason ? ' why' : ''}" title="${esc(typeName(g.type))} · ${dmy(g.date)}${g.reason ? ' · причина: ' + esc((REASONS[g.reason] || [])[1] || g.reason) + (g.note ? ' — ' + esc(g.note) : '') : ''}">${g.value}</${g.id ? 'button' : 'span'}>`;
 
 export function toast(msg, kind = '') {
   const host = $toast(); if (!host) return;

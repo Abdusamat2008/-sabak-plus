@@ -5,6 +5,7 @@ import { evaluate as evaluateAch } from './achv.js';
 import * as Sch from './sched.js';
 import * as API from './api.js';
 import * as Net from './net.js';
+import * as Term from './termcal.js';
 import { DOC_TYPES } from './docs.js';
 
 // Два режима: demo (всё в браузере, для знакомства с продуктом) и live (Supabase). Данные в обоих хранятся в одной форме,
@@ -65,7 +66,7 @@ function seed() {
   // профиль: base — уровень, tr — динамика (+ растёт, − падает)
   const prof = { s1: { b: 4.1, tr: 0 }, s2: { b: 4.6, tr: .3 }, s3: { b: 3.4, tr: -.9 }, s4: { b: 4.8, tr: .1 }, s5: { b: 2.9, tr: -.4 }, s6: { b: 4.2, tr: .5 }, s7: { b: 5, tr: 0 }, s8: { b: 3.8, tr: .2 }, s9: { b: 3.2, tr: .6 }, s10: { b: 4.4, tr: -.2 }, s11: { b: 3.9, tr: 0 }, s12: { b: 4.5, tr: .2 }, s13: { b: 3.1, tr: -.5 }, s14: { b: 4.7, tr: 0 }, s15: { b: 3.5, tr: .4 }, s16: { b: 4.0, tr: -.1 } };
   const typeCycle = ['hw', 'act', 'ind', 'test', 'hw', 'talk', 'ind', 'test', 'act', 'hw'];
-  const days = schoolDaysBack(34).reverse(); // от старых к новым
+  const days = schoolDaysBack(34).filter(d => !Term.inDefaultBreak(d)).reverse(); // от старых к новым
   const grades = []; let gid = 1;
   const add = (sid, sj, value, type, date, by = SUBJ_TEACHER[sj]) => grades.push({ id: 'g' + (gid++), sid, subj: sj, value, type, date, by });
 
@@ -175,6 +176,7 @@ export function load() {
   syncSubjects(); if (MODE === 'demo') S.students.forEach(st => awardFor(st.id));
   save(); return S;
 }
+export function touch() { save(); }
 function save() { try { localStorage.setItem(KEYS[MODE], JSON.stringify(S)); } catch (e) { console.warn('storage', e); } }
 export const state = () => S;
 export function resetDemo() { S = seed(); S.prefs = readPrefs(); syncSubjects(); save(); emit(); }
@@ -229,15 +231,19 @@ export function logout() { if (isLive()) { API.signOut(); S.session = null; S.st
 export function setPrefs(p) { Object.assign(S.prefs, p); try { localStorage.setItem(PREF_KEY, JSON.stringify(S.prefs)); } catch {} emit(); }
 
 // ---- оценки, посещаемость, ученики ----
-export function addGrade({ sid, subj: sj, value, type, reason = null, note = null, date = null }) {
+export function addGrade({ sid, subj: sj, value, type, reason = null, note = null, date = null, topic = null, comment = null }) {
+  Term.assertOpen(date || todayISO());
   if (value <= 2 && !reason) throw new Error('Для оценки «2» укажите причину');
   if (reason === 'other' && String(note || '').trim().length < 3) throw new Error('Опишите причину');
   const g = { id: isLive() ? gid() : uid('g'), sid, subj: sj, value, type, date: date || todayISO(), by: S.session ? S.session.id : 't1' };
   if (value <= 2) { g.reason = reason; g.note = note ? String(note).trim().slice(0, 300) : null; }
+  if (topic && String(topic).trim()) g.topic = String(topic).trim().slice(0, 120);
+  if (comment && String(comment).trim()) g.comment = String(comment).trim().slice(0, 300);
+  g.ts = new Date().toISOString();
   S.grades.push(g);
   S.undo.push({ kind: 'delGrade', id: g.id });
   const st = S.students.find(s => s.id === sid);
-  logAndQueue('grade', `Оценка «${value}» · ${st ? st.name : sid} · ${subj(sj).ru}`, { m: 'POST', t: 'grades', b: { id: g.id, school_id: S.school && S.school.id, student_id: sid, subject_id: sj, value, type, date: g.date, by: g.by, ...(g.reason ? { reason: g.reason, note: g.note } : {}) } });
+  logAndQueue('grade', `Оценка «${value}» · ${st ? st.name : sid} · ${subj(sj).ru}`, { m: 'POST', t: 'grades', b: { id: g.id, school_id: S.school && S.school.id, student_id: sid, subject_id: sj, value, type, date: g.date, by: g.by, ...(g.reason ? { reason: g.reason, note: g.note } : {}), ...(Term.cache.deployed && g.topic ? { topic: g.topic } : {}), ...(Term.cache.deployed && g.comment ? { comment: g.comment } : {}) } });
   if (!isLive()) awardFor(sid);
   save(); emit(); return g;
 }
