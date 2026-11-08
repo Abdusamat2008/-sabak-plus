@@ -1,5 +1,6 @@
 // Хранилище MVP: localStorage + журнал изменений + откат + очередь синхронизации (offline-first).
 // Этап 2: заменить на Supabase (см. README и supabase/schema.sql) — интерфейс функций останется тем же.
+import * as RC from './rcache.js';
 import { schoolDaysBack, todayISO, addDays, sortGrades } from './calc.js';
 import { evaluate as evaluateAch } from './achv.js';
 import * as Sch from './sched.js';
@@ -177,7 +178,13 @@ export function load() {
   save(); return S;
 }
 export function touch() { save(); }
-function save() { try { localStorage.setItem(KEYS[MODE], JSON.stringify(S)); } catch (e) { console.warn('storage', e); } }
+function save() {
+  try { localStorage.setItem(KEYS[MODE], JSON.stringify(S)); }
+  catch (e) {   // место на устройстве кончилось: освобождаем журнал изменений и память для чтения, очередь неотправленного не трогаем
+    console.warn('storage', e);
+    try { S.log = (S.log || []).slice(-20); RC.clear(); localStorage.setItem(KEYS[MODE], JSON.stringify(S)); } catch (e2) { console.warn('storage-2', e2); }
+  }
+}
 export const state = () => S;
 export function resetDemo() { S = seed(); S.prefs = readPrefs(); syncSubjects(); save(); emit(); }
 export function switchMode(m) { setMode(m); load(); emit(); }
@@ -227,7 +234,7 @@ export const isOffline = () => !Net.isOnline();
 
 // ---- сессия ----
 export function login(role) { S.session = { ...USERS[role], level: role === 'admin' ? 'director' : USERS[role].level }; save(); emit(); }
-export function logout() { if (isLive()) { API.signOut(); S.session = null; S.students = []; S.grades = []; save(); } else { S.session = null; save(); } emit(); }
+export function logout() { RC.clear(); lastStamp = null; if (isLive()) { API.signOut(); S.session = null; S.students = []; S.grades = []; save(); } else { S.session = null; save(); } emit(); }
 export function setPrefs(p) { Object.assign(S.prefs, p); try { localStorage.setItem(PREF_KEY, JSON.stringify(S.prefs)); } catch {} emit(); }
 
 // ---- оценки, посещаемость, ученики ----
@@ -704,7 +711,15 @@ export const rpcRaw = (n, a) => API.rpc(n, a);
 // ---- загрузка данных (live) ----
 const ymd = d => (d || '').slice(0, 10);
 const opt = p => p.catch(() => []);
-let noStatusRpc = false;
+let noStatusRpc = false, lastStamp = null, noStamp = false;
+const stampKey = r => `${r.s}|${r.n}`;
+/** Дешёвая проверка «что-то изменилось на сервере?» (один маленький запрос вместо загрузки всех данных) */
+export async function changed() {
+  if (!isLive() || !API.userId()) return false;
+  if (noStamp) return true;
+  try { const r = await API.rpc('sync_stamp'); if (!r || !r.ok) return true; const k = stampKey(r); if (k === lastStamp) return false; lastStamp = k; return true; }
+  catch (e) { if (e.network) return false; noStamp = true; return true; }
+}
 export async function hydrate() {
   if (!isLive() || !API.userId()) return;
   const uidv = API.userId();
@@ -719,10 +734,13 @@ export async function hydrate() {
   }
   if (prof.role === 'superadmin') { S.session = base; S.school = null; save(); emit(); return; }   // суперадмин: без школы, только архив и сводка
   const adm = base.role === 'admin', today = todayISO();
+  // Окно оценок: ученик и родитель — весь текущий учебный год; персонал — последние ~100 дней (прошлое: «Отчёты» и «Табель»). Так экран не тяжелеет к концу года.
+  const yStart = `${Term.yearLabel(today).slice(0, 4)}-09-01`, gFrom = base.role === 'student' || base.role === 'parent' ? yStart : (addDays(today, -100) > yStart ? addDays(today, -100) : yStart);
+  API.rpc('sync_stamp').then(r => { if (r && r.ok) lastStamp = stampKey(r); }).catch(() => { noStamp = true; });
   const q = (t, query = '') => API.selectAll(t, query);
   const jobs = {
     school: API.select('schools', `id=eq.${prof.school_id}`), classes: q('classes', 'select=*&order=name'), students: q('students', 'select=*&order=full_name'),
-    grades: q('grades', 'select=id,student_id,subject_id,value,type,date,by,reason,note&order=date'), att: q('attendance', `select=student_id,date,status&date=gte.${addDays(today, -60)}`),
+    grades: q('grades', `select=id,student_id,subject_id,value,type,date,by,reason,note&date=gte.${gFrom}&order=date`), att: q('attendance', `select=student_id,date,status&date=gte.${addDays(today, -60)}`),
     hw: q('homework', 'select=*'), hwd: q('homework_done', 'select=*'), notifs: API.select('notifications', 'select=*&order=created_at.desc&limit=100'),
     ta: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : q('teacher_assignments', 'select=*'),
     staff: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : API.select('profiles', 'select=id,full_name,role,status,phone,created_at&role=in.(director,deputy,teacher)'),

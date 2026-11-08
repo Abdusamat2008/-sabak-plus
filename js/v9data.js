@@ -1,6 +1,7 @@
 // Данные v0.11: календарь четвертей, архив, табель, отчёты, удостоверение. live — функции Supabase (schema_v8.sql); demo — тот же формат ответов из localStorage.
 import * as S from './store.js';
 import * as API from './api.js';
+import * as RC from './rcache.js';
 import * as T from './termcal.js';
 
 const KEY = 'sabak.v9.demo', live = () => S.isLive();
@@ -149,7 +150,7 @@ const DEMO = { term_tick_all: () => ({ ok: true, archived: tick().archived.lengt
 
 export async function call(name, args = {}) {
   if (live()) {
-    try { return await API.rpc(name, args); } catch (e) { if (e.network) return { ok: false, error: 'network' }; if (/Could not find the function|PGRST202|404/.test(e.message + (e.body ? JSON.stringify(e.body) : ''))) return { ok: false, error: 'not_deployed' }; throw e; }
+    try { return await RC.cached(name, args, async () => { try { return await API.rpc(name, args); } catch (e) { if (e.network) return { ok: false, error: 'network' }; throw e; } }); } catch (e) { if (e.network) return { ok: false, error: 'network' }; if (/Could not find the function|PGRST202|404/.test(e.message + (e.body ? JSON.stringify(e.body) : ''))) return { ok: false, error: 'not_deployed' }; throw e; }
   }
   const f = DEMO[name]; if (!f) return err('not_found');
   return JSON.parse(JSON.stringify(await f(args)));
@@ -164,6 +165,12 @@ export const ERR = {
 export const need = r => { if (!r || !r.ok) throw new Error(ERR[r && r.error] || (r && r.error) || 'Ошибка'); return r; };
 
 /** Загрузка календаря в общий кэш (один раз за сессию) и ночной архив четвертей */
+// «Закрыть закончившиеся четверти» достаточно проверять раз в сутки на устройстве, а не при каждом открытии
+function tickDaily() {
+  const key = 'sabak.tick.' + (API.userId() || ''), today = T.today();
+  try { if (localStorage.getItem(key) === today) return; } catch {}
+  call('term_tick', {}).then(r => { if (r && r.ok) { try { localStorage.setItem(key, today); } catch {} } }).catch(() => {});
+}
 export async function boot() {
   if (T.cache.loading) return; T.cache.loading = true;
   try {
@@ -171,7 +178,7 @@ export async function boot() {
     const c = await call('calendar_get', {});
     if (c && c.ok) { T.cache.deployed = true; const lb = c.year, items = [...c.terms.map(t => ({ ...t, year: c.label }))];
       for (const y of [T.prevYear(lb), T.nextYear(lb)]) { if (c.years.includes(y)) { const r = await call('calendar_get', { p_year: y }); if (r.ok) items.push(...r.terms.map(t => ({ ...t, year: y }))); } }
-      T.setTerms(items); call('term_tick', {}).catch(() => {}); }
+      T.setTerms(items); tickDaily(); }
     else { T.cache.deployed = false; T.setTerms([]); }
   } catch { T.cache.loaded = true; } finally { T.cache.loading = false; }
 }

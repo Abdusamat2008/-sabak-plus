@@ -485,12 +485,19 @@ let flushTimer = null;
 function scheduleFlush() {
   clearTimeout(flushTimer);
   if (S.isOffline() || !S.pending()) return;
-  flushTimer = setTimeout(async () => { const n = await S.flushQueue(); if (n) { toast(`${t('synced')}: ${n}`, 'ok'); bgHydrate(); } }, 900);
+  flushTimer = setTimeout(async () => { const n = await S.flushQueue(); if (n) { toast(`${t('synced')}: ${n}`, 'ok'); bgHydrate(true); } }, 900);
 }
-function bgHydrate() { if (S.isLive() && S.state().session && !S.isOffline() && !S.pending() && !isTyping() && !ui.photo) S.hydrate().catch(() => {}); }
-Net.onChange(v => { toast(v ? t('online') : t('offline_msg'), v ? 'ok' : 'warn'); render(); if (v) { scheduleFlush(); bgHydrate(); } });
+// Фоновое обновление: только пока вкладка открыта и только если на сервере что-то изменилось (один лёгкий запрос sync_stamp)
+let bgBusy = false;
+async function bgHydrate(force) {
+  if (bgBusy || document.hidden || !S.isLive() || !S.state().session || S.isOffline() || S.pending() || isTyping() || ui.photo) return;
+  bgBusy = true;
+  try { if (force || await S.changed()) await S.hydrate(); } catch {} finally { bgBusy = false; }
+}
+Net.onChange(v => { toast(v ? t('online') : t('offline_msg'), v ? 'ok' : 'warn'); render(); if (v) { scheduleFlush(); bgHydrate(true); } });
 setInterval(() => { if (S.pending()) scheduleFlush(); }, 15000);
-setInterval(bgHydrate, 60000);
+setInterval(() => bgHydrate(), 45000 + Math.floor(Math.random() * 15000));   // разброс, чтобы тысячи устройств не стучались одновременно
+document.addEventListener('visibilitychange', () => { if (!document.hidden) bgHydrate(); });
 
 // ---------- events ----------
 document.addEventListener('click', async e => {

@@ -20,6 +20,8 @@ if (typeof window !== 'undefined') {
   window.addEventListener('offline', () => set(false));
   window.addEventListener('online', () => { check(); });
   document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
-  setInterval(check, 10000);
+  // Пульс редкий, пока всё хорошо (один запрос в минуту и только при открытой вкладке); при обрыве проверяем чаще, чтобы быстро вернуться в сеть
+  const loop = () => setTimeout(async () => { if (!document.hidden || !online) await check(); loop(); }, online ? 60000 + Math.floor(Math.random() * 15000) : 7000);
+  loop();
   check();
 }

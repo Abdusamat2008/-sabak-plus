@@ -1,6 +1,7 @@
 // Данные v0.8: алтыны, новости школы, «Үн». live — функции Supabase (schema_v6.sql); demo — тот же формат ответов из localStorage.
 import * as S from './store.js';
 import * as API from './api.js';
+import * as RC from './rcache.js';
 
 const KEY = 'sabak.v8.demo', live = () => S.isLive();
 const nowIso = () => new Date().toISOString();
@@ -333,7 +334,7 @@ const DEMO = {
 
 export async function call(name, args = {}) {
   if (live()) {
-    try { return await API.rpc(name, args); } catch (e) { if (e.network) return { ok: false, error: 'network' }; if (/Could not find the function|PGRST202|404/.test(e.message + (e.body ? JSON.stringify(e.body) : ''))) return { ok: false, error: 'not_deployed' }; throw e; }
+    try { return await RC.cached(name, args, async () => { try { return await API.rpc(name, args); } catch (e) { if (e.network) return { ok: false, error: 'network' }; throw e; } }); } catch (e) { if (e.network) return { ok: false, error: 'network' }; if (/Could not find the function|PGRST202|404/.test(e.message + (e.body ? JSON.stringify(e.body) : ''))) return { ok: false, error: 'not_deployed' }; throw e; }
   }
   const f = DEMO[name]; if (!f) return err('not_found');
   return JSON.parse(JSON.stringify(await f(args)));

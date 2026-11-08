@@ -67,7 +67,7 @@ export function cardSvg(c, photo) {
   <text x="${W - 26}" y="50" font-size="11" font-weight="700" fill="#fff" text-anchor="end" font-family="ui-monospace,Consolas,monospace">${esc(st.number)}</text>
   <rect x="26" y="88" width="176" height="232" rx="9" fill="#fff" stroke="#c9d1dc"/>
   <g clip-path="url(#ph-${uid})"><rect x="30" y="92" width="168" height="224" fill="#e6eaf0"/>${photo ? `<image href="${photo}" xlink:href="${photo}" x="30" y="92" width="168" height="224" preserveAspectRatio="xMidYMid slice"/>` : `<g transform="translate(39 104)">${SIL}</g>`}</g>
-  ${photo ? '' : '<text x="114" y="108" font-size="9" fill="#6a7385" text-anchor="middle" font-family="system-ui,Arial,sans-serif">фото добавит администрация</text>'}
+  ${photo ? '' : '<text x="114" y="108" font-size="9" fill="#6a7385" text-anchor="middle" font-family="system-ui,Arial,sans-serif">фото из личного дела</text>'}
   <text x="236" y="100" font-size="10.5" fill="#6a7385" font-family="system-ui,Arial,sans-serif">Фамилия, имя, отчество</text>
   <text x="236" y="123" font-size="21" font-weight="700" fill="#10131c" font-family="Georgia,'Times New Roman',serif">${esc(st.name)}</text>
   ${row(146, 'Место учёбы', nm[0], false).replace('</text></text>', '</text>')}${nm[1] ? `<text x="236" y="178" font-size="13.5" font-weight="600" fill="#161b26" font-family="system-ui,Arial,sans-serif">${esc(nm[1])}</text>` : ''}
@@ -93,6 +93,14 @@ export async function toPng(svg, scale = 2) {
 }
 
 const translit = t => { const m = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', ө: 'o', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ү: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya', ң: 'n' }; return String(t).toLowerCase().split('').map(ch => m[ch] ?? ch).join('').replace(/[^a-z0-9]/g, ''); };
+/** Фото берётся из личного дела ученика (то же формальное фото профиля), отдельно его загружать не нужно */
+const demoPortrait = name => { const ini = String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase(); return 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 224"><rect width="168" height="224" fill="#dfe6ef"/><circle cx="84" cy="92" r="38" fill="#b7c3d4"/><path d="M14 224c0-52 32-80 70-80s70 28 70 80z" fill="#b7c3d4"/><text x="84" y="104" font-size="30" text-anchor="middle" fill="#fff" font-family="Arial" font-weight="700">${ini}</text></svg>`); };
+export function dossierPhoto(c, stu) {
+  const own = S.photoSrc(stu); if (own) return own;
+  if (stu && stu.photo && stu.photo.ph) return demoPortrait(stu.name);
+  const path = c && c.student && c.student.photo_path;
+  return path ? S.photoSrc({ photo: { ok: true, path } }) : null;
+}
 function mine() {
   const u = S.state().session; if (!u) return [];
   if (u.role === 'student') return [u.id];
@@ -107,18 +115,18 @@ export function page() {
   const c = load('id:' + sid, async () => { const r = await V.call('id_card', { p_sid: sid }); if (!r || !r.ok) throw new Error(r && r.error === 'not_deployed' ? 'Сервер ещё без schema_v8: удостоверение недоступно' : 'Не удалось получить данные удостоверения'); return r; });
   if (c === 'loading') return `${head('Удостоверение', 'ученика', 'Электронный документ')}${sel}<div class="card"><p class="muted">Загружаем…</p></div>`;
   if (c.err) return `${head('Удостоверение', 'ученика', '')}${sel}<div class="card empty"><p>${esc(c.err)}</p></div>`;
-  const stu = S.state().students.find(z => z.id === sid), photo = S.photoSrc(stu);
+  const stu = S.state().students.find(z => z.id === sid), photo = dossierPhoto(c, stu);
   return `${head('Удостоверение', 'ученика', 'Электронный документ вашей школы')}${sel}
   <section class="idc-wrap"><div class="idc-card" id="idc-card">${cardSvg(c, photo)}</div>
   <div class="btns"><button class="btn blue" data-act="idc-dl" data-sid="${esc(sid)}">Скачать на устройство (PNG)</button></div>
-  <p class="muted idc-note">${photo ? 'Фото — официальное, из личного дела.' : 'Официальное фото ещё не добавлено. Его загружает администрация школы.'} Печать у каждой школы своя: название школы стоит по кольцу. Удостоверение показывает данные электронного дневника.</p></section>`;
+  <p class="muted idc-note">${photo ? 'Фото взято из личного дела ученика, загружать его отдельно не нужно.' : 'В личном деле пока нет фото. Оно появится на удостоверении само, когда школа добавит его в дело.'} Печать у каждой школы своя: название школы стоит по кольцу. Удостоверение показывает данные электронного дневника.</p></section>`;
 }
 export function onChange(el) { if (el.dataset && el.dataset.idc === 'sid') { X().sid = el.value; rerender(); return true; } return false; }
 export async function act(a, el) {
   if (a !== 'idc-dl') return false;
   try {
     const sid = el.dataset.sid, c = cache['id:' + sid]; if (!c || c === 'loading' || c.err) return true;
-    const stu = S.state().students.find(z => z.id === sid), photo = await toData(S.photoSrc(stu));
+    const stu = S.state().students.find(z => z.id === sid), photo = await toData(dossierPhoto(c, stu));
     const png = await toPng(cardSvg(c, photo), 2);
     downloadBlob(png, `udostoverenie-${translit((c.student.name || 'uchenik').split(' ')[0]) || 'uchenik'}.png`);
     toast('Удостоверение сохранено', 'ok');
