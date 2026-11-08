@@ -1,0 +1,93 @@
+/* v0.11: календарь четвертей, отчёты, табель, карточка оценки, редактор новостей, удостоверение ученика.
+   Цвета только парами токенов (--card/--ink, --blue/#fff), чтобы работали все режимы доступности. */
+
+/* строка «сегодня» над страницей */
+.dayline{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin:0 0 14px;padding:9px 14px;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:8px;text-decoration:none;font-size:.9rem}
+.dayline .dl-d{font-weight:700;text-transform:capitalize}.dayline .dl-t{font-weight:600;color:var(--blue)}.dayline .dl-y{margin-left:auto;color:var(--muted);font-size:.8rem}
+.dayline.brk .dl-t{color:var(--ink);font-style:italic}
+html[data-contrast=dark] .dayline .dl-t,html[data-contrast=yb] .dayline .dl-t{color:var(--ink)}
+
+/* календарь */
+.cal-today{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;margin-bottom:14px}
+.ct-date{display:grid}.ct-date span{font-size:.85rem;color:var(--muted);text-transform:capitalize}.ct-date b{font:700 1.7rem/1.1 var(--head)}
+.ct-state{display:grid;gap:3px;flex:1;min-width:220px}.ct-state b{font-size:1.1rem}
+.cal-year{display:inline-flex;gap:8px;align-items:center;font-weight:700;margin-bottom:12px}
+.cal-year select,.rp-ctl select,.ctl select{font:inherit;padding:8px 10px;border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink)}
+.rp-ctl label,.ctl label{display:grid;gap:4px;font-weight:700;font-size:.85rem}
+.tl{position:relative;display:flex;height:34px;margin:6px 0 26px;border:2px solid var(--ink);border-radius:8px;overflow:visible;background:var(--card)}
+.tl-seg{display:grid;place-items:center;min-width:6px;color:var(--ink);font-weight:700;border-right:1px solid var(--ink)}
+.tl-seg:last-of-type{border-right:0}
+.tl-seg.quarter{background:var(--blue);color:#fff}.tl-seg.quarter.upcoming{background:var(--card);color:var(--ink)}.tl-seg.quarter.closed{opacity:.72}
+.tl-seg.break{background:repeating-linear-gradient(45deg,var(--card) 0 5px,rgba(127,127,127,.28) 5px 8px)}
+.tl-now{position:absolute;top:-6px;bottom:-6px;width:0;border-left:3px solid var(--g2)}
+.tl-now span{position:absolute;top:100%;left:-24px;width:54px;text-align:center;font-size:.7rem;font-weight:700;background:var(--card);color:var(--ink);border-radius:4px}
+.tm-list{display:grid;gap:8px;margin-bottom:14px}
+.tm{display:flex;gap:12px;align-items:center;padding:10px 12px;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:8px}
+.tm.open{border-width:3px;box-shadow:4px 4px 0 var(--blue)}.tm.closed{opacity:.85}.tm.break,.tm.summer{border-style:dashed}
+.tm-n{flex:none;display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:var(--blue);color:#fff;font:700 1.1rem var(--head)}
+.tm.break .tm-n,.tm.summer .tm-n{background:var(--card);color:var(--ink);border:2px solid var(--ink)}
+.tm-b{display:grid;gap:1px;flex:1}.tm-b small{color:var(--muted)}
+.tm-s{flex:none;font-size:.75rem;font-weight:700;padding:3px 9px;border:1.5px solid var(--ink);border-radius:999px}
+.tm-s.open{background:var(--blue);color:#fff;border-color:var(--blue)}
+.cal-how .plain,.plain{margin:0;padding-left:20px;display:grid;gap:5px}
+.cal-decree{margin:0 0 14px;font-size:.88rem}
+.ce-list{display:grid;gap:8px;margin-bottom:14px}
+.ce-row{display:grid;grid-template-columns:150px 1fr auto 1fr;gap:8px;align-items:center}
+.ce-row input{font:inherit;padding:8px;border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink);min-width:0}
+.ce-row.break .ce-n{font-style:italic}.ce-n{font-weight:700}
+@media(max-width:560px){.ce-row{grid-template-columns:1fr 1fr}.ce-row .ce-n{grid-column:1/-1}.ce-row>span[aria-hidden]{display:none}}
+
+/* отчёты и табель */
+.rp-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.jk{display:grid;gap:2px;padding:10px 12px;background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:8px}.jk b{font:700 1.5rem/1 var(--head)}
+.dist{display:grid;grid-template-columns:34px 1fr 34px;gap:10px;align-items:center;margin:6px 0}
+.db{height:12px;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}.db i{display:block;height:100%;background:var(--blue)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px}
+.tblw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.9rem;color:var(--ink)}
+.tbl th,.tbl td{padding:7px 9px;border-bottom:1px solid rgba(127,127,127,.4);text-align:left;vertical-align:middle}
+.tbl th{font-size:.78rem;color:var(--muted);white-space:nowrap}
+.tbl .hc,.hist th:not(:first-child){text-align:center}
+.rp-sj{display:inline-flex;gap:5px;align-items:center;margin:2px 8px 2px 0;white-space:nowrap}
+.rp-tbl{margin-top:10px}.rp-note{margin-top:10px;font-size:.85rem}
+.hist select{font:inherit;padding:5px;border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink)}
+.g.live{outline:2px dashed var(--ink);outline-offset:2px}
+button.g{border:0;font:inherit;cursor:pointer;padding:0}
+button.g:hover{transform:translateY(-1px)}
+.gtopic{display:inline-flex;gap:6px;align-items:center;font-size:.85rem}.gtopic input{font:inherit;padding:6px 8px;border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink);min-width:160px}
+.gd-top{display:flex;gap:14px;align-items:center;margin-bottom:10px}.g.lg{width:56px;height:56px;font-size:1.8rem}
+.sum{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0 0 14px}.sum dt{color:var(--muted);font-size:.85rem}.sum dd{margin:0;font-weight:600}
+.gd-h{margin:14px 0 6px}.gd-log{margin:0;padding-left:20px;display:grid;gap:6px}.gd-log small{display:block;color:var(--muted)}
+.mb-form{border-top:1px solid rgba(127,127,127,.4);padding-top:10px;margin-bottom:6px}
+
+/* редактор новостей */
+.ed{border:2px solid var(--ink);border-radius:8px;background:var(--card);color:var(--ink)}
+.ed-tb{display:flex;flex-wrap:wrap;gap:3px;align-items:center;padding:6px;border-bottom:2px solid var(--ink);position:sticky;top:0;background:var(--card);z-index:3;border-radius:6px 6px 0 0}
+.ed-b{min-width:34px;height:34px;padding:0 7px;border:1.5px solid transparent;border-radius:6px;background:transparent;color:var(--ink);display:inline-grid;place-items:center}
+.ed-b:hover{border-color:var(--ink)}.ed-b:active{background:var(--blue);color:#fff}
+.ed-sep{width:1px;height:22px;background:var(--ink);opacity:.3;margin:0 3px}
+.ed-a{border-bottom:3px solid var(--g2);line-height:1}.ed-a.hl{background:#FFF3B0;color:#14110F;padding:0 3px;border-bottom:0}
+.ed-sel{height:34px;border:1.5px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;font-size:.85rem}
+.ed-pop{position:relative}.ed-sw{display:none;position:absolute;top:38px;left:0;z-index:5;padding:8px;gap:6px;grid-template-columns:repeat(4,28px);background:var(--card);border:2px solid var(--ink);border-radius:8px;box-shadow:4px 4px 0 var(--ink)}
+.ed-pop.open .ed-sw{display:grid}.ed-sw button{width:28px;height:28px;border:2px solid var(--ink);border-radius:50%;padding:0}
+.ed-area{min-height:200px;max-height:60vh;overflow:auto;padding:14px;outline:none;border-radius:0 0 6px 6px}
+.ed-area:empty::before{content:attr(data-ph);color:var(--muted)}
+.ed-area:focus-visible{box-shadow:inset 0 0 0 3px var(--blue)}
+.ed-foot{padding:4px 10px 8px;border-top:1px solid rgba(127,127,127,.4)}
+.news-body{line-height:1.6;overflow-wrap:anywhere}
+.news-body h2{font:700 1.4rem/1.25 var(--head);margin:.9em 0 .4em}.news-body h3{font:700 1.15rem/1.25 var(--head);margin:.8em 0 .3em}
+.news-body p,.news-body div{margin:0 0 .7em}.news-body ul,.news-body ol{margin:0 0 .8em;padding-left:26px}
+.news-body blockquote{margin:.8em 0;padding:6px 14px;border-left:4px solid var(--blue);background:rgba(127,127,127,.12)}
+.news-body hr{border:0;border-top:2px solid var(--ink);margin:1em 0}.news-body a{color:var(--blue);text-decoration:underline}
+html[data-contrast=dark] .news-body a,html[data-contrast=yb] .news-body a{color:inherit}
+.news-read{max-width:720px}.nr-t{font:700 1.6rem/1.2 var(--head);margin:8px 0 4px}.nr-m{margin:0 0 14px}
+.rolechip{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border:1.5px solid var(--ink);border-radius:999px;background:var(--card);color:var(--ink)}
+.rolechip.r-platform{background:var(--blue);color:#fff;border-color:var(--blue)}
+.rolechip.r-director,.rolechip.r-deputy{border-width:2.5px}
+
+/* удостоверение */
+.idc-wrap{display:grid;gap:14px;justify-items:center}
+.idc-card{width:min(100%,660px);filter:drop-shadow(0 8px 14px rgba(0,0,0,.25))}
+.idc-card svg{display:block;width:100%;height:auto}
+.idc-note{max-width:640px;text-align:center}
+.idc-wrap .btns{justify-content:center}
