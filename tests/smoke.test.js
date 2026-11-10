@@ -12,7 +12,11 @@ await pg.screenshot({path:'tests/out/04_demo.png'});
 for (const role of ['student','parent','teacher','admin']) {
   await pg.click(`[data-act=login][data-role=${role}]`); await pg.waitForSelector('.top');
   await pg.waitForTimeout(300); await pg.screenshot({path:`tests/out/10_${role}.png`});
-  const links=await pg.$$eval('.nav a',as=>as.map(a=>a.getAttribute('href')));
+  let links=await pg.$$eval('.nav > a',as=>as.map(a=>a.getAttribute('href')));
+  const gids=await pg.$$eval('.nbtn',b=>b.map(x=>x.dataset.g));
+  for(const g of gids){ await pg.click(`.nbtn[data-g=${g}]`); links=links.concat(await pg.$$eval('.npop a',as=>as.map(a=>a.getAttribute('href')))); await pg.keyboard.press('Escape'); }
+  if(gids.length<2||links.length<7) errs.push('NAV GROUPS MISSING '+role);
+  if(await pg.$$eval('.nav > a, .nav > .ngrp',x=>x.length)>6) errs.push('TOO MANY NAV ITEMS '+role);
   for(const h of links){ await pg.evaluate(h=>{location.hash=h},h); await pg.waitForTimeout(150); const txt=await pg.$eval('#main',e=>e.innerText.length); if(txt<30) errs.push('EMPTY '+role+' '+h); await pg.screenshot({path:`tests/out/20_${role}_${h.replace(/[#\/]/g,'_')}.png`}); }
   await pg.click('[data-act=menu]'); await pg.screenshot({path:`tests/out/30_menu_${role}.png`}); await pg.click('[data-act=logout]'); await pg.waitForSelector('.auth'); await pg.click('[data-act=auth-demo]'); await pg.waitForSelector('.role-card');
 }

@@ -24,14 +24,14 @@ await p.evaluate(()=>document.querySelector('form[data-form=cal-save]').requestS
 t=await T();ok(/Приказ МОиН КР № 1/.test(t),'даты сохранены, основание видно');
 // отчёты
 await as('admin');await go('#/admin/reports');t=await T();
-ok(/Отчёты/.test(t)&&await p.locator('.rp-kpi .jk').count()>=3,'отчёты: KPI');
+ok(/отчёты/i.test(t)&&await p.locator('.rp-kpi .jk').count()>=3,'отчёты: KPI');
 await p.selectOption('select[data-act=rp-q]','0');await p.waitForTimeout(500);
 ok(await p.locator('.tbl').count()>=1,'отчёт: таблица');
 const [dl]=await Promise.all([p.waitForEvent('download',{timeout:5000}).catch(()=>null),p.click('[data-act=rp-xlsx]')]);
 ok(!!dl,'экспорт Excel скачался');
 // табель + прошлые годы
 await as('student');await go('#/student/history');t=await T();
-ok(/Табель/.test(t)&&await p.locator('.mb-tabs button').count()>=2,'табель с вкладками годов');
+ok(/табель/i.test(t)&&await p.locator('.mb-tabs button').count()>=2,'табель с вкладками годов');
 console.log('   табы:',(await p.locator('.mb-tabs').innerText()).replace(/\n/g,' | '));
 await p.locator('.mb-tabs button').nth(1).click();await p.waitForTimeout(400);
 ok(await p.locator('.hist tbody tr').count()>0||/не оцифровала/.test(await T()),'прошлый год: итоги или пояснение');

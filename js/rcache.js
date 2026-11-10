@@ -23,3 +23,14 @@ export async function cached(name, args, doCall) {
   if (r && r.error === 'network') { const hit = load()[key]; if (hit) return { ...hit.v, stale: true, staleAt: hit.t }; }
   return r;
 }
+
+// Записывающие запросы, которые безопасно отложить без сети (текст и реакции). Деньги («Алтын»), календарь и удаление не откладываются.
+const WRITE = { news_post: 'Новость', news_edit: 'Правка новости', super_news_post: 'Новость платформы', th_post: 'Пост в «Үн»', th_comment: 'Комментарий', th_react: 'Реакция', th_vote: 'Голос в опросе', th_edit: 'Правка поста', th_report: 'Жалоба', grade_note_set: 'Тема и комментарий к оценке' };
+/** Нет связи — кладём запрос в очередь устройства (она отправится сама), ученик/учитель видят «сохранено» */
+export async function queued(name, args, doCall, enqueue) {
+  if (!WRITE[name]) return doCall();
+  const park = () => { enqueue(name, args, WRITE[name]); try { window.dispatchEvent(new CustomEvent('sabak:queued', { detail: { name } })); } catch {} return { ok: true, queued: true }; };
+  if (!Net.isOnline()) return park();
+  const r = await doCall();
+  return r && r.error === 'network' ? park() : r;
+}

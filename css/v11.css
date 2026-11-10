@@ -91,3 +91,45 @@ html[data-contrast=dark] .news-body a,html[data-contrast=yb] .news-body a{color:
 .idc-card svg{display:block;width:100%;height:auto}
 .idc-note{max-width:640px;text-align:center}
 .idc-wrap .btns{justify-content:center}
+
+/* ключи учеников, подсказки к фото, подтверждение «ключ выдан для» */
+.keyline{display:block;margin-top:2px}.keyline .link{background:none;border:0;color:var(--blue);text-decoration:underline;padding:0;font:inherit;cursor:pointer}
+html[data-contrast=dark] .keyline .link,html[data-contrast=yb] .keyline .link{color:inherit}
+.hintx.tip{opacity:.9;font-style:italic}
+.peek.known{margin:10px 0}.peek.known small{display:block;margin-top:4px;font-weight:400}
+
+/* v0.14: согласие, предупреждение о календаре, печать удостоверения */
+.consent-bg{z-index:9999;overflow:auto}
+.consent{max-width:560px;max-height:90vh;overflow:auto}
+.consent-chk{display:flex;gap:10px;align-items:flex-start;margin:14px 0;font-weight:600}
+.consent-chk input{margin-top:3px;width:20px;height:20px;flex:none}
+.dayline.nocal{background:#fff4d6;border-color:#e0b040;color:#6b4b00}
+@media print{
+  body.print-idc *{visibility:hidden}
+  body.print-idc #idc-card,body.print-idc #idc-card *{visibility:visible}
+  body.print-idc #idc-card{position:fixed;left:0;top:0;width:85.6mm;height:auto;box-shadow:none}
+  body.print-idc #idc-card svg{width:85.6mm;height:auto}
+  @page{margin:10mm}
+}
+
+/* v0.14: навигация «полочками» */
+.ngrp{position:relative;display:flex;flex:1;min-width:0}
+.nbtn{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--muted);background:none;border:0;font:inherit;font-size:.68rem;font-weight:700;padding:6px 6px;border-radius:12px;flex:1;min-width:0;cursor:pointer}
+.nbtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.nbtn .ic{width:22px;height:22px;flex:none}.ncar{display:none;font-style:normal;font-size:.7em}
+.nbtn.act,.ngrp.open .nbtn{background:var(--blue);color:#fff}
+.npop{position:fixed;left:10px;right:10px;bottom:calc(88px + env(safe-area-inset-bottom));background:var(--card);border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);padding:6px;z-index:30;display:grid;gap:2px}
+.nav .npop a.npi{flex-direction:row;gap:12px;font-size:.98rem;font-weight:700;padding:13px 14px;color:var(--ink);border-radius:10px;justify-content:flex-start}
+.nav .npop a.npi span{font-size:inherit;overflow:visible}
+.nav .npop a.npi.act{background:var(--blue);color:#fff}
+@media(min-width:860px){
+  .ngrp{flex:none}
+  .nbtn{flex-direction:row;gap:7px;font-size:.88rem;padding:7px 13px;border-radius:99px;border:2px solid transparent;color:var(--muted)}
+  .nbtn .ic{width:18px;height:18px}.ncar{display:inline}
+  .nbtn:hover:not(.act){border-color:var(--ink);background:#fff}
+  .nbtn.act{border-color:var(--ink);box-shadow:2px 2px 0 var(--ink)}
+  .ngrp.open .nbtn:not(.act){border-color:var(--ink);background:#fff;color:var(--ink)}
+  .nbtn.act:hover,.ngrp.open .nbtn.act{background:var(--blue);color:#fff}
+  .npop{position:absolute;left:0;right:auto;bottom:auto;top:calc(100% + 8px);min-width:220px}
+  .nav .npop a.npi{padding:10px 14px;font-size:.92rem}
+}

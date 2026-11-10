@@ -24,6 +24,7 @@ import * as Term from './termcal.js';
 import * as Cal from './cal.js';
 import * as Reports from './reports.js';
 import * as IdCard from './idcard.js';
+import * as Backup from './backup.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -43,13 +44,33 @@ const IC = {
   shield: '<path d="M12 3l8 3v6c0 5-3.500 8-8 9-4.500-1-8-4-8-9V6z"/>', file: '<path d="M6 3h8l5 5v13H6zM14 3v5h5"/>', bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4zM10 21h4"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
 };
 const ico = n => `<svg class="ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+// Навигация: прямые ссылки и «полочки» (группы). Группа = [ключ, название, значок, [[href, подпись, значок], ...]]
+const L1 = (href, key, ic) => ({ href, key, ic });
+const G = (id, key, ic, items) => ({ id, key, ic, items: items.map(([h, k, i]) => L1(h, k, i)) });
 const NAV = {
-  student: [['student', 'nav_home', 'home'], ['student/subjects', 'nav_subjects', 'book'], ['student/schedule', 'nav_schedule', 'cal'], ['student/hw', 'nav_hw', 'check'], ['student/coins', 'Алтын', 'coin'], ['student/un', 'Үн', 'voice'], ['student/news', 'Новости', 'news'], ['student/history', 'Табель', 'list'], ['student/id', 'Удостоверение', 'user'], ['student/ach', 'nav_ach', 'star'], ['student/mail', 'nav_mail', 'mail']],
-  teacher: [['teacher', 'nav_journal', 'book'], ['teacher/class', 'nav_class', 'chart'], ['teacher/schedule', 'nav_schedule', 'cal'], ['teacher/students', 'Ученики', 'users'], ['teacher/reports', 'Отчёты', 'file'], ['teacher/past', 'Прошлые годы', 'list'], ['teacher/requests', 'Заявки', 'coin'], ['teacher/news', 'Новости', 'news'], ['teacher/log', 'nav_log', 'list']],
-  parent: [['parent', 'nav_week', 'home'], ['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/coins', 'Алтын', 'coin'], ['parent/news', 'Новости', 'news'], ['parent/history', 'Табель', 'list'], ['parent/id', 'Удостоверение', 'user'], ['parent/dossier', 'Дело', 'file']],
-  admin: [['admin', 'Обзор', 'chart'], ['admin/schedule', 'Расписание', 'cal'], ['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/reports', 'Отчёты', 'file'], ['admin/past', 'Прошлые годы', 'list'], ['admin/calendar', 'Четверти', 'cal'], ['admin/news', 'Новости', 'news'], ['admin/un', 'Үн', 'voice'], ['admin/requests', 'Алтыны', 'coin'], ['admin/access', 'Доступ', 'shield'], ['admin/mail', 'Обращения', 'mail']],
+  student: [L1('student', 'nav_home', 'home'),
+    G('study', 'Учёба', 'book', [['student/subjects', 'nav_subjects', 'book'], ['student/schedule', 'nav_schedule', 'cal'], ['student/hw', 'nav_hw', 'check'], ['student/history', 'Табель', 'list']]),
+    G('talk', 'Общение', 'news', [['student/news', 'Новости', 'news'], ['student/un', 'Үн', 'voice'], ['student/mail', 'nav_mail', 'mail']]),
+    G('rew', 'Награды', 'star', [['student/coins', 'Алтын', 'coin'], ['student/ach', 'nav_ach', 'star']]),
+    L1('student/id', 'Удостоверение', 'user')],
+  teacher: [L1('teacher', 'nav_journal', 'book'),
+    G('cls', 'Класс', 'users', [['teacher/class', 'nav_class', 'chart'], ['teacher/students', 'Ученики', 'users'], ['teacher/reports', 'Отчёты', 'file'], ['teacher/past', 'Прошлые годы', 'list']]),
+    L1('teacher/schedule', 'nav_schedule', 'cal'),
+    G('more', 'Ещё', 'list', [['teacher/requests', 'Заявки', 'coin'], ['teacher/news', 'Новости', 'news'], ['teacher/log', 'nav_log', 'list']])],
+  parent: [L1('parent', 'nav_week', 'home'),
+    G('study', 'Учёба', 'book', [['parent/subjects', 'nav_subjects', 'book'], ['parent/schedule', 'nav_schedule', 'cal'], ['parent/history', 'Табель', 'list']]),
+    L1('parent/coins', 'Алтын', 'coin'),
+    L1('parent/news', 'Новости', 'news'),
+    G('kid', 'Ребёнок', 'user', [['parent/id', 'Удостоверение', 'user'], ['parent/dossier', 'Дело', 'file']])],
+  admin: [L1('admin', 'Обзор', 'chart'),
+    G('ppl', 'Люди', 'users', [['admin/teachers', 'Педагоги', 'users'], ['admin/students', 'Ученики', 'user'], ['admin/access', 'Доступ', 'shield']]),
+    G('study', 'Учёба', 'book', [['admin/schedule', 'Расписание', 'cal'], ['admin/calendar', 'Четверти', 'cal'], ['admin/reports', 'Отчёты', 'file'], ['admin/past', 'Прошлые годы', 'list']]),
+    G('talk', 'Общение', 'news', [['admin/news', 'Новости', 'news'], ['admin/un', 'Үн', 'voice'], ['admin/mail', 'Обращения', 'mail'], ['admin/requests', 'Алтыны', 'coin']])],
 };
-NAV.super = [['super', 'Обзор', 'chart'], ['super/schools', 'Школы', 'home'], ['super/directors', 'Директора', 'users'], ['super/inbox', 'Входящие', 'bell'], ['super/calendar', 'Четверти', 'cal'], ['super/news', 'Новости', 'news'], ['super/system', 'Система', 'shield']];
+NAV.super = [L1('super', 'Обзор', 'chart'),
+  G('sch', 'Школы', 'home', [['super/schools', 'Школы', 'home'], ['super/directors', 'Директора', 'users']]),
+  L1('super/inbox', 'Входящие', 'bell'),
+  G('sys', 'Управление', 'shield', [['super/calendar', 'Четверти', 'cal'], ['super/news', 'Новости', 'news'], ['super/system', 'Система', 'shield']])];
 const navLabel = k => (k.startsWith('nav_') ? t(k) : k);
 const isActive = (href, r, role) => r === href || (href !== role && r.startsWith(href + '/')) || (href === 'admin' && r.startsWith('admin/audit')) || (href === 'parent/dossier' && r.startsWith('dossier'));
 
@@ -63,8 +84,13 @@ function netPill() {
 function shell(content) {
   const st = S.state(), u = st.session, r = route();
   const unread = S.myNotifs().filter(n => !n.read).length;
-  const many = NAV[u.role].length > 6;
-  const items = NAV[u.role].map(([href, key, ic]) => `<a href="#/${href}" class="${isActive(href, r, u.role) ? 'act' : ''}">${ico(ic)}<span>${navLabel(key)}</span></a>`).join('');
+  const link = (n, cls = '') => `<a href="#/${n.href}" class="${cls} ${isActive(n.href, r, u.role) ? 'act' : ''}">${ico(n.ic)}<span>${navLabel(n.key)}</span></a>`;
+  const items = NAV[u.role].map(n => {
+    if (!n.items) return link(n);
+    const on = n.items.some(i => isActive(i.href, r, u.role)), open = ui.ng === n.id;
+    return `<div class="ngrp${open ? ' open' : ''}"><button type="button" class="nbtn ${on ? 'act' : ''}" data-act="ngrp" data-g="${n.id}" aria-haspopup="true" aria-expanded="${open}">${ico(n.ic)}<span>${navLabel(n.key)}</span><i class="ncar" aria-hidden="true">▾</i></button>${open ? `<div class="npop" role="menu">${n.items.map(i => link(i, 'npi')).join('')}</div>` : ''}</div>`;
+  }).join('');
+  const many = false;
   const me = S.state().students.find(s => s.id === u.id);
   return `
   <header class="top">
@@ -437,7 +463,7 @@ function view() {
       if (sub[1] === 'access') return Admin.accessPage();
       if (sub[1] === 'mail') return Admin.mailPage();
       if (sub[1] === 'audit') return Admin.auditPage();
-      if (sub[1] === 'archive') return Archive.adminPage(sub.slice(2));
+      if (sub[1] === 'archive') return Archive.adminPage(sub.slice(2)) + (sub.length === 2 ? Backup.section() : '');
       if (sub[1] === 'support') return Super.supportPage();
       if (sub[1] === 'news') return News.page();
       if (sub[1] === 'un') return Un.page(sub.slice(2));
@@ -455,6 +481,8 @@ function render() {
   setLang(st.prefs.lang);
   A11y.apply(st.prefs);
   if (st.session && !st.session.suspended && !Term.cache.loaded && !Term.cache.loading) V9.boot().then(() => render());
+  if (S.isLive() && st.session && !st.session.suspended && !Privacy.known()) { Privacy.check().then(() => render()); }
+  if (!st.session) Privacy.reset();
   if (!st.session && Term.cache.loaded) { V9.reset(); [Cal, Reports, IdCard].forEach(m => m.refresh()); }
   const v = view();
   if (v === '') return;
@@ -470,7 +498,7 @@ function render() {
   const y = window.scrollY, focusId = document.activeElement && document.activeElement.id;
   const sheetScroll = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
   const authLike = !st.session || st.session.suspended || st.session.needsProfile || (st.session.status && st.session.status !== 'active');
-  $app.innerHTML = (authLike ? v + A11y.fab() : shell(Cal.strip() + v)) + (authLike ? '' : Reports.modal()) + A11y.panel();
+  $app.innerHTML = (authLike ? v + A11y.fab() : shell(Cal.strip() + v)) + (authLike ? '' : Reports.modal()) + (S.isLive() && st.session && Privacy.needed() ? Privacy.gate() : '') + A11y.panel();
   if (lastRoute !== route()) { lastRoute = route(); A11y.enter(st.prefs); }
   document.body.classList.toggle('is-auth', authLike);
   document.body.classList.toggle('un-on', !authLike && /(^|\/)un(\/|$)/.test(route()));
@@ -479,6 +507,7 @@ function render() {
   if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
 }
 window.__render = render;
+window.addEventListener('sabak:queued', () => toast('Нет связи: сохранено на устройстве, отправится само', 'ok'));
 
 // ---------- sync (автоматически, без кнопок) ----------
 let flushTimer = null;
@@ -502,9 +531,11 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) bgHy
 // ---------- events ----------
 document.addEventListener('click', async e => {
   if (ui.menu && !e.target.closest('.usr')) { ui.menu = false; render(); }
+  if (ui.ng && !e.target.closest('.ngrp')) { ui.ng = null; render(); }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, st = S.state();
   if (['cls', 'subj', 'role', 'wi-target', 'wi-test', 'acls', 'homeroom'].includes(act) || el.tagName === 'SELECT') return; // обрабатываются на change
+  if (act === 'ngrp') { ui.ng = ui.ng === el.dataset.g ? null : el.dataset.g; ui.menu = false; render(); return; }
   if (act === 'menu') { ui.menu = !ui.menu; render(); return; }
   if (act === 'tour') { ui.menu = false; Tour.start(); return; }
   if (act === 'login') { S.login(el.dataset.role); ui.demoPick = false; go(el.dataset.role); return; }
@@ -551,7 +582,7 @@ document.addEventListener('click', async e => {
     } catch { ui.cloud[key] = t('ai_cloud_off'); }
     out.textContent = ui.cloud[key]; return;
   }
-  for (const m of [Auth, People, Admin, Sched, Archive, Super, Coins, News, Un, Cal, Reports, IdCard]) if (await m.act(act, el)) return;
+  for (const m of [Auth, People, Admin, Sched, Archive, Super, Coins, News, Un, Cal, Reports, IdCard, Backup, Privacy]) if (await m.act(act, el)) return;
 });
 document.addEventListener('change', e => {
   if (e.target.dataset && e.target.dataset.act === 'gdate') { ui.gdate = e.target.value; render(); return; }
@@ -589,8 +620,8 @@ document.addEventListener('submit', async e => {
   Admin.submit(f, fd);
 });
 document.addEventListener('input', e => { if (e.target.dataset && 'gtopic' in e.target.dataset) { ui.gtopic = e.target.value; return; } if (News.onInput(e.target)) return; if (Cal.onInput(e.target)) return; Un.onInput(e.target); });
-window.addEventListener('hashchange', () => { ui.sheet = ui.pendingSheet || null; ui.pendingSheet = null; ui.mailOk = false; ui.menu = false; ui.codeBox = null; render(); window.scrollTo(0, 0); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (ui.photo) { ui.photo = null; render(); } else if (ui.sheet) { ui.sheet = null; render(); } else if (ui.menu) { ui.menu = false; render(); } } });
+window.addEventListener('hashchange', () => { ui.sheet = ui.pendingSheet || null; ui.pendingSheet = null; ui.mailOk = false; ui.menu = false; ui.ng = null; ui.codeBox = null; render(); window.scrollTo(0, 0); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (ui.photo) { ui.photo = null; render(); } else if (ui.sheet) { ui.sheet = null; render(); } else if (ui.ng) { ui.ng = null; render(); } else if (ui.menu) { ui.menu = false; render(); } } });
 
 // ---------- start ----------
 S.load();

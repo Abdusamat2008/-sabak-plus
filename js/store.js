@@ -206,8 +206,20 @@ function logAndQueue(action, text, op) {
   S.log = S.log.slice(0, 200);
   S.queue.push({ id: uid('q'), ts, action, text, synced: false, op: isLive() ? op : undefined });
 }
+/** Отложить RPC до появления связи (live): попадает в ту же очередь, что оценки и посещаемость */
+export function enqueueRpc(name, args, text) { logAndQueue('rpc', text || name, { rpc: name, args }); save(); emit(); }
 export const pending = () => S.queue.filter(q => !q.synced).length;
 export const failed = () => S.failed || [];
+async function conflict(q) {
+  try {
+    let id = null;
+    if (q.op.t === 'grades' && q.op.m === 'DELETE') id = (/id=eq\.(.+)/.exec(q.op.q || '') || [])[1];
+    else if (q.op.rpc === 'grade_note_set') id = q.op.args && q.op.args.p_id;
+    if (!id) return false;
+    const r = await API.select('grades', `select=updated_at,updated_by&id=eq.${id}`), row = r && r[0];
+    return !!(row && row.updated_at && Date.parse(row.updated_at) > q.ts && row.updated_by && row.updated_by !== API.userId());
+  } catch { return false; }
+}
 let flushing = false;
 export async function flushQueue() {
   const n = pending(); if (!n) return 0;
@@ -217,6 +229,9 @@ export async function flushQueue() {
   try {
     for (const q of S.queue.filter(x => !x.synced)) {
       if (!q.op) { q.synced = true; continue; }
+      if (await conflict(q)) {   // правило: побеждает тот, кто изменил позже по реальному времени; отложенное изменение не затирает чужое новое
+        q.synced = true; (S.failed = S.failed || []).unshift({ ts: nowTs(), text: q.text, error: 'Эту оценку позже изменил другой пользователь, поэтому ваше изменение без сети не применено. Проверьте оценку.' }); S.failed = S.failed.slice(0, 20); continue;
+      }
       try {
         if (q.op.rpc) await API.rpc(q.op.rpc, q.op.args);
         else await API.rest(q.op.m, q.op.t, { query: q.op.q || '', body: q.op.b, prefer: q.op.prefer });
@@ -745,7 +760,7 @@ export async function hydrate() {
     ta: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : q('teacher_assignments', 'select=*'),
     staff: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : API.select('profiles', 'select=id,full_name,role,status,phone,created_at&role=in.(director,deputy,teacher)'),
     ps: base.role === 'parent' ? API.select('parent_students', `parent_id=eq.${uidv}`) : Promise.resolve([]),
-    inv: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : API.select('invites', 'select=*&order=created_at.desc&limit=200'),
+    inv: base.role === 'student' || base.role === 'parent' ? Promise.resolve([]) : q('invites', `select=*&revoked=eq.false&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&order=created_at.desc`),   // только действующие ключи, зато все (у ученика ключ живёт, пока им не воспользуются)
     audit: adm ? API.select('audit_log', 'select=*&order=at.desc&limit=100') : Promise.resolve([]),
     mail: adm ? API.select('anonymous_messages', 'select=*&order=created_at.desc&limit=100') : Promise.resolve([]),
     // таблицы из schema_v3.sql: если она ещё не применена, приложение продолжает работать без них
@@ -767,6 +782,8 @@ export async function hydrate() {
   S.staff = R.staff.map(p => { const asg = R.ta.filter(a => a.teacher_id === p.id); const home = S.classes.find(c => c.homeroom === p.id);
     return { id: p.id, name: p.full_name, role: p.role, status: p.status, phone: p.phone, created: Date.parse(p.created_at), classes: [...new Set([...asg.map(a => cname[a.class_id]), ...(home ? [home.name] : [])])], subjects: [...new Set(asg.map(a => a.subject_id))], homeroom: home ? home.name : null }; });
   S.invites = R.inv.map(i => ({ id: i.id, code: i.code, role: i.role, cls: cname[i.class_id] || null, sid: i.student_id, tail: i.bind_tail, expires: Date.parse(i.expires_at), uses: i.uses, max: i.max_uses, revoked: i.revoked, by: (R.staff.find(p => p.id === i.created_by) || {}).full_name || '' }));
+  // ключ ученика хранится в базе вместе со ссылкой на ученика: учитель видит его и после перезагрузки, пока ученик не зарегистрировался
+  S.students.forEach(st => { const iv = S.invites.find(i => i.role === 'student' && i.sid === st.id && !i.revoked && i.uses < i.max && i.expires > Date.now()); st.code = iv ? iv.code : null; });
   const ACT = { 'school.created': 'Школа основана', 'invite.created': 'Создано приглашение', 'invite.redeemed': 'Приглашение принято', 'profile.active': 'Доступ подтверждён', 'profile.blocked': 'Доступ закрыт', 'photo.warning': 'Предупреждение о фото', 'photo.set': 'Фото загружено', 'demo.seeded': 'Загружены демо-данные', 'demo.cleared': 'Демо-данные удалены' };
   const nm = id => (R.staff.find(p => p.id === id) || {}).full_name || 'участник';
   S.audit = R.audit.map(a => ({ id: a.id, ts: Date.parse(a.at), who: nm(a.actor), action: a.action, text: ACT[a.action] || a.action }));

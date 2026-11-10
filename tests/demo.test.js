@@ -32,7 +32,7 @@ await pg.click('[data-act=photo-save]'); await pg.waitForSelector('.modal',{stat
 chk(await pg.evaluate(()=>window.__sabak.S.student('s1').photo&&window.__sabak.S.student('s1').photo.ok),'photo saved in state');
 chk(!(await pg.$('.banner.warn [data-act=photo-open]')),'banner gone after photo');
 // --- parent dossier edit
-await pg.click('.nav a[href="#/parent/dossier"]'); await pg.waitForSelector('.dos-head');
+await pg.click('.nbtn[data-g=kid]'); await pg.click('.npop a[href="#/parent/dossier"]'); await pg.waitForSelector('.dos-head');
 chk((await pg.$eval('.acc',e=>e.innerText)).includes('Можно редактировать'),'parent can edit dossier');
 await pg.fill('#dos-char','Тестовая характеристика'); await pg.click('[data-act=dos-save-char]');
 await pg.selectOption('[data-doc=med_063][data-f=status]','have');

@@ -1,15 +1,15 @@
 // Проверка формального фото профиля в браузере (face-api, модели лежат в /vendor — ничего не уходит на сторонние серверы).
-// Критерии: одно лицо анфас · лицо крупно и по центру · без сильного наклона/поворота · разрешение · свет · резкость ·
-// светлый ровный фон · глаза не закрыты тёмными очками/тенью. Если хоть один критерий не выполнен — фото не принимается.
+// Критерии: одно лицо анфас · лицо не слишком мелко · без сильного наклона/поворота · разрешение · свет · резкость · глаза не закрыты.
+// Фон — только совет (на приём фото не влияет). Пороги мягкие: фото принимается, если оно годится для документа, а не только если оно идеально.
 
 export const CRITERIA = [
   'Официальное фото как на документы: одно лицо, смотрите прямо в камеру',
-  'Лицо занимает около половины кадра и находится по центру',
+  'Лицо хорошо видно, примерно по центру кадра',
   'Голова не наклонена и не повёрнута в сторону',
-  'Светлый однотонный фон (стена, дверь), без людей и предметов позади',
+  'Фон лучше спокойный, но это пожелание: любое фото с хорошо видным лицом пройдёт',
   'Хорошее равномерное освещение, фото чёткое, не размытое',
   'Без тёмных очков, масок и закрытого лица. Не селфи с фильтрами',
-  'Не меньше 400×400 пикселей, файл JPG/PNG/WebP до 8 МБ',
+  'Не меньше 300×300 пикселей, файл JPG/PNG/WebP до 8 МБ',
 ];
 
 let loading = null;
@@ -66,7 +66,7 @@ export function evaluate(canvas, dets) {
   const W = canvas.width, H = canvas.height, ctx = canvas.getContext('2d', { willReadFrequently: true });
   const checks = [], add = (id, label, ok, detail, hint) => checks.push({ id, label, ok, detail, hint });
   const faces = dets.length;
-  add('res', 'Разрешение', Math.min(W, H) >= 400, `${W}×${H}`, 'Нужно не меньше 400×400 пикселей — снимите ближе или в большем качестве.');
+  add('res', 'Разрешение', Math.min(W, H) >= 300, `${W}×${H}`, 'Нужно не меньше 300×300 пикселей — снимите ближе или в большем качестве.');
   add('one', 'Одно лицо в кадре', faces === 1, faces === 0 ? 'лицо не найдено' : faces === 1 ? 'найдено 1' : `найдено ${faces}`,
     faces === 0 ? 'Лицо не обнаружено (или фото слишком размыто/тёмное): смотрите прямо в камеру, откройте лицо, снимайте при хорошем свете.' : 'В кадре должно быть только одно лицо — без других людей.');
   const meta = { verified: false, faces, w: W, h: H, v: 1 };
@@ -74,22 +74,22 @@ export function evaluate(canvas, dets) {
 
   const det = dets[0], b = det.detection.box, pts = det.landmarks.positions;
   const fw = b.width / W, fh = b.height / H, cxr = (b.x + b.width / 2) / W, cyr = (b.y + b.height / 2) / H;
-  add('size', 'Размер лица в кадре', fh >= 0.28 && fh <= 0.75, `${Math.round(fh * 100)}% высоты кадра`, fh < 0.28 ? 'Лицо слишком мелкое — подойдите ближе (лицо ≈ половина кадра).' : 'Лицо слишком крупное — отойдите чуть дальше, голова и плечи должны помещаться.');
-  add('center', 'Лицо по центру', Math.abs(cxr - 0.5) <= 0.16 && cyr >= 0.22 && cyr <= 0.62, `смещение ${Math.round((cxr - 0.5) * 100)}%`, 'Поместите лицо в центр кадра, чуть выше середины.');
+  add('size', 'Размер лица в кадре', fh >= 0.2 && fh <= 0.85, `${Math.round(fh * 100)}% высоты кадра`, fh < 0.2 ? 'Лицо слишком мелкое — подойдите ближе (лицо ≈ половина кадра).' : 'Лицо слишком крупное — отойдите чуть дальше, голова и плечи должны помещаться.');
+  add('center', 'Лицо по центру', Math.abs(cxr - 0.5) <= 0.25 && cyr >= 0.15 && cyr <= 0.72, `смещение ${Math.round((cxr - 0.5) * 100)}%`, 'Поместите лицо в центр кадра, чуть выше середины.');
 
   const leftEye = avg(pts.slice(36, 42)), rightEye = avg(pts.slice(42, 48));
   const tilt = Math.abs(Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x) * 180 / Math.PI);
-  add('tilt', 'Голова не наклонена', tilt <= 12, `${tilt.toFixed(1)}°`, 'Держите голову ровно, не наклоняйте к плечу.');
+  add('tilt', 'Голова не наклонена', tilt <= 20, `${tilt.toFixed(1)}°`, 'Держите голову ровно, не наклоняйте к плечу.');
   const nose = pts[30], jl = pts[0], jr = pts[16];
   const ratio = Math.abs(nose.x - jl.x) / Math.max(1, Math.abs(jr.x - nose.x));
-  add('yaw', 'Лицо анфас (без поворота)', ratio > 0.55 && ratio < 1.8, `симметрия ${ratio.toFixed(2)}`, 'Смотрите прямо в камеру, не поворачивайте голову в сторону.');
+  add('yaw', 'Лицо анфас (без поворота)', ratio > 0.4 && ratio < 2.5, `симметрия ${ratio.toFixed(2)}`, 'Смотрите прямо в камеру, не поворачивайте голову в сторону.');
 
   const fx = Math.max(0, b.x), fy = Math.max(0, b.y), fW = Math.min(W - fx, b.width), fH = Math.min(H - fy, b.height);
   const face = stats(ctx, fx + fW * 0.2, fy + fH * 0.2, fW * 0.6, fH * 0.6);
-  add('light', 'Освещение лица', face.mean >= 75 && face.mean <= 225 && face.sd >= 18, `яркость ${Math.round(face.mean)}, контраст ${Math.round(face.sd)}`,
-    face.mean < 75 ? 'Слишком темно — встаньте лицом к окну или включите свет.' : face.mean > 225 ? 'Пересвет — уберите вспышку и прямой свет.' : 'Свет плоский/неравномерный — встаньте лицом к источнику света.');
+  add('light', 'Освещение лица', face.mean >= 55 && face.mean <= 238 && face.sd >= 12, `яркость ${Math.round(face.mean)}, контраст ${Math.round(face.sd)}`,
+    face.mean < 55 ? 'Слишком темно — встаньте лицом к окну или включите свет.' : face.mean > 238 ? 'Пересвет — уберите вспышку и прямой свет.' : 'Свет плоский/неравномерный — встаньте лицом к источнику света.');
   const sh = sharpness(ctx, fx, fy, fW, fH);
-  add('sharp', 'Чёткость', sh >= 55, `резкость ${Math.round(sh)}`, 'Фото размытое — держите камеру неподвижно, протрите объектив, снимайте при свете.');
+  add('sharp', 'Чёткость', sh >= 28, `резкость ${Math.round(sh)}`, 'Фото размытое — держите камеру неподвижно, протрите объектив, снимайте при свете.');
 
   // фон: полосы слева/справа от головы и сверху
   const sideW = Math.min(b.x, W - b.x - b.width), strips = [];
@@ -99,15 +99,17 @@ export function evaluate(canvas, dets) {
   if (b.y > H * 0.05) strips.push(stats(ctx, 0, 0, W, Math.max(2, b.y * 0.85)));
   const bgMean = strips.length ? strips.reduce((a, s) => a + s.mean, 0) / strips.length : 0;
   const bgSd = strips.length ? Math.max(...strips.map(s => s.sd)) : 99;
-  add('bg', 'Светлый однотонный фон', strips.length > 0 && bgMean >= 115 && bgSd <= 48, strips.length ? `яркость фона ${Math.round(bgMean)}, пестрота ${Math.round(bgSd)}` : 'фон не виден',
-    bgMean < 115 ? 'Фон тёмный — встаньте у светлой стены.' : 'Фон пёстрый — встаньте у ровной светлой стены, без людей и предметов.');
+  // Фон — только пожелание: не блокирует приём, лишь подсказывает, как сделать фото аккуратнее
+  const bgGood = strips.length > 0 && bgMean >= 90 && bgSd <= 60;
+  add('bg', 'Фон', true, strips.length ? (bgGood ? 'спокойный' : 'можно ровнее') : 'не оценивался', '');
+  if (!bgGood && strips.length) checks[checks.length - 1].tip = bgMean < 90 ? 'Фон тёмный: у светлой стены фото выглядит аккуратнее.' : 'Фон пёстрый: у ровной стены фото выглядит аккуратнее.';
 
   // глаза не должны быть сильно темнее щёк (тёмные очки / тень)
   const eyeBox = { x: Math.min(leftEye.x, rightEye.x) - fW * 0.08, y: Math.min(leftEye.y, rightEye.y) - fH * 0.05, w: Math.abs(rightEye.x - leftEye.x) + fW * 0.16, h: fH * 0.12 };
   const eyes = stats(ctx, eyeBox.x, eyeBox.y, eyeBox.w, eyeBox.h);
   const cheeks = stats(ctx, pts[2].x + fW * 0.05, nose.y, Math.max(4, pts[14].x - pts[2].x - fW * 0.1), fH * 0.14);
   const er = eyes.mean / Math.max(1, cheeks.mean);
-  add('eyes', 'Глаза открыты, без тёмных очков', er >= 0.5, `отношение яркости ${er.toFixed(2)}`, 'Снимите тёмные очки и уберите волосы/тень с глаз.');
+  add('eyes', 'Глаза открыты, без тёмных очков', er >= 0.35, `отношение яркости ${er.toFixed(2)}`, 'Снимите тёмные очки и уберите волосы/тень с глаз.');
 
   Object.assign(meta, { box: [b.x / W, b.y / H, b.width / W, b.height / H], score: +det.detection.score.toFixed(2), tilt: +tilt.toFixed(1), sharp: Math.round(sh), light: Math.round(face.mean), bg: Math.round(bgMean) });
   return finish(checks, meta);
@@ -133,7 +135,7 @@ export async function checkPhoto(file) {
   // разрешение оцениваем по исходнику
   const real = { ...canvas, width: canvas.width, height: canvas.height };
   const res = evaluate(canvas, dets);
-  const rc = res.checks.find(c => c.id === 'res'); rc.ok = resNote >= 400; rc.detail = `${img.naturalWidth}×${img.naturalHeight}`;
+  const rc = res.checks.find(c => c.id === 'res'); rc.ok = resNote >= 300; rc.detail = `${img.naturalWidth}×${img.naturalHeight}`;
   res.ok = res.checks.every(c => c.ok); res.meta.verified = res.ok; res.failed = res.checks.filter(c => !c.ok);
   if (res.ok) res.blob = await cropBlob(canvas, dets[0].detection.box);
   return res;

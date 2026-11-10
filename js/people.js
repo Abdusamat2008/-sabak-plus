@@ -18,7 +18,7 @@ export function photoModal() {
     const r = p.res;
     body = `<div class="pv"><img src="${p.url}" alt="Выбранное фото"><div class="pv-r">
       <div class="verdict ${r.ok ? 'ok' : 'bad'}">${r.ok ? '✓ Фото подходит' : '✕ Фото не принято'}</div>
-      <ul class="checks">${r.checks.map(c => `<li class="${c.ok ? 'ok' : 'bad'}"><i>${c.ok ? '✓' : '✕'}</i><div><b>${esc(c.label)}</b> <small>${esc(c.detail)}</small>${c.ok ? '' : `<div class="hintx">${esc(c.hint)}</div>`}</div></li>`).join('')}</ul></div></div>
+      <ul class="checks">${r.checks.map(c => `<li class="${c.ok ? 'ok' : 'bad'}"><i>${c.ok ? '✓' : '✕'}</i><div><b>${esc(c.label)}</b> <small>${esc(c.detail)}</small>${c.ok ? (c.tip ? `<div class="hintx tip">Совет: ${esc(c.tip)}</div>` : '') : `<div class="hintx">${esc(c.hint)}</div>`}</div></li>`).join('')}</ul></div></div>
       <div class="btns">${r.ok ? `<button class="btn blue" data-act="photo-save" ${p.saving ? 'disabled' : ''}>${p.saving ? 'Сохраняем…' : 'Сохранить как фото профиля'}</button>` : ''}<button class="btn ghost" data-act="photo-again">${r.ok ? 'Выбрать другое' : 'Выбрать другое фото'}</button></div>
       ${r.ok ? '' : '<p class="errmsg">Пока фото не соответствует требованиям, сохранить его нельзя. Исправьте отмеченное выше и попробуйте снова.</p>'}`;
   } else body = `<div class="crit"><b>Требования к фото</b><ul>${CRITERIA.map(c => `<li>${esc(c)}</li>`).join('')}</ul></div>
@@ -71,9 +71,9 @@ export function studentsPage() {
   ${canWarn && noPhoto.length ? `<div class="banner"><div><b>${noPhoto.length} без подходящего фото</b><p>Отправьте ученикам и родителям уведомление с требованиями.</p></div><button class="btn blue" data-act="warn-class">⚠ Предупредить всех</button></div>` : ''}
   ${ui.codeBox ? `<div class="codebox"><div><small>${esc(ui.codeBox.what)}</small><b>${esc(ui.codeBox.code)}</b></div><button class="btn light" data-act="copy" data-v="${esc(ui.codeBox.code)}">Скопировать</button><small>Действует ограниченное время, использовать можно один раз (родителям — два).</small></div>` : ''}
   <div class="stgrid">${list.map(s => { const has = s.photo && s.photo.ok;
-    return `<div class="stc">${avatar(s, 64)}<div class="stc-b"><b>${esc(s.name)}</b><small class="${has ? 'okc' : 'badc'}">${has ? '✓ фото принято' : '⚠ нет фото'}${s.accId ? ' · есть аккаунт' : ''}</small>
+    return `<div class="stc">${avatar(s, 64)}<div class="stc-b"><b>${esc(s.name)}</b><small class="${has ? 'okc' : 'badc'}">${has ? '✓ фото принято' : '⚠ нет фото'}${s.accId ? ' · есть аккаунт' : ''}</small>${S.isLive() && !s.accId && S.can.readDossier(s.id) ? (s.code ? `<small class="keyline">Ключ: <b class="mono">${esc(s.code)}</b> <button class="link" data-act="copy" data-v="${esc(s.code)}">копировать</button></small>` : '<small class="keyline muted">Ключа ещё нет</small>') : ''}
       <div class="stc-a">${S.can.readDossier(s.id) ? `<a class="btn sm ghost" href="#/dossier/${s.id}">Дело</a>` : ''}${S.can.editPhoto(s.id) ? `<button class="btn sm ghost" data-act="photo-open" data-sid="${s.id}">Фото</button>` : ''}${S.can.warnPhoto(s.id) && !has ? `<button class="btn sm" data-act="warn-one" data-sid="${s.id}">⚠ Предупредить</button>` : ''}
-      ${(u.role === 'admin' || (u.role === 'teacher' && S.isHomeroomOf(s.id))) && S.isLive() ? `<button class="btn sm ghost" data-act="inv-student" data-sid="${s.id}">Код ученика</button><button class="btn sm ghost" data-act="inv-parent" data-sid="${s.id}">Код родителя</button>` : ''}</div></div></div>`; }).join('') || '<p class="muted">В классе пока нет учеников.</p>'}</div>`;
+      ${(u.role === 'admin' || (u.role === 'teacher' && S.isHomeroomOf(s.id))) && S.isLive() ? `<button class="btn sm ghost" data-act="inv-student" data-sid="${s.id}">${s.code ? 'Новый ключ ученика' : 'Ключ ученика'}</button><button class="btn sm ghost" data-act="inv-parent" data-sid="${s.id}">Код родителя</button>` : ''}</div></div></div>`; }).join('') || '<p class="muted">В классе пока нет учеников.</p>'}</div>`;
 }
 
 // ================= Дело =================

@@ -26,10 +26,10 @@ export function strip() {
   const n = T.now(), role = (S.state().session || {}).role;
   const base = role === 'super' ? 'super' : role === 'deputy' ? 'admin' : role;
   let txt;
-  if (!n.term) txt = n.next ? `До ${T.termName(n.next).toLowerCase()} ${n.toNext} дн.` : 'Календарь года ещё не заполнен';
+  if (!n.term) txt = n.next ? `До ${T.termName(n.next).toLowerCase()} ${n.toNext} дн.` : (role === 'super' || role === 'director' ? 'Календарь учебного года не заполнен: оценки пока не ограничены по четвертям' : 'Календарь года ещё не заполнен');
   else if (n.term.kind === 'quarter') txt = `${T.termName(n.term)} · день ${n.day} из ${n.total}`;
   else txt = `${T.termName(n.term)} · осталось ${n.left + 1} дн.`;
-  return `<a class="dayline ${n.term && n.term.kind === 'break' ? 'brk' : ''}" href="#/${base}/calendar" aria-label="Календарь года"><span class="dl-d">${esc(T.weekdayRu(n.today))}, ${esc(T.dateRu(n.today))}</span><span class="dl-t">${esc(txt)}</span><span class="dl-y">${esc(n.year)} уч. год</span></a>`;
+  return `<a class="dayline ${!n.term && !n.next ? 'nocal' : ''} ${n.term && n.term.kind === 'break' ? 'brk' : ''}" href="#/${base}/calendar" aria-label="Календарь года"><span class="dl-d">${esc(T.weekdayRu(n.today))}, ${esc(T.dateRu(n.today))}</span><span class="dl-t">${esc(txt)}</span><span class="dl-y">${esc(n.year)} уч. год</span></a>`;
 }
 
 function timeline(terms, today) {

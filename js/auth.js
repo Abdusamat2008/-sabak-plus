@@ -63,7 +63,7 @@ function codeStep(a) {
   return `<form data-form="regcode"><h2>${dir ? 'Ключ школы' : 'Код приглашения'}</h2>
     <p class="muted">${dir ? 'Ключ вида <b>SABAK-XXXX-XXXX-XXXX</b> выдаёт оператор SABAK+ один раз для каждой школы. По нему создаётся школа и вы становитесь директором.' : a.role === 'teacher' ? 'Код вида <b>XXXX-XXXX-XXXX</b> выдаёт директор или завуч. Он действует 3 дня и может быть привязан к вашему телефону.' : 'Код вида <b>XXXX-XXXX-XXXX</b> выдаёт классный руководитель. Он привязан к конкретному ученику.'}</p>
     <label class="fld"><span>${dir ? 'Ключ школы' : 'Код'} <i>*</i></span><input name="code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${dir ? 'SABAK-XXXX-XXXX-XXXX' : 'XXXX-XXXX-XXXX'}" value="${esc(a.code)}"></label>
-    ${a.peek ? `<div class="peek ok">✓ Код действителен: <b>${esc(a.peek.school || '')}</b> · ${({ teacher: 'учитель', deputy: 'завуч', parent: 'родитель', student: 'ученик' })[a.peek.role] || a.peek.role}${a.peek.class ? ' · класс ' + esc(a.peek.class) : ''}</div>` : ''}${msg(a)}
+    ${a.peek ? `<div class="peek ok">✓ Код действителен: <b>${esc(a.peek.school || '')}</b> · ${({ teacher: 'учитель', deputy: 'завуч', parent: 'родитель', student: 'ученик' })[a.peek.role] || a.peek.role}${a.peek.class ? ' · класс ' + esc(a.peek.class) : ''}${a.peek.student_name ? `<br>${a.peek.role === 'parent' ? 'Для ребёнка' : 'Ключ выдан для'}: <b>${esc(a.peek.student_name)}</b>` : ''}</div>` : ''}${msg(a)}
     <div class="nav-row"><button type="button" class="btn ghost" data-act="auth-back">← Назад</button><button class="btn blue" type="submit" ${a.busy ? 'disabled' : ''}>${a.busy ? 'Проверяем…' : 'Продолжить →'}</button></div></form>`;
 }
 function profileStep(standalone) {
@@ -72,9 +72,10 @@ function profileStep(standalone) {
     <label class="fld"><span>Роль <i>*</i></span><select name="role">${ROLES.map(([k, , n]) => `<option value="${k}" ${k === r ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
     <label class="fld"><span>Код / ключ школы <i>*</i></span><input name="code" required autocomplete="off" value="${esc(a.code)}"></label>` : '';
   const need = a.peek && a.peek.need_phone;
+  const known = !standalone && r === 'student' && a.peek && a.peek.student_name;
   return `<form data-form="regprofile" ${standalone ? 'data-standalone="1"' : ''}><h2>${standalone ? 'Завершите регистрацию' : 'Ваши данные'}</h2>${standalone ? '' : '<p class="muted">Как в обычном школьном дневнике: данные нужны, чтобы школа знала, кто есть кто.</p>'}${roleSel}
-    <div class="frow3">${field('last', 'Фамилия', { req: true, auto: 'family-name' })}${field('first', 'Имя', { req: true, auto: 'given-name' })}${field('mid', 'Отчество', { auto: 'additional-name' })}</div>
-    <div class="frow3">${field('birth', 'Дата рождения', { type: 'date', req: r === 'student' || r === 'director' || r === 'teacher', attrs: 'max="' + new Date().toISOString().slice(0, 10) + '"' })}
+    ${known ? `<div class="peek ok known">Ключ выдан для: <b>${esc(a.peek.student_name)}</b><br><small>Фамилию, имя и отчество вводить не нужно: школа уже внесла их. Если это не вы, вернитесь назад и попросите классного руководителя выдать новый ключ.</small></div>` : `<div class="frow3">${field('last', 'Фамилия', { req: !(standalone && r === 'student'), auto: 'family-name' })}${field('first', 'Имя', { req: !(standalone && r === 'student'), auto: 'given-name' })}${field('mid', 'Отчество', { auto: 'additional-name' })}</div>`}
+    <div class="frow3">${known && a.peek.known_birth ? '' : field('birth', 'Дата рождения', { type: 'date', req: r === 'student' || r === 'director' || r === 'teacher', attrs: 'max="' + new Date().toISOString().slice(0, 10) + '"' })}
       <label class="fld"><span>Пол</span><select name="gender"><option value="">—</option><option value="f" ${a.d.gender === 'f' ? 'selected' : ''}>Женский</option><option value="m" ${a.d.gender === 'm' ? 'selected' : ''}>Мужской</option></select></label>
       ${field('phone', 'Телефон', { type: 'tel', req: need || r !== 'student', ph: '+996 700 123 456', auto: 'tel' })}</div>
     ${need ? '<p class="hint">Телефон должен оканчиваться теми цифрами, к которым привязано приглашение — это вторая защита.</p>' : ''}
@@ -122,7 +123,7 @@ function pendingView(u) {
 const norm = c => String(c || '').trim().toUpperCase();
 const fullName = d => [d.last, d.first, d.mid].map(x => (x || '').trim()).filter(Boolean).join(' ');
 function rpcFor(a) {
-  const d = a.d, p = { p_full_name: fullName(d), p_birth: d.birth || null, p_gender: d.gender || null, p_phone: d.phone || null, p_lang: d.lang || 'ru' };
+  const d = a.d, p = { p_full_name: a.role === 'student' && a.peek && a.peek.student_name ? a.peek.student_name : fullName(d), p_birth: d.birth || null, p_gender: d.gender || null, p_phone: d.phone || null, p_lang: d.lang || 'ru' };
   if (a.role === 'director') return () => S.rpcRaw('register_director', { p_key: norm(a.code), p_school_name: d.school, p_city: d.city, ...p, p_extra: { position: 'director' } });
   return () => S.rpcRaw('redeem_invite', { p_code: norm(a.code), ...p, p_extra: { relation: d.relation, work: d.work, position: d.position, subjects: d.subjects_txt } });
 }
@@ -181,7 +182,7 @@ export async function submit(form, fd) {
       try { const r = await S.completeProfile(rpcFor(a)); a.busy = false; if (!r.ok) return fail(errText(r.error)); const u = S.me(); location.hash = u && u.role ? '#/' + u.role : ''; rerender(); }
       catch (e) { return fail(e.message); } return true;
     }
-    if (!(d.last && d.first)) return fail('Введите фамилию и имя.');
+    if (!(a.role === 'student' && a.peek && a.peek.student_name) && !(d.last && d.first)) return fail('Введите фамилию и имя.');
     a.err = ''; a.step = 4; rerender(); return true;
   }
   if (f === 'verify') {

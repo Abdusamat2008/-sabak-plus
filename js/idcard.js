@@ -118,11 +118,12 @@ export function page() {
   const stu = S.state().students.find(z => z.id === sid), photo = dossierPhoto(c, stu);
   return `${head('Удостоверение', 'ученика', 'Электронный документ вашей школы')}${sel}
   <section class="idc-wrap"><div class="idc-card" id="idc-card">${cardSvg(c, photo)}</div>
-  <div class="btns"><button class="btn blue" data-act="idc-dl" data-sid="${esc(sid)}">Скачать на устройство (PNG)</button></div>
+  <div class="btns"><button class="btn blue" data-act="idc-dl" data-sid="${esc(sid)}">Скачать на устройство (PNG)</button><button class="btn ghost" data-act="idc-print">Распечатать</button></div>
   <p class="muted idc-note">${photo ? 'Фото взято из личного дела ученика, загружать его отдельно не нужно.' : 'В личном деле пока нет фото. Оно появится на удостоверении само, когда школа добавит его в дело.'} Печать у каждой школы своя: название школы стоит по кольцу. Удостоверение показывает данные электронного дневника.</p></section>`;
 }
 export function onChange(el) { if (el.dataset && el.dataset.idc === 'sid') { X().sid = el.value; rerender(); return true; } return false; }
 export async function act(a, el) {
+  if (a === 'idc-print') { document.body.classList.add('print-idc'); const done = () => { document.body.classList.remove('print-idc'); window.removeEventListener('afterprint', done); }; window.addEventListener('afterprint', done); window.print(); return true; }
   if (a !== 'idc-dl') return false;
   try {
     const sid = el.dataset.sid, c = cache['id:' + sid]; if (!c || c === 'loading' || c.err) return true;

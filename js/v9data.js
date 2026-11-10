@@ -150,7 +150,7 @@ const DEMO = { term_tick_all: () => ({ ok: true, archived: tick().archived.lengt
 
 export async function call(name, args = {}) {
   if (live()) {
-    try { return await RC.cached(name, args, async () => { try { return await API.rpc(name, args); } catch (e) { if (e.network) return { ok: false, error: 'network' }; throw e; } }); } catch (e) { if (e.network) return { ok: false, error: 'network' }; if (/Could not find the function|PGRST202|404/.test(e.message + (e.body ? JSON.stringify(e.body) : ''))) return { ok: false, error: 'not_deployed' }; throw e; }
+    try { return await RC.queued(name, args, () => RC.cached(name, args, async () => { try { return await API.rpc(name, args); } catch (e) { if (e.network) return { ok: false, error: 'network' }; throw e; } }), S.enqueueRpc); } catch (e) { if (e.network) return { ok: false, error: 'network' }; if (/Could not find the function|PGRST202|404/.test(e.message + (e.body ? JSON.stringify(e.body) : ''))) return { ok: false, error: 'not_deployed' }; throw e; }
   }
   const f = DEMO[name]; if (!f) return err('not_found');
   return JSON.parse(JSON.stringify(await f(args)));
