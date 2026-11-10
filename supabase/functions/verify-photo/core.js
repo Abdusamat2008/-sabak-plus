@@ -2,7 +2,7 @@
 // ВАЖНО: это не распознавание лица нейросетью, а независимая проверка «картинки как данных»:
 // формат/размер, экспозиция, контраст, резкость и присутствие областей цвета кожи в центре кадра.
 // Распознавание лица остаётся в браузере (см. README, раздел «Честные ограничения»).
-export const LIMITS = { minW: 240, minH: 320, maxW: 1600, maxH: 2133, ratio: [0.70, 0.80], lum: [55, 215], contrast: 25, sharp: 14, skin: 0.06 };
+export const LIMITS = { minW: 240, minH: 320, maxW: 1600, maxH: 2133, ratio: [0.70, 0.80], lum: [40, 235], contrast: 15, sharp: 8, skin: 0.03 };
 
 export function analyse(rgba, w, h) {
   const checks = [], add = (id, label, ok, detail) => checks.push({ id, label, ok, detail });

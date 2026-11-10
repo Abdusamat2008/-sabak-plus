@@ -1,8 +1,8 @@
 // Service Worker: оболочка приложения кэшируется, поэтому SABAK+ открывается без интернета.
-const CACHE = 'sabak-shell-v23';
+const CACHE = 'sabak-shell-v26';
 const SHELL = [
   '/', '/index.html', '/app.html', '/css/landing.css', '/css/pages.css', '/js/landing.js', '/js/site.js', '/css/app.css', '/css/a11y.css', '/css/paper.jpg',
-  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/privacy.js', '/js/a11y.js', '/js/achv.js', '/js/sched.js', '/js/schedui.js', '/js/archive.js', '/js/super.js', '/js/v8data.js', '/js/coins.js', '/js/news.js', '/js/termcal.js', '/js/v9data.js', '/js/cal.js', '/js/reports.js', '/js/editor.js', '/js/rcache.js', '/vendor/jszip.min.js', '/js/idcard.js', '/js/un.js', '/css/v8.css', '/css/v11.css', '/img/altyn.svg', '/css/un.css', '/js/superdata.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
+  '/js/app.js', '/js/store.js', '/js/calc.js', '/js/ai.js', '/js/i18n.js', '/js/ky.js', '/js/ky2.js', '/js/privacy.js', '/js/a11y.js', '/js/achv.js', '/js/sched.js', '/js/schedui.js', '/js/archive.js', '/js/super.js', '/js/v8data.js', '/js/coins.js', '/js/news.js', '/js/termcal.js', '/js/v9data.js', '/js/cal.js', '/js/reports.js', '/js/editor.js', '/js/rcache.js', '/vendor/jszip.min.js', '/js/idcard.js', '/js/backup.js', '/js/un.js', '/css/v8.css', '/css/v11.css', '/img/altyn.svg', '/css/un.css', '/js/superdata.js', '/js/tour.js', '/js/common.js', '/js/auth.js', '/js/people.js', '/js/admin.js', '/js/analytics.js', '/js/export.js', '/js/face.js', '/js/docs.js', '/js/api.js', '/js/net.js', '/js/config.js',
   '/fonts/oswald-700.woff2', '/fonts/inter-400.woff2', '/fonts/inter-700.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png', '/manifest.webmanifest',
 ];
