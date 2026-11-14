@@ -1,0 +1,12 @@
+/* /updates — карта хроник: 15 глав в виде дороги из карточек, у каждой своя палитра */
+.hhero{padding:calc(110px + 4vh) 0 30px}.hhero .mega{font-size:clamp(3rem,11vw,9rem);max-width:12ch}.hhero .lead{margin-top:18px}
+.hroad{position:relative;padding:20px 0 40px}
+.cards{list-style:none;margin:0;padding:10px max(22px,calc((100vw - 1120px)/2)) 30px;display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.cards li{flex:0 0 min(78vw,340px);scroll-snap-align:start;--mut:color-mix(in srgb,var(--fg) 66%,var(--bg));--line:color-mix(in srgb,var(--fg) 16%,transparent);background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:26px;position:relative;transition:transform .5s var(--spring);overflow:hidden}
+.cards li:hover{transform:translateY(-8px) rotate(-.6deg)}.cards li a{display:grid;gap:6px;align-content:end;min-height:360px;padding:22px;text-decoration:none;position:relative;z-index:1;background:linear-gradient(transparent 30%,color-mix(in srgb,var(--bg) 70%,transparent))}
+.cards li::before{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 80% 10%,color-mix(in srgb,var(--acc) 45%,transparent),transparent 70%)}
+.cards .cn{position:absolute;top:18px;left:22px;font:700 .8rem var(--head);letter-spacing:.2em;color:var(--mut)}.cards .cv{font:700 .9rem var(--head);letter-spacing:.14em;color:var(--acc)}
+.cards .cname{font:700 clamp(2rem,6vw,2.8rem)/1 var(--head);text-transform:uppercase;letter-spacing:.01em}.cards em{font-style:normal;color:var(--mut)}.cards small{color:var(--mut);font-size:.8rem;margin-top:6px}.cards .go{position:absolute;right:20px;top:16px;font-size:1.6rem;color:var(--acc);transition:transform .4s var(--spring)}.cards li:hover .go{transform:translateX(6px)}
+.hmore{padding:20px 0 60px}.hmore a{color:var(--acc)}
+@media(max-width:700px){.cards{flex-direction:column;overflow:visible;scroll-snap-type:none}.cards li{flex:none}.cards li a{min-height:200px}}
+html.rm .cards li{transition:none}

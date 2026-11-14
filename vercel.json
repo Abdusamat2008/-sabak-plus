@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/updates/0-11-zhylnaama", "destination": "/updates/0-11-zhylsanak", "permanent": true }
+  ],
   "headers": [
     { "source": "/sw.js", "headers": [
       { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
