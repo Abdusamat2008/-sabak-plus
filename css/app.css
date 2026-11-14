@@ -469,7 +469,3 @@ input,select,textarea,button{font-family:inherit}
 .note{white-space:pre-wrap}
 textarea{width:100%;font:inherit;padding:10px;border:2px solid var(--ink);background:var(--fld,#fff);color:inherit}
 @media(max-width:600px){.hb{grid-template-columns:1fr auto}.hb i{grid-column:1/-1;grid-row:2}}
-/* Мой профиль */
-.acc-dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:12px 0}.acc-dl dt{color:var(--mut,#666);font-size:.9rem}.acc-dl dd{margin:0;word-break:break-word}.acc-mail small{display:block;color:var(--mut,#666);font-weight:400;margin-top:2px}.mh-mail{display:block;word-break:break-all}
-#account .fld{display:block;margin:10px 0}#account .fld span{display:block;font-size:.9rem;margin-bottom:4px}#account .fld input{width:100%}#account #acc-msg{min-height:1.4em;margin:8px 0;font-weight:700}
-.priv-links{margin:16px 0 4px}.priv-links a{color:var(--blue);font-weight:700}
