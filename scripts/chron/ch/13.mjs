@@ -1,0 +1,14 @@
+export default {
+  hero: `<div class="tall" id="h13" style="--h:300vh;--hm:240vh"><div class="stick"><canvas id="sp" aria-hidden="true"></canvas>
+  <div class="ht"><p class="eyebrow">SABAK+ · 0.12</p><h1 class="mega" aria-label="ЫЛДАМ">ЫЛДАМ</h1><p class="subt"><span data-ky="Ылдамдык — көрүнбөгөн күч">Ылдамдык — көрүнбөгөн күч</span> <em data-ky="— скорость, которую не всегда видно">— скорость, которую не всегда видно</em></p></div>
+  <div class="pcard" aria-hidden="true" id="pcd"><small>Данные ученика</small><b>Айбек Т. · 9А</b><span>Оценки · Посещаемость</span></div><p class="hint" aria-hidden="true"><span data-ky="жылдырыңыз">листайте</span> ↓</p></div></div>`,
+  scenes: [
+    { id: 'speed', title: 'Тест скорости: 19 секунд против 0,03', lead: 'Нажмите «Запустить» — два таймера сравнят прежнюю и новую загрузку всех оценок школы для директора.', html: `<div class="demo"><span class="tag">Симуляция</span><div class="race"><div class="lane"><small>Было</small><div class="trk9"><i id="ba"></i></div><b id="ta">0,00 с</b></div><div class="lane"><small>Стало</small><div class="trk9"><i id="bb2" class="fast"></i></div><b id="tb">0,00 с</b></div></div><div class="row"><button class="btn" id="go" type="button">Запустить</button><span class="note" id="rn" role="status"></span></div>
+      <p class="note"><b>Это демонстрация, а не измерение вашего сайта.</b> Цифры 19 секунд и 0,03 секунды получены при подготовке релиза на тестовой школе из 1000 учеников; анимация лишь показывает масштаб разницы.</p>
+      <div class="facts"><div><b>Меньше запросов</b><span>Сначала — лёгкая проверка «что-то изменилось?», а полная загрузка — только если да.</span></div><div><b>Свёрнутая вкладка</b><span>Больше не создаёт лишней нагрузки.</span></div><div><b>Окно оценок</b><span>Экран не тяжелеет к концу года; старые оценки — в отчётах и табеле.</span></div></div></div>` },
+    { id: 'offline', title: 'Без интернета: очередь изменений', lead: 'Выключите «интернет» и внесите оценку или отметку. Включите — изменения отправятся сами.', html: `<div class="demo"><span class="tag">Симуляция</span><div class="row"><button class="btn" id="nt9" type="button" aria-pressed="true">Интернет: включён</button><span class="nstat" id="ns">Синхронизировано</span></div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost" id="ag" type="button">+ Оценка «5» Айбеку</button><button class="btn ghost" id="aa" type="button">+ Отметка «Н» Айым</button></div><div class="qbox" id="qb" aria-live="polite"></div><canvas id="qc" aria-hidden="true"></canvas>
+      <p class="note">Без интернета доступны чтение новостей, «Үн», календаря четвертей, табеля, удостоверения и «Алтына», а внесённые оценки и посещаемость ждут в очереди.</p></div>` },
+  ],
+  finale: `<div class="fbeam" aria-hidden="true"><i></i><i></i><i></i></div>`,
+};
