@@ -120,7 +120,3 @@ Supabase → SQL Editor → вставить **весь** файл `supabase/sch
 Для v0.14 выполните `supabase/schema_v11.sql` (после v10): защита HTML новостей, выгрузка данных школы, согласие с политикой. Тесты: `supabase/tests_v11.sql`. Единый прогон браузерных тестов: `scripts/run-all-tests.sh`. Резервные копии: `docs/BACKUP.md`.
 
 Навигация (v0.14): пункты сгруппированы в «полочки» (учёба, общение и т. д.). Состав групп — константа NAV в js/app.js.
-
-
-## Хроника версий (/updates)
-15 страниц-глав: `updates/<slug>.html` + `css/chron/<slug>.css` + `js/chron/<slug>.js`. Общее ядро: `js/chron.js`, `css/chron.css`, список глав `js/chron/chapters.js` (имена, даты, цвета). Правила для авторов глав: `docs/chronicle/CONTRACT.md`, тексты и факты: `docs/chronicle/briefs.md`. Индекс `updates.html` генерируется `node scripts/build-updates-index.mjs`. Проверка всех глав: `node tests/chron.test.js` (нужен локальный сервер `python3 -m http.server 8765` и playwright). Все демо в главах используют вымышленные данные и помечены «ДЕМО».
