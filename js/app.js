@@ -26,6 +26,7 @@ import * as Reports from './reports.js';
 import * as IdCard from './idcard.js';
 import * as Backup from './backup.js';
 import * as Profile from './profile.js';
+import * as Welcome from './welcome.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -107,6 +108,7 @@ function shell(content) {
           ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${[['student', 'Ученик'], ['parent', 'Родитель'], ['teacher', 'Учитель'], ['admin', 'Директор'], ['deputy', 'Завуч'], ['super', 'Суперадмин']].map(([x, n]) => `<option value="${x}" ${(x === u.role || (u.level === 'deputy' && x === 'deputy') && true) && !(x === 'admin' && u.level === 'deputy') ? 'selected' : ''}>${n}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
           <a class="mi" href="#/profile">Мой профиль</a>
           <button class="mi" data-act="a11y">Специальные возможности <b>Alt+A</b></button>
+          <button class="mi" data-act="welcome">${Welcome.menuLabel()}</button>
           <button class="mi" data-act="privacy">Политика данных</button>
           <button class="mi" data-act="lang">Язык: <b>${L() === 'ru' ? 'Русский → Кыргызча' : 'Кыргызча → Русский'}</b></button>
           ${u.role === 'admin' ? '<a class="mi" href="#/admin/audit">Журнал аудита</a>' : ''}
@@ -506,6 +508,7 @@ function render() {
   document.body.classList.toggle('is-auth', authLike);
   document.body.classList.toggle('un-on', !authLike && /(^|\/)un(\/|$)/.test(route()));
   window.scrollTo(0, y);
+  if (!authLike) Welcome.maybe();
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sheetScroll;
   if (focusId) { const f = document.getElementById(focusId); if (f) f.focus(); }
 }
@@ -545,6 +548,7 @@ document.addEventListener('click', async e => {
   if (act === 'demo-back') { ui.demoPick = false; render(); return; }
   if (act === 'logout') { ui.menu = false; S.logout(); location.hash = ''; ui.demoPick = false; render(); return; }
   if (act === 'to-live') { S.switchMode('live'); location.hash = ''; render(); return; }
+  if (act === 'welcome') { ui.menu = false; render(); Welcome.open(); return; }
   if (act === 'privacy') { Privacy.open(); return; }
   if (act === 'lang') { S.setPrefs({ lang: st.prefs.lang === 'ru' ? 'ky' : 'ru' }); return; }
   if (A11y.act(act, el)) return;
@@ -633,6 +637,7 @@ if (location.hash.includes('access_token')) {
   const type = API.sessionFromHash(location.hash); history.replaceState(null, '', location.pathname);
   if (type === 'recovery') { recovering = true; S.switchMode('live'); ui.auth = { mode: 'recover-set', step: 1, d: {}, err: '', info: '' }; }
 }
+if (new URLSearchParams(location.search).has('welcome')) Welcome.forceNext();
 if (new URLSearchParams(location.search).has('demo')) { if (!S.state().session) { S.switchMode('demo'); ui.demoPick = true; location.hash = ''; } history.replaceState(null, '', location.pathname); }
 Tour.init({ S, ui, go, render, scheduleFlush, Net });
 if (S.isLive()) setTimeout(() => { const u = S.state().session; if (u && u.level === 'director') Archive.autoClose(); }, 4000);

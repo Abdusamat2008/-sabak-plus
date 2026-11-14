@@ -742,7 +742,7 @@ export async function hydrate() {
   const m0 = mut;
   const [prof] = await API.select('profiles', `id=eq.${uidv}&select=*`);
   if (!prof) { S.session = { id: uidv, role: null, needsProfile: true, name: '' }; save(); emit(); return; }
-  const base = { id: uidv, name: prof.full_name, role: UIROLE[prof.role], level: prof.role, status: prof.status, phone: prof.phone, lang: prof.lang, email: API.session() && API.session().user.email };
+  const base = { id: uidv, name: prof.full_name, role: UIROLE[prof.role], level: prof.role, status: prof.status, phone: prof.phone, lang: prof.lang, created: prof.created_at, email: API.session() && API.session().user.email };
   if (prof.status !== 'active') { S.session = base; save(); emit(); return; }
   if (prof.school_id && !noStatusRpc) {   // приостановленная школа: понятное сообщение вместо пустого экрана
     try { const ss = await API.rpc('my_school_status'); if (ss && ss.status === 'suspended') { S.session = { ...base, suspended: true, suspendedReason: ss.reason, schoolName: ss.name }; save(); emit(); return; } } catch { noStatusRpc = true; }
