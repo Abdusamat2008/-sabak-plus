@@ -37,7 +37,7 @@ const e = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '
 export function open() {
   close(); const L = getLang() === 'ky' ? KY : RU;
   const d = document.createElement('div'); d.id = 'privacy'; d.className = 'modal-bg'; d.setAttribute('data-notr', '1');
-  d.innerHTML = `<div class="modal priv" role="dialog" aria-modal="true" aria-label="${e(L.title)}"><h2>${e(L.title)}</h2><p class="muted">${e(L.upd)}</p>${L.s.map(([h, t]) => `<h3>${e(h)}</h3><p>${e(t)}</p>`).join('')}<div class="btns"><button class="btn blue" data-privacy-close>${e(L.close)}</button></div></div>`;
+  d.innerHTML = `<div class="modal priv" role="dialog" aria-modal="true" aria-label="${e(L.title)}"><h2>${e(L.title)}</h2><p class="muted">${e(L.upd)}</p>${L.s.map(([h, t]) => `<h3>${e(h)}</h3><p>${e(t)}</p>`).join('')}<p><a href="/privacy" target="_blank" rel="noopener">${getLang() === 'ky' ? 'Саясаттын толук тексти' : 'Полный текст политики'}</a></p><div class="btns"><button class="btn blue" data-privacy-close>${e(L.close)}</button></div></div>`;
   d.addEventListener('click', ev => { if (ev.target === d || ev.target.closest('[data-privacy-close]')) close(); });
   document.body.appendChild(d); const b = d.querySelector('button'); if (b) b.focus();
 }
@@ -55,7 +55,7 @@ export const reset = () => { st.ok = null; };
 export const known = () => st.ok !== null;
 export function gate() {
   const L = getLang() === 'ky' ? KY : RU, ky = getLang() === 'ky';
-  return `<div class="modal-bg consent-bg" data-notr="1"><div class="modal priv consent" role="dialog" aria-modal="true" aria-label="${e(L.title)}"><h2>${e(L.title)}</h2><p class="muted">${e(L.upd)}</p>${L.s.map(([h, t]) => `<h3>${e(h)}</h3><p>${e(t)}</p>`).join('')}
+  return `<div class="modal-bg consent-bg" data-notr="1"><div class="modal priv consent" role="dialog" aria-modal="true" aria-label="${e(L.title)}"><h2>${e(L.title)}</h2><p class="muted">${e(L.upd)}</p>${L.s.map(([h, t]) => `<h3>${e(h)}</h3><p>${e(t)}</p>`).join('')}<p><a href="/privacy" target="_blank" rel="noopener">${getLang() === 'ky' ? 'Саясаттын толук тексти' : 'Полный текст политики'}</a></p>
   <label class="chk consent-chk"><input type="checkbox" id="consent-ok"> ${ky ? 'Купуялык саясатын окудум жана маалыматтарымды иштетүүгө макулмун' : 'Я прочитал(а) политику и согласен(на) на обработку данных'}</label>
   <div class="btns"><button class="btn blue" data-act="consent-accept" disabled id="consent-btn">${ky ? 'Макулмун' : 'Принять и продолжить'}</button><button class="btn ghost" data-act="logout">${ky ? 'Чыгуу' : 'Выйти'}</button></div></div></div>`;
 }

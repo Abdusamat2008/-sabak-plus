@@ -1,0 +1,61 @@
+/* Хроника SABAK+: общая основа страниц релизов. Визуальный язык каждой главы задаёт css/chron/<slug>.css */
+@font-face{font-family:Oswald;font-weight:700;font-display:swap;src:url(/fonts/oswald-700.woff2) format("woff2")}
+@font-face{font-family:Inter;font-weight:400;font-display:swap;src:url(/fonts/inter-400.woff2) format("woff2")}
+@font-face{font-family:Inter;font-weight:700;font-display:swap;src:url(/fonts/inter-700.woff2) format("woff2")}
+:root{--ch-accent:#c8923a;--ch-bg:#111;--ch-ink:#f5f5f7;--ch-head:Oswald,Impact,sans-serif;--ch-body:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--p:0;--ch-gut:clamp(16px,4vw,48px)}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body.ch{margin:0;background:var(--ch-bg);color:var(--ch-ink);font:400 clamp(16px,1.05vw + 12px,19px)/1.55 var(--ch-body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.ch h1,.ch h2,.ch h3,.ch p{margin:0}
+.ch a{color:inherit}
+.ch :focus-visible{outline:3px solid var(--ch-accent);outline-offset:3px;border-radius:6px}
+.ch .skip{position:absolute;left:-999px;top:8px;background:#fff;color:#000;padding:8px 12px;z-index:400;border-radius:8px}.ch .skip:focus{left:8px}
+@view-transition{navigation:auto}
+/* верхняя полоса: прогресс и навигация по главам */
+.cb{position:fixed;inset:0 0 auto 0;z-index:300;display:flex;align-items:center;gap:10px;padding:10px var(--ch-gut);pointer-events:none}
+.cb>*{pointer-events:auto}
+.cb-prog{position:fixed;left:0;top:0;height:3px;width:100%;background:var(--ch-accent);transform-origin:0 50%;transform:scaleX(var(--p));z-index:310;pointer-events:none}
+.cb-logo{font:700 1.15rem var(--ch-head);letter-spacing:.04em;text-decoration:none;padding:6px 12px;border-radius:99px;background:color-mix(in srgb,var(--ch-bg) 78%,transparent);backdrop-filter:blur(8px);border:1px solid color-mix(in srgb,var(--ch-ink) 18%,transparent)}
+.cb-logo b{color:var(--ch-accent)}
+.cb-ver{font:700 .8rem var(--ch-body);padding:6px 12px;border-radius:99px;background:color-mix(in srgb,var(--ch-bg) 78%,transparent);backdrop-filter:blur(8px);border:1px solid color-mix(in srgb,var(--ch-ink) 18%,transparent)}
+.cb-sp{flex:1}
+.cb button{font:700 .82rem var(--ch-body);color:inherit;cursor:pointer;padding:7px 13px;border-radius:99px;background:color-mix(in srgb,var(--ch-bg) 78%,transparent);backdrop-filter:blur(8px);border:1px solid color-mix(in srgb,var(--ch-ink) 22%,transparent)}
+.cb button:hover{border-color:var(--ch-accent)}
+.cb button[aria-pressed=true]{background:var(--ch-accent);color:var(--ch-bg)}
+/* меню глав */
+.cm{position:fixed;inset:0;z-index:350;background:color-mix(in srgb,var(--ch-bg) 94%,#000);color:var(--ch-ink);overflow:auto;padding:70px var(--ch-gut) 40px;display:none}
+.cm.open{display:block}
+.cm h2{font:700 clamp(1.6rem,4vw,2.6rem) var(--ch-head);margin-bottom:18px}
+.cm ol{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))}
+.cm a{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:14px;border:1px solid color-mix(in srgb,var(--ch-ink) 20%,transparent);text-decoration:none}
+.cm a:hover,.cm a[aria-current]{border-color:var(--ch-accent);background:color-mix(in srgb,var(--ch-accent) 14%,transparent)}
+.cm a b{font:700 1.25rem var(--ch-head);letter-spacing:.03em}.cm a small{opacity:.75}
+.cm-x{position:fixed;right:var(--ch-gut);top:12px;z-index:360}
+/* конец главы: предыдущая / следующая */
+.ce{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid color-mix(in srgb,var(--ch-ink) 18%,transparent)}
+.ce a{display:flex;flex-direction:column;gap:6px;padding:clamp(24px,5vw,56px) var(--ch-gut);text-decoration:none;transition:background .35s}
+.ce a:hover{background:color-mix(in srgb,var(--ch-accent) 14%,transparent)}
+.ce a small{opacity:.7;font-weight:700}.ce a b{font:700 clamp(1.6rem,5vw,3.4rem)/1 var(--ch-head);letter-spacing:.02em}
+.ce a.next{text-align:right;align-items:flex-end}
+.ce a:only-child{grid-column:1/-1}
+@media(max-width:640px){.ce{grid-template-columns:1fr}.ce a.next{text-align:left;align-items:flex-start;order:-1}}
+/* появление блоков */
+.cr{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.cr.in{opacity:1;transform:none}
+/* занавес при переходе между главами */
+.cw{position:fixed;inset:0;z-index:500;pointer-events:none;clip-path:circle(0 at var(--wx,50%) var(--wy,50%));transition:clip-path .55s cubic-bezier(.7,0,.2,1)}
+.cw.go{clip-path:circle(150vmax at var(--wx,50%) var(--wy,50%))}
+.cw.out{clip-path:circle(0 at var(--wx,50%) var(--wy,50%));transition-duration:.7s}
+.cw span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:700 clamp(2.2rem,9vw,6rem) var(--ch-head);letter-spacing:.04em}
+/* пометки */
+.demo-tag{display:inline-block;font:700 .72rem var(--ch-body);letter-spacing:.06em;padding:4px 10px;border-radius:99px;border:1.5px dashed currentColor;opacity:.85}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ch button{font-family:inherit}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .cr{opacity:1;transform:none;transition:none}
+  .cw{transition:none}
+  *{animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
+.ch.rm .cr{opacity:1;transform:none;transition:none}
+@media(max-width:600px){.cb{gap:6px;padding:8px 12px}.cb-ver{display:none}.cb button{padding:6px 10px;font-size:.76rem}.cb-logo{padding:5px 10px}}

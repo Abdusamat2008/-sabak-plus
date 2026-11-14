@@ -133,3 +133,8 @@ html[data-contrast=dark] .keyline .link,html[data-contrast=yb] .keyline .link{co
   .npop{position:absolute;left:0;right:auto;bottom:auto;top:calc(100% + 8px);min-width:220px}
   .nav .npop a.npi{padding:10px 14px;font-size:.92rem}
 }
+
+.pf-r{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px dashed #0b0b0b44;flex-wrap:wrap}
+.pf-r span{color:var(--muted)}.pf-r b{word-break:break-all;text-align:right}
+.pf-note{margin-top:10px}.pf-pass form{display:grid;gap:12px;max-width:420px}
+.pf-err{color:var(--danger);font-weight:700}.pf-ok{color:#0a7a3d;font-weight:700}
