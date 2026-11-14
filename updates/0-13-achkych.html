@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAK+ 0.13 — АЧКЫЧ</title>
+<meta name="description" content="Версия 0.13 SABAK+ «Ачкыч»: регистрация ученика по личному ключу, который выдаёт учитель, и более мягкая проверка фото.">
+<link rel="canonical" href="https://sabak-plus.vercel.app/updates/0-13-achkych">
+<meta name="theme-color" content="#10141b">
+<meta property="og:type" content="article"><meta property="og:site_name" content="SABAK+"><meta property="og:title" content="SABAK+ 0.13 — АЧКЫЧ"><meta property="og:description" content="Туура ачкыч — туура мүмкүнчүлүк. Правильный ключ открывает правильные возможности."><meta property="og:image" content="https://sabak-plus.vercel.app/og.png">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/chron.css"><link rel="stylesheet" href="/css/chron/0-13-achkych.css">
+</head>
+<body class="ch c13">
+<main id="main">
+<section class="hero" id="hero" aria-label="Ключ и замок"><div class="stage"><div class="engr" aria-hidden="true"></div>
+ <h1 class="mega" aria-label="АЧКЫЧ"><span aria-hidden="true">АЧКЫЧ</span></h1>
+ <div class="kw" id="kw" aria-hidden="true"><div class="lock"><div class="shackle"></div><div class="body"><i class="hole"></i></div></div>
+  <div class="key"><div class="bow"></div><div class="shaft"><i></i><i></i><i></i></div></div>
+  <div class="pf"><div class="pav">А</div><b>Айбек Т.</b><span>8 «Б» · ДЕМО</span></div></div>
+ <p class="sub"><b data-ky="Ар бир окуучунун өз ачкычы бар">Ар бир окуучунун өз ачкычы бар</b><span>У каждого ученика свой ключ</span></p>
+ <p class="hint" data-ky="Ылдый жылдырыңыз">Листайте вниз: ключ войдёт в замок</p></div></section>
+
+<section class="intro"><div class="col"><p class="vline cr"><b>0.13</b> · АЧКЫЧ · <time datetime="2026-11-09">9 ноября 2026</time></p>
+ <h2 class="cr" data-ky="Ачкыч">Регистрация по личному ключу</h2>
+ <p class="story cr">Ученику больше не нужно вводить фамилию и имя. Учитель выдаёт личный ключ, а SABAK+ уже знает, для кого он создан.</p></div></section>
+
+<section class="demo" id="demo" aria-label="Демонстрация ключа"><div class="col wide"><p class="demo-tag">ДЕМО · <span data-ky="симуляция">вымышленные данные, настоящая регистрация не выполняется</span></p>
+ <h2 class="cr" data-ky="Ачкычты сынаңыз">Выдача ключа и регистрация</h2>
+ <div class="two"><div class="box"><h3>Учитель: карточка ученика</h3><p class="small">Айбек Т. · 8 «Б» (демо)</p><div class="keyrow" id="krow"><span>Действующий ключ: нет</span></div><div class="irow2"><button type="button" class="bt" id="issue">Выдать ключ</button><button type="button" class="bt ghost" id="copy">Копировать</button></div><p class="small" id="kmsg" aria-live="polite"></p></div>
+  <div class="box"><h3>Ученик: регистрация</h3><label class="small" for="kin">Введите ключ</label><input id="kin" autocomplete="off" placeholder="например, AB12-CD34" inputmode="text"><button type="button" class="bt" id="reg">Проверить ключ</button><div class="res" id="res" aria-live="polite"></div></div></div>
+ <div class="box ph"><h3>Проверка фото (демо)</h3><p class="small">Выберите пример. Система только предупреждает о фоне, а отказывает за слишком маленький размер.</p><div class="opts" id="opts"></div><div class="scanbox"><div class="face" id="face"><i></i></div><div class="beam" id="beam"></div></div><p class="small" id="pres" aria-live="polite"></p>
+  <p class="small">Это иллюстрация проверки качества фото, а не опознавание человека.</p></div></div></section>
+
+<section class="feat"><div class="col wide"><h2 class="cr" data-ky="Версия 0.13те эмне бар">Что вошло в версию 0.13</h2><ul class="fl">
+ <li class="cr"><b>Не нужно вводить ФИО</b> при регистрации ученика</li><li class="cr"><b>Ученик определяется по личному ключу;</b> при выдаче запоминается, для кого он создан</li><li class="cr"><b>После ввода ключа</b> ученик видит «Ключ выдан для: ФИО»</li>
+ <li class="cr"><b>Дата рождения и пол</b> берутся из школьной записи, если они внесены</li><li class="cr"><b>Учитель видит действующие ключи</b> в карточке ученика и может скопировать ключ</li><li class="cr"><b>У ученика один действующий ключ;</b> новый ключ отзывает прежний</li>
+ <li class="cr"><b>Ключ действует до использования,</b> максимум 180 дней</li><li class="cr"><b>Проверка фото мягче:</b> фон больше не причина отказа, система лишь предупреждает</li><li class="cr"><b>Шире допуски</b> для размера лица, наклона, поворота головы, освещения и резкости; минимальный размер фото 300×300</li></ul></div></section>
+
+<section class="finale" id="finale" aria-label="Финал"><div class="fstage"><div class="engr" aria-hidden="true"></div><div class="gk" id="gk" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+ <p class="q" id="quote"><b data-ky="Туура ачкыч — туура мүмкүнчүлүк">«Туура ачкыч — туура мүмкүнчүлүк»</b><br><span>Правильный ключ открывает правильные возможности</span></p></div></section>
+</main><nav data-chron-end></nav>
+<script type="module">
+import { Chron } from '/js/chron.js';
+Chron.init('0-13-achkych');
+import('/js/chron/0-13-achkych.js').then(m => m.default(Chron));
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAK+ 0.1 — БАШТАЛЫШ</title>
+<meta name="description" content="Версия 0.1 SABAK+ «Башталыш»: первый прототип электронного журнала. Оценки за несколько касаний, итог с весами, подсказки и анонимная почта.">
+<link rel="canonical" href="https://sabak-plus.vercel.app/updates/0-1-bashtalysh">
+<meta name="theme-color" content="#f1e8d2">
+<meta property="og:type" content="article"><meta property="og:site_name" content="SABAK+"><meta property="og:title" content="SABAK+ 0.1 — БАШТАЛЫШ"><meta property="og:description" content="Всё начинается с одной идеи. Первый прототип электронного журнала SABAK+."><meta property="og:image" content="https://sabak-plus.vercel.app/og.png">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/chron.css"><link rel="stylesheet" href="/css/chron/0-1-bashtalysh.css">
+</head>
+<body class="ch c01">
+<main id="main">
+
+<!-- 1. Hero: тетрадь раскрывается при прокрутке -->
+<section class="hero" id="hero" aria-label="Тетрадь раскрывается">
+  <div class="stage">
+    <h1 class="mega" aria-label="БАШТАЛЫШ"><span class="ltrs" aria-hidden="true"></span></h1>
+    <p class="sub" data-ky="Баары бир идеядан башталат">Всё начинается с одной идеи</p>
+    <div class="nb" id="nb" aria-hidden="true">
+      <div class="nb-back"></div>
+      <div class="nb-page nb-right">
+        <div class="ruled"></div>
+        <div class="ui-bit grid" id="uig">
+          <b>Математика</b>
+          <div class="cells"><i data-v="5">5</i><i data-v="4">4</i><i data-v="5" class="x2">5</i><i data-v="3">3</i></div>
+          <small>контрольная ×2</small>
+        </div>
+      </div>
+      <div class="nb-page nb-left">
+        <div class="ruled"></div>
+        <svg class="hand" viewBox="0 0 300 120" aria-hidden="true"><path id="hw" d="M10 70 C30 20 50 20 55 60 S75 100 95 55 S125 20 140 60 S165 95 185 50 S215 25 230 60 S260 85 290 45"/></svg>
+        <div class="ui-bit undo" id="uiu"><span>↶</span> <small>отменить</small></div>
+        <div class="ui-bit saved" id="uis"><span>✓</span> <small>сохранено</small></div>
+      </div>
+      <div class="nb-cover" id="cover"><span class="mk"></span><b>SABAK<i>+</i></b><small>журнал · 0.1</small></div>
+    </div>
+    <p class="hint" data-ky="Тетрадды ачуу үчүн ылдый жылдырыңыз">Листайте вниз, чтобы открыть тетрадь</p>
+  </div>
+</section>
+
+<!-- 2. Название, дата, история -->
+<section class="intro">
+  <div class="col">
+    <p class="vline cr"><b>0.1</b> · <span>БАШТАЛЫШ</span> · <time datetime="2026-10">Октябрь 2026</time></p>
+    <h2 class="cr" data-ky="Бир дептер. Бир идея.">Одна тетрадь. Одна идея.</h2>
+    <p class="story cr">Всё началось с простого вопроса: почему поставить оценку должно быть дольше, чем её выставить на бумаге? Так появился первый прототип: электронный журнал, где оценка ставится несколькими касаниями, сохраняется сама и не пропадает, если ошибся.</p>
+    <p class="story cr">Это ещё не платформа для школ. Это первая страница, на которой появились главные правила дневника.</p>
+  </div>
+</section>
+
+<!-- 3. Главная демонстрация: страницы переворачиваются -->
+<section class="flip" id="flip" aria-label="Страницы первого прототипа">
+  <div class="fstage">
+    <h2 class="ftitle" data-ky="Прототиптин үч негизги барагы">Три главные страницы прототипа</h2>
+    <div class="deck" id="deck">
+      <article class="leaf l1"><div class="face"><h3 data-ky="Бир нече басуу менен баа коюу">Оценка за несколько касаний</h3><p data-ky="Окуучуну тандайсыз, баасын басасыз — болду.">Выбираете ученика, нажимаете оценку — готово. Основание оценки выбирается рядом.</p><div class="tap"><i>2</i><i>3</i><i>4</i><b>5</b></div></div></article>
+      <article class="leaf l2"><div class="face"><h3 data-ky="Автосактоо жана артка кайтаруу">Автосохранение и отмена</h3><p>Изменения сохраняются сами. Последнее действие можно отменить.</p><div class="tap2"><span>✓ сохранено</span><span>↶ отменить</span></div></div></article>
+      <article class="leaf l3"><div class="face"><h3 data-ky="Салмактуу жыйынтык баа">Итог с весами</h3><p>Контрольная считается с весом ×2, остальные работы — ×1.</p><div class="fm" aria-hidden="true">(5 + 4 + 5×2) ÷ 4 = 4,75</div></div></article>
+    </div>
+  </div>
+</section>
+
+<!-- 4. Список функций -->
+<section class="feat">
+  <div class="col wide">
+    <h2 class="cr" data-ky="Биринчи версияда эмне болгон">Что было в первой версии</h2>
+    <ol class="ruledlist" id="fl">
+      <li class="cr"><b>Первый прототип электронного журнала</b></li>
+      <li class="cr"><b>Оценки за несколько касаний</b> — учитель ставит оценку быстро</li>
+      <li class="cr"><b>Автоматическое сохранение</b></li>
+      <li class="cr"><b>Отмена последнего действия</b></li>
+      <li class="cr"><b>Итоговая оценка с весами:</b> контрольная работа ×2</li>
+      <li class="cr"><b>Сколько пятёрок нужно</b> до следующей итоговой оценки</li>
+      <li class="cr"><b>Основания оценок:</b> домашняя работа, активность, самостоятельная, доклад, реферат</li>
+      <li class="cr"><b>ИИ-подсказки учителю.</b> Оценки он не выставляет — решает человек</li>
+      <li class="cr"><b>Ежедневные аффирмации</b> — короткая добрая фраза на день</li>
+      <li class="cr"><b>Анонимная почта администрации</b></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 5. Калькулятор -->
+<section class="calc" id="calc" aria-label="Калькулятор итоговой оценки">
+  <div class="col wide">
+    <p class="demo-tag">ДЕМО · <span data-ky="үлгү маалыматтар">примерные данные</span></p>
+    <h2 class="cr" data-ky="Жыйынтык баа кантип эсептелет">Как считается итоговая оценка</h2>
+    <p class="story">Добавляйте оценки и отмечайте контрольную: она весит вдвое больше. Формула пересчитывается сразу.</p>
+    <div class="cgrid">
+      <div class="cpanel">
+        <div class="cbtns" role="group" aria-label="Выберите оценку">
+          <button type="button" data-g="2">2</button><button type="button" data-g="3">3</button><button type="button" data-g="4">4</button><button type="button" data-g="5">5</button>
+        </div>
+        <label class="ck"><input type="checkbox" id="istest"> <span data-ky="Бул көзөмөл иши (×2)">Это контрольная работа (×2)</span></label>
+        <ul class="glist" id="glist" aria-live="polite"></ul>
+        <div class="crow"><button type="button" id="undo" class="ghost">↶ Отменить последнее</button><button type="button" id="reset" class="ghost">Сбросить пример</button></div>
+      </div>
+      <div class="cresult" aria-live="polite">
+        <div class="formula" id="fml"></div>
+        <div class="avg"><small>Среднее</small><b id="avg">—</b></div>
+        <div class="fin"><small>Итоговая оценка</small><b id="fin">—</b></div>
+        <p class="need" id="need"></p>
+        <p class="note">Среднее округляется от x,5 вверх.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Что изменилось -->
+<section class="changed">
+  <div class="col wide">
+    <h2 class="cr" data-ky="Эмне өзгөрдү">Что изменилось</h2>
+    <div class="cols3">
+      <article class="cr"><h3>Для учителя</h3><p>Оценка ставится несколькими касаниями и сохраняется сама. Если ошибся — последнее действие отменяется. ИИ-подсказки помогают заметить, кому нужна поддержка, но решения не принимают.</p></article>
+      <article class="cr"><h3>Для ученика</h3><p>Видно, как считается итог и сколько пятёрок нужно до следующей итоговой оценки. Каждый день — аффирмация.</p></article>
+      <article class="cr"><h3>Для администрации</h3><p>Появилась анонимная почта: можно написать, не называя себя.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Финал -->
+<section class="finale" id="finale" aria-label="Финал">
+  <div class="fpage">
+    <svg class="sig" viewBox="0 0 640 170" role="img" aria-label="SABAK+"><text id="sigt" x="50%" y="62%" text-anchor="middle" dominant-baseline="middle">SABAK+</text></svg>
+    <p class="q" id="quote"><b data-ky="Бул болгону башталышы">«Бул болгону башталышы»</b><br><span>Это было только начало</span></p>
+  </div>
+</section>
+</main>
+<nav data-chron-end></nav>
+<script type="module">
+import { Chron } from '/js/chron.js';
+Chron.init('0-1-bashtalysh');
+import('/js/chron/0-1-bashtalysh.js').then(m => m.default(Chron));
+</script>
+</body>
+</html>

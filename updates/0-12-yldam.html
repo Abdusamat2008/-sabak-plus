@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAK+ 0.12 — ЫЛДАМ</title>
+<meta name="description" content="Версия 0.12 SABAK+ «Ылдам»: быстрая работа с большими школами и работа без интернета с очередью изменений.">
+<link rel="canonical" href="https://sabak-plus.vercel.app/updates/0-12-yldam">
+<meta name="theme-color" content="#02060d">
+<meta property="og:type" content="article"><meta property="og:site_name" content="SABAK+"><meta property="og:title" content="SABAK+ 0.12 — ЫЛДАМ"><meta property="og:description" content="Ылдамдык — сапаттын бир бөлүгү. Скорость является частью качества."><meta property="og:image" content="https://sabak-plus.vercel.app/og.png">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/chron.css"><link rel="stylesheet" href="/css/chron/0-12-yldam.css">
+</head>
+<body class="ch c12">
+<main id="main">
+<section class="hero" id="hero" aria-label="Поток данных"><div class="stage"><canvas id="cv" aria-hidden="true"></canvas>
+ <h1 class="mega" aria-label="ЫЛДАМ"><span aria-hidden="true">ЫЛДАМ</span></h1>
+ <div class="dcard" id="dcard" aria-hidden="true"><small>Ученик · ДЕМО</small><b>Алгебра</b><i>5</i></div>
+ <p class="sub"><b data-ky="Ылдамдык — көрүнбөгөн күч">Ылдамдык — көрүнбөгөн күч</b><span>Скорость — невидимая сила</span></p>
+ <p class="hint" data-ky="Ылдый жылдырыңыз">Листайте вниз: поток ускорится</p></div></section>
+
+<section class="intro"><div class="col"><p class="vline cr"><b>0.12</b> · ЫЛДАМ · <time datetime="2026-11-08">8 ноября 2026</time></p>
+ <h2 class="cr" data-ky="Ылдамдык">Быстро, даже когда пользователей тысячи</h2>
+ <p class="story cr">Школьный дневник должен работать быстро и тогда, когда интернет нестабилен. В версии 0.12 приложение стало легче, а основные разделы открываются без сети.</p></div></section>
+
+<section class="race" id="race" aria-label="Сравнение скорости"><div class="col wide"><p class="demo-tag">ДЕМО · <span data-ky="симуляция">симуляция, не измерение сайта</span></p>
+ <h2 class="cr" data-ky="Ылдамдыкты салыштыруу">19 секунд против 0,03</h2>
+ <p class="story">Такие цифры получены на локальном тесте: загрузка всех оценок тестовой школы из 1000 учеников для директора. На реальной нагрузке результат может отличаться. Ниже анимация, а не измерение вашего сайта.</p>
+ <div class="rc"><div class="lane"><span>До: <b>19 с</b></span><div class="tr"><i id="slow"></i></div></div><div class="lane"><span>После: <b>0,03 с</b></span><div class="tr"><i id="fast" class="f"></i></div></div></div>
+ <div class="irow2"><button type="button" class="bt" id="go">Запустить сравнение</button><span class="timer" id="tm" aria-live="polite">—</span></div></div></section>
+
+<section class="off" id="off" aria-label="Работа без интернета"><div class="col wide"><p class="demo-tag">ДЕМО · <span data-ky="симуляция">симуляция очереди изменений</span></p>
+ <h2 class="cr" data-ky="Интернетсиз иштөө">Работа без интернета</h2><p class="story">Отключите виртуальный интернет, внесите оценки и посещаемость, затем включите связь: очередь отправится сама.</p>
+ <div class="oc"><label class="sw"><input type="checkbox" id="net" checked> <span id="nlab">Интернет есть</span></label>
+  <div class="btns"><button type="button" class="bt" data-g="Айбек · 5">Оценка: Айбек, 5</button><button type="button" class="bt" data-g="Мээрим · 4">Оценка: Мээрим, 4</button><button type="button" class="bt ghost" data-g="Эмир · был">Посещаемость: Эмир, был</button></div>
+  <div class="two"><div class="box"><h3>Очередь на устройстве</h3><ul id="queue"></ul></div><div class="box"><h3>Отправлено в журнал</h3><ul id="sent"></ul></div></div><p class="story small" id="omsg" aria-live="polite"></p></div></div></section>
+
+<section class="feat"><div class="col wide"><h2 class="cr" data-ky="Версия 0.12де эмне бар">Что вошло в версию 0.12</h2><ul class="fl">
+ <li class="cr"><b>Оптимизирована база данных</b></li><li class="cr"><b>Загрузка всех оценок школы для директора</b> ускорена с 19 секунд до 0,03 секунды на тестовой школе из 1000 учеников (локальный тест)</li>
+ <li class="cr"><b>Меньше лишних запросов:</b> вместо постоянной полной загрузки сначала лёгкая проверка изменений</li><li class="cr"><b>Свёрнутая вкладка</b> не создаёт нагрузку</li>
+ <li class="cr"><b>«Окно оценок»,</b> чтобы интерфейс не тяжелел к концу года; старые оценки доступны через отчёты и табель</li><li class="cr"><b>Без интернета</b> доступны новости, «Үн», календарь четвертей, табель, удостоверение и «Алтын»</li>
+ <li class="cr"><b>Оценки и посещаемость</b> можно вносить офлайн; отправка после восстановления связи</li></ul>
+ <p class="story small">Цифры получены на локальном тесте, а не на реальной нагрузке.</p></div></section>
+
+<section class="finale" id="finale" aria-label="Финал"><div class="fstage"><div class="gridf" id="gridf" aria-hidden="true"></div>
+ <p class="q" id="quote"><b data-ky="Ылдамдык — сапаттын бир бөлүгү">«Ылдамдык — сапаттын бир бөлүгү»</b><br><span>Скорость является частью качества</span></p></div></section>
+</main><nav data-chron-end></nav>
+<script type="module">
+import { Chron } from '/js/chron.js';
+Chron.init('0-12-yldam');
+import('/js/chron/0-12-yldam.js').then(m => m.default(Chron));
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAK+ 0.14 — КАЛКАН</title>
+<meta name="description" content="Версия 0.14 SABAK+ «Калкан»: запись без интернета, выгрузка данных школы, резервные копии, согласие с политикой конфиденциальности.">
+<link rel="canonical" href="https://sabak-plus.vercel.app/updates/0-14-kalkan">
+<meta name="theme-color" content="#050a14">
+<meta property="og:type" content="article"><meta property="og:site_name" content="SABAK+"><meta property="og:title" content="SABAK+ 0.14 — КАЛКАН"><meta property="og:description" content="Калкан — келечекти коргойт. Щит защищает будущее."><meta property="og:image" content="https://sabak-plus.vercel.app/og.png">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/chron.css"><link rel="stylesheet" href="/css/chron/0-14-kalkan.css">
+</head>
+<body class="ch c14">
+<main id="main">
+<section class="hero" id="hero" aria-label="Щит"><div class="stage"><div class="stars" aria-hidden="true"></div>
+ <h1 class="mega" aria-label="КАЛКАН"><span aria-hidden="true">КАЛКАН</span></h1>
+ <div class="sh" id="sh" aria-hidden="true"><div class="school"><i></i><b>S<em>+</em></b></div>
+  <svg viewBox="-100 -110 200 230"><g id="layers"></g></svg></div>
+ <p class="sub"><b data-ky="Маалымат корголсо — ишеним сакталат">Маалымат корголсо — ишеним сакталат</b><span>Когда данные защищены, доверие сохраняется</span></p>
+ <p class="hint" data-ky="Ылдый жылдырыңыз">Листайте вниз: вокруг школы вырастет щит</p></div></section>
+
+<section class="intro"><div class="col"><p class="vline cr"><b>0.14</b> · КАЛКАН · <time datetime="2026-11-10">10 ноября 2026</time></p>
+ <h2 class="cr" data-ky="Калкан">Надёжность — основа доверия</h2>
+ <p class="story cr">Версия 0.14 добавила то, что нужно школе каждый день: запись без интернета, резервные копии, выгрузку своих данных и ясное согласие с политикой конфиденциальности.</p>
+ <p class="story cr small">Мы не обещаем абсолютной защиты. Мы описываем только то, что реально сделано.</p></div></section>
+
+<section class="demo" id="demo" aria-label="Демонстрации"><div class="col wide"><p class="demo-tag">ДЕМО · <span data-ky="симуляция">симуляция, данные вымышленные</span></p>
+ <h2 class="cr" data-ky="Калканды сынаңыз">Что делает «Калкан»</h2>
+ <div class="grid">
+  <article class="box"><h3>Очередь без интернета</h3><p class="small">Напишите новость при отключённой связи: она запечатается и уйдёт сама.</p><label class="sw"><input type="checkbox" id="net" checked> <span id="nlab">Интернет есть</span></label><input id="nt" maxlength="60" placeholder="Заголовок новости" aria-label="Заголовок новости"><button type="button" class="bt" id="npost">Опубликовать</button><ul id="nq"></ul><p class="small" id="nmsg" aria-live="polite"></p></article>
+  <article class="box"><h3>Проверка текста</h3><p class="small">Опасная разметка в тексте отклоняется. Попробуйте вставить кусок кода.</p><textarea id="mk" rows="3" aria-label="Текст новости">Завтра сокращённые уроки &lt;b&gt;просьба не опаздывать&lt;/b&gt;</textarea><div class="irow2"><button type="button" class="bt" id="chk">Проверить</button><button type="button" class="bt ghost" id="bad">Вставить опасный пример</button></div><p class="res" id="mres" aria-live="polite"></p></article>
+  <article class="box"><h3>Резервная копия</h3><p class="small">Копия собирается в один контейнер по расписанию. Школа может выгрузить все свои данные.</p><div class="pack" id="pack"><i></i><i></i><i></i><i></i></div><button type="button" class="bt" id="bk">Собрать копию</button><p class="small" id="bmsg" aria-live="polite"></p></article>
+  <article class="box"><h3>Календарь учебного года</h3><p class="small">Если календарь не заполнен, школа видит предупреждение.</p><label class="sw"><input type="checkbox" id="cal"> <span>Календарь заполнен</span></label><p class="res" id="cres" aria-live="polite"></p></article>
+  <article class="box wide2"><h3>Согласие при входе</h3><p class="small">При входе нужно согласиться с политикой конфиденциальности.</p><div class="cons"><label class="sw"><input type="checkbox" id="c1"> <span>Я прочитал(а) политику конфиденциальности</span></label><label class="sw"><input type="checkbox" id="c2"> <span>Я согласен(на) с обработкой данных, описанной в политике</span></label><button type="button" class="bt" id="cbtn" disabled>Войти</button></div><p class="small" id="cmsg" aria-live="polite"></p></article>
+ </div></div></section>
+
+<section class="feat"><div class="col wide"><h2 class="cr" data-ky="Версия 0.14те эмне бар">Что вошло в версию 0.14</h2><ul class="fl">
+ <li class="cr"><b>Очередь записи без интернета</b> для новостей и «Үн»</li><li class="cr"><b>После восстановления связи</b> изменения отправляются сами</li><li class="cr"><b>Школа может выгрузить</b> все свои данные</li>
+ <li class="cr"><b>Резервные копии</b> по расписанию</li><li class="cr"><b>Согласие с политикой конфиденциальности</b> при входе</li><li class="cr"><b>Печать удостоверения</b></li>
+ <li class="cr"><b>Предупреждение,</b> если календарь учебного года не заполнен</li><li class="cr"><b>Сервер отклоняет опасную разметку</b> в текстах новостей</li></ul>
+ <p class="story small">Это не заявление об абсолютной защите. Подробности о данных читайте в <a href="/privacy">политике конфиденциальности</a>.</p></div></section>
+
+<section class="finale" id="finale" aria-label="Финал"><div class="fstage"><div class="stars" aria-hidden="true"></div><div class="orn" id="orn" aria-hidden="true"></div><div class="sch2" aria-hidden="true"><b>S<em>+</em></b></div>
+ <p class="q" id="quote"><b data-ky="Калкан — келечекти коргойт">«Калкан — келечекти коргойт»</b><br><span>Щит защищает будущее</span></p></div></section>
+</main><nav data-chron-end></nav>
+<script type="module">
+import { Chron } from '/js/chron.js';
+Chron.init('0-14-kalkan');
+import('/js/chron/0-14-kalkan.js').then(m => m.default(Chron));
+</script>
+</body>
+</html>

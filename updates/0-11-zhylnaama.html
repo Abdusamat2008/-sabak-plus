@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SABAK+ 0.11 — ЖЫЛСАНАК</title>
+<meta name="description" content="Версия 0.11 SABAK+ «Жылсанак»: календарь учебного года, четверти, подробный журнал, табель и электронное удостоверение ученика.">
+<link rel="canonical" href="https://sabak-plus.vercel.app/updates/0-11-zhylnaama">
+<meta name="theme-color" content="#f3ecdc">
+<meta property="og:type" content="article"><meta property="og:site_name" content="SABAK+"><meta property="og:title" content="SABAK+ 0.11 — ЖЫЛСАНАК"><meta property="og:description" content="Ар бир күн — тарыхтын бир бөлүгү. Каждый день является частью истории."><meta property="og:image" content="https://sabak-plus.vercel.app/og.png">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/chron.css"><link rel="stylesheet" href="/css/chron/0-11-zhylnaama.css">
+</head>
+<body class="ch c11">
+<main id="main">
+<section class="hero" id="hero" aria-label="Календарь"><div class="stage">
+ <h1 class="mega" aria-label="ЖЫЛСАНАК"><span aria-hidden="true">ЖЫЛСАНАК</span></h1>
+ <div class="cal" id="cal" aria-hidden="true"><div class="back"></div><div class="pg" style="--i:0"><b>Сентябрь</b><span>1</span></div><div class="pg" style="--i:1"><b>Октябрь</b><span>2</span></div><div class="pg" style="--i:2"><b>Ноябрь</b><span>3</span></div><div class="pg" style="--i:3"><b>Декабрь</b><span>4</span></div><div class="pg" style="--i:4"><b>Январь</b><span>5</span></div></div>
+ <div class="scale" id="scale" aria-hidden="true"><i class="q1">1 четверть</i><i class="q2">2 четверть</i><i class="q3">3 четверть</i><i class="q4">4 четверть</i></div>
+ <p class="hint" data-ky="Ылдый жылдырыңыз">Листайте вниз: страницы перевернутся</p></div></section>
+
+<section class="intro"><div class="col"><p class="vline cr"><b>0.11</b> · ЖЫЛСАНАК · <time datetime="2026-11-08">8 ноября 2026</time></p>
+ <h2 class="cr" data-ky="Жылсанак">У школьного года появилась летопись</h2>
+ <p class="story cr">Версия 0.11 дала SABAK+ календарь учебного года. Оценки, четверти, каникулы и новости теперь складываются в понятную историю года.</p></div></section>
+
+<section class="demo" id="demo" aria-label="Календарь четвертей"><div class="col wide"><p class="demo-tag">ДЕМО · <span data-ky="симуляция">даты вымышленные, это не реальный календарь школ</span></p>
+ <h2 class="cr" data-ky="Чейректер">Календарь четвертей</h2><p class="story">Нажмите на день: система покажет, можно ли в этот день ставить оценки.</p>
+ <div class="qs" id="qs"></div><div class="days" id="days" role="grid" aria-label="Дни"></div><p class="verdict" id="verdict" aria-live="polite"></p>
+ <div class="rules"><p><b>Каникулы и закрытые четверти:</b> оценки ставить нельзя.</p><p><b>После конца четверти</b> есть три дня на исправления, затем архив четверти фиксируется.</p></div></div></section>
+
+<section class="idc" id="idc" aria-label="Удостоверение"><div class="col wide"><p class="demo-tag">ДЕМО · <span data-ky="симуляция">вымышленный ученик</span></p><h2 class="cr" data-ky="Окуучунун күбөлүгү">Электронное удостоверение</h2>
+ <p class="story">Фото, школа, дата рождения, класс, классный руководитель, родители и телефоны. Нажмите «Поставить печать», чтобы увидеть, как удостоверение заверяется.</p>
+ <div class="idw"><div class="id" id="id"><div class="ph">А</div><div class="tx"><b>Айбек Т.</b><span>8 «Б» класс · Школа № 0 (демо)</span><span>Дата рождения: 01.01.2012 (демо)</span><span>Классный руководитель: Н. Н. (демо)</span><span>Родитель: тел. +996 000 000 000 (демо)</span></div><div class="seal" id="seal" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="34"/><path d="M34 52l11 11 21-24"/><defs><path id="cp" d="M50 50m-40 0a40 40 0 1 1 80 0a40 40 0 1 1-80 0"/></defs><text><textPath href="#cp">ШКОЛА · ДЕМО · ШКОЛА · ДЕМО ·</textPath></text></svg></div></div>
+  <div class="irow2"><button type="button" class="bt" id="stamp">Поставить печать</button><button type="button" class="bt ghost" id="unstamp">Сбросить</button></div></div>
+ <p class="note"><b>Важно:</b> это внутренний школьный электронный документ. Он не является государственным удостоверением.</p></div></section>
+
+<section class="feat"><div class="col wide"><h2 class="cr" data-ky="Версия 0.11де эмне бар">Что вошло в версию 0.11</h2><ul class="fl">
+ <li class="cr"><b>Календарь учебного года;</b> даты четырёх четвертей и каникул вносит суперадминистратор по приказу министерства</li><li class="cr"><b>Текущая четверть и номер учебного дня</b> на страницах</li>
+ <li class="cr"><b>Оценки нельзя ставить</b> в каникулы и в закрытые четверти</li><li class="cr"><b>Три дня на исправления</b> после конца четверти</li><li class="cr"><b>Автосохранение архива оценок</b> после четверти; архив нельзя изменить</li>
+ <li class="cr"><b>Подробный журнал:</b> тема урока, комментарий, автор, история изменений</li><li class="cr"><b>Отчёты</b> по году, четверти, классу и предмету; экспорт в Excel, Word и PDF</li>
+ <li class="cr"><b>Табель ученика:</b> итоги за четверти и год</li><li class="cr"><b>Просмотр прошлых лет,</b> если школа их оцифровала</li><li class="cr"><b>Чтение школьных новостей</b> с указанием автора: суперадминистратор, система, директор, завуч</li>
+ <li class="cr"><b>Редактор новостей:</b> заголовки, цвета, выделение, списки, цитаты, выравнивание, ссылки</li><li class="cr"><b>Электронное удостоверение ученика</b> с круглой школьной печатью; его можно скачать как изображение</li></ul></div></section>
+
+<section class="finale" id="finale" aria-label="Финал"><div class="fstage"><div class="tl" id="tl" aria-hidden="true"><i></i></div><div class="bigseal" id="bseal" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46"/><circle cx="50" cy="50" r="34"/><path d="M34 52l11 11 21-24"/></svg></div>
+ <p class="q" id="quote"><b data-ky="Ар бир күн — тарыхтын бир бөлүгү">«Ар бир күн — тарыхтын бир бөлүгү»</b><br><span>Каждый день является частью истории</span></p></div></section>
+</main><nav data-chron-end></nav>
+<script type="module">
+import { Chron } from '/js/chron.js';
+Chron.init('0-11-zhylnaama');
+import('/js/chron/0-11-zhylnaama.js').then(m => m.default(Chron));
+</script>
+</body>
+</html>
