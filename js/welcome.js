@@ -1,7 +1,7 @@
 // Мастер первого знакомства с SABAK+.
 // 1) заставка из финала главы «Башталыш» (тетрадь → страница в линейку → слово SABAK+: сначала контур, потом заливка, без слогана);
-// 2) «экран загрузки» в духе текстового режима установки Windows;
-// 3) мастер установки в стиле Windows XP: слева шаги, справа страницы с инструкцией, внизу «‹ Назад · Далее ›».
+// 2) мастер установки в фирменном стиле SABAK+ (mobile-first): шаги, инструкция для своей роли, шпаргалка, настройка, установка;
+// 3) экскурсия-подсветка по настоящему интерфейсу («Показать на экране»).
 // Показывается один раз после регистрации (признак хранится на устройстве и в таблице consents). Открыть снова: меню профиля → «Как пользоваться SABAK+».
 import * as S from './store.js';
 import * as API from './api.js';
@@ -136,7 +136,7 @@ function renderSplash() {
     if (W.phase !== 'splash') return;
     if (reduced()) { paint(END); const b = $('.wzs-skip'); if (b) { b.textContent = T('Продолжить', 'Улантуу') + ' ›'; b.classList.add('on'); b.focus(); } return; }
     paint(0); const t0 = performance.now();
-    const frame = now => { if (W.phase !== 'splash') return; const t = (now - t0) / 1000; paint(t); if (t < END) W.raf = requestAnimationFrame(frame); else renderText(); };
+    const frame = now => { if (W.phase !== 'splash') return; const t = (now - t0) / 1000; paint(t); if (t < END) W.raf = requestAnimationFrame(frame); else renderWizard(); };
     W.raf = requestAnimationFrame(frame);
   };
   // шрифт нужен до первого кадра, иначе контур слова «прыгнет»
@@ -144,36 +144,8 @@ function renderSplash() {
   f.catch(() => {}).then(go2);
 }
 
-// ───────────────────────── 2. «текстовый режим» установки ─────────────────────────
-const dots = (a, b, w = 38) => a + ' ' + '.'.repeat(Math.max(2, w - a.length - b.length - 2)) + ' ' + b;
-function textLines() {
-  return ky() ? [
-    'SABAK+  ·  ОРНОТУУ ПРОГРАММАСЫ', '══════════════════════════════════════', 'Компоненттер жүктөлүүдө...',
-    ' ▸ ' + dots('журнал жана баалар', 'OK', 35), ' ▸ ' + dots('сабак тартиби жана үй иши', 'OK', 35), ' ▸ ' + dots('Алтын жана жетишкендиктер', 'OK', 35), ' ▸ ' + dots('мектеп лентасы «Үн»', 'OK', 35), ' ▸ ' + dots('интернетсиз иштөө', 'OK', 35),
-    dots('Түзмөк текшерилүүдө', 'даяр', 38), '',
-    'SABAK+ орнотууга кош келиңиз.', '2–3 мүнөттө эмне кайда экенин жана', 'эмнени басуу керек экенин билесиз.', '',
-    ' • ENTER — орнотууну баштоо', ' • Esc — таанышууну өткөрүү',
-  ] : [
-    'SABAK+  ·  ПРОГРАММА УСТАНОВКИ', '══════════════════════════════════════', 'Загрузка компонентов...',
-    ' ▸ ' + dots('журнал и оценки', 'OK', 35), ' ▸ ' + dots('расписание и ДЗ', 'OK', 35), ' ▸ ' + dots('Алтын и достижения', 'OK', 35), ' ▸ ' + dots('школьная лента «Үн»', 'OK', 35), ' ▸ ' + dots('работа без интернета', 'OK', 35),
-    dots('Проверка устройства', 'готово', 38), '',
-    'Добро пожаловать в установку SABAK+.', 'За 2–3 минуты вы узнаете, где что', 'находится и что нажимать.', '',
-    ' • ВВОД — начать установку', ' • Esc — пропустить знакомство',
-  ];
-}
-function renderText() {
-  clearAnim(); W.phase = 'text'; root.className = 'wz wz-text'; root.style.removeProperty('--horn');
-  root.innerHTML = `<div class="wzt"><div class="wzt-title">${T('Установка SABAK+', 'SABAK+ орнотуу')}</div><pre class="wzt-out" id="wzt-out"></pre></div>
-    <div class="wzt-bar"><button type="button" id="wzt-go" data-wz="text-go" disabled>${T('ВВОД=Продолжить', 'ENTER=Улантуу')}</button><button type="button" data-wz="skip">${T('Esc=Пропустить', 'Esc=Өткөрүү')}</button></div>`;
-  const out = $('#wzt-out'), lines = textLines(), go = $('#wzt-go'); let i = 0;
-  const ready = () => { go.disabled = false; go.focus(); };
-  if (reduced()) { out.textContent = lines.join('\n') + '\n'; ready(); return; }
-  const step = () => { if (W.phase !== 'text') return; if (i < lines.length) { out.textContent += lines[i++] + '\n'; later(step, lines[i - 1] ? 110 : 280); } else ready(); };
-  step();
-}
-
 // ───────────────────────── 3. мастер: страницы и содержание ─────────────────────────
-const GROUPS = [['Добро пожаловать', 'Кош келиңиз'], ['Экран и меню', 'Экран жана меню'], ['Ваши возможности', 'Мүмкүнчүлүктөрүңүз'], ['Настройка под вас', 'Өзүңүзгө ылайыктоо'], ['Завершение', 'Аяктоо']];
+const GROUPS = [['Добро пожаловать', 'Кош келиңиз'], ['Экран и меню', 'Экран жана меню'], ['Ваши возможности', 'Мүмкүнчүлүктөрүңүз'], ['Шпаргалка и настройка', 'Шпаргалка жана жөндөө'], ['Завершение', 'Аяктоо']];
 
 // Урок = { vis: ключ наглядного примера, t: заголовок, lead: вводный текст, steps: «что нажать», tip: подсказка } (пары [рус, кырг])
 const LESSONS = {
@@ -255,6 +227,57 @@ const FIRST = {
   admin: [['admin/access', 'Пригласить завучей и учителей', 'Завучтарды жана мугалимдерди чакыруу'], ['admin/schedule', 'Составить расписание', 'Сабак тартибин түзүү'], ['admin/students', 'Проверить список учеников', 'Окуучулардын тизмесин текшерүү'], ['admin', 'Открыть обзор школы', 'Мектепке сереп салуу']],
   super: [['super', 'Открыть обзор платформы', 'Платформага сереп салуу'], ['super/schools', 'Посмотреть школы', 'Мектептерди көрүү'], ['super/inbox', 'Прочитать входящие', 'Кирүүчүлөрдү окуу']],
 };
+
+// Шпаргалка «задача → куда нажать» [рус, кырг, путь рус, путь кырг]
+const CHEAT = {
+  student: [
+    ['Узнать итог по предмету', 'Предметтин жыйынтыгын билүү', 'Учёба › Предметы', 'Окуу › Сабактар'],
+    ['Понять, сколько «пятёрок» нужно до следующей оценки', 'Кийинки баа үчүн канча «беш» керек экенин билүү', 'Учёба › Предметы › нужный предмет', 'Окуу › Сабактар › керектүү предмет'],
+    ['Посмотреть расписание', 'Тартипти көрүү', 'Учёба › Расписание', 'Окуу › Тартип'],
+    ['Отметить домашнее задание', 'Үй ишин белгилөө', 'Учёба › ДЗ', 'Окуу › Үй иши'],
+    ['Увидеть итоги четвертей', 'Чейрек жыйынтыктарын көрүү', 'Учёба › Табель', 'Окуу › Табель'],
+    ['Потратить или перевести Алтын', 'Алтынды короо же которуу', 'Награды › Алтын', 'Сыйлыктар › Алтын'],
+    ['Написать администрации анонимно', 'Администрацияга анонимдүү жазуу', 'Общение › Анонимно', 'Баарлашуу › Анонимдүү'],
+    ['Сменить язык', 'Тилди которуу', 'Ваше имя вверху › Язык', 'Жогорудагы атыңыз › Тил'],
+    ['Сделать текст крупнее', 'Текстти чоңойтуу', 'Значок человечка › Размер текста', 'Адамча белгиси › Текст өлчөмү'],
+  ],
+  teacher: [
+    ['Поставить оценку', 'Баа коюу', 'Журнал › «За что» › цифра у ученика', 'Журнал › «Эмне үчүн» › окуучудагы сан'],
+    ['Отменить ошибочную оценку', 'Жаңылыш бааны кайтаруу', 'Журнал › Отменить (вверху)', 'Журнал › Артка (жогоруда)'],
+    ['Отметить, кто пришёл', 'Ким келгенин белгилөө', 'Журнал › ✓ / Н / ⏱ у ученика', 'Журнал › окуучудагы ✓ / Н / ⏱'],
+    ['Записать тему урока и ДЗ', 'Сабактын темасын жана үй ишин жазуу', 'Журнал › План урока', 'Журнал › Сабак планы'],
+    ['Увидеть, кому нужна поддержка', 'Кимге колдоо керек экенин көрүү', 'Класс › Аналитика', 'Класс › Аналитика'],
+    ['Выгрузить журнал', 'Журналды жүктөө', 'Журнал › Excel / Word / PDF', 'Журнал › Excel / Word / PDF'],
+    ['Добавить ученика', 'Окуучу кошуу', 'Журнал › ФИО ученика › Добавить', 'Журнал › Окуучунун аты-жөнү › Кошуу'],
+    ['Открыть расписание', 'Тартипти ачуу', 'Расписание', 'Тартип'],
+  ],
+  parent: [
+    ['Узнать, как дела у ребёнка за неделю', 'Бала жумада кандай экенин билүү', 'Неделя', 'Жума'],
+    ['Посмотреть оценки по предметам', 'Предметтер боюнча бааларды көрүү', 'Учёба › Предметы', 'Окуу › Сабактар'],
+    ['Узнать, за что поставлена оценка', 'Баа эмне үчүн коюлганын билүү', 'Нажмите на оценку', 'Баага басыңыз'],
+    ['Проверить «дело» и документы', '«Ишти» жана документтерди текшерүү', 'Ребёнок › Дело', 'Бала › Иш'],
+    ['Открыть удостоверение ребёнка', 'Баланын күбөлүгүн ачуу', 'Ребёнок › Удостоверение', 'Бала › Күбөлүк'],
+    ['Прочитать новости школы', 'Мектеп жаңылыктарын окуу', 'Новости', 'Жаңылыктар'],
+    ['Переключиться на другого ребёнка', 'Башка балага которулуу', 'Вверху страницы › имя ребёнка', 'Беттин жогору жагы › баланын аты'],
+  ],
+  admin: [
+    ['Пригласить учителя, завуча, родителя', 'Мугалим, завуч, ата-эне чакыруу', 'Люди › Доступ', 'Адамдар › Жеткиликтүүлүк'],
+    ['Подтвердить нового пользователя', 'Жаңы колдонуучуну ырастоо', 'Люди › Доступ', 'Адамдар › Жеткиликтүүлүк'],
+    ['Составить или утвердить расписание', 'Тартипти түзүү же бекитүү', 'Учёба › Расписание', 'Окуу › Сабак тартиби'],
+    ['Задать четверти', 'Чейректерди коюу', 'Учёба › Четверти', 'Окуу › Чейректер'],
+    ['Посмотреть показатели школы', 'Мектептин көрсөткүчтөрүн көрүү', 'Обзор', 'Обзор'],
+    ['Опубликовать новость', 'Жаңылык жарыялоо', 'Общение › Новости', 'Баарлашуу › Жаңылыктар'],
+    ['Прочитать анонимные обращения', 'Анонимдүү кайрылууларды окуу', 'Общение › Обращения', 'Баарлашуу › Кайрылуулар'],
+    ['Узнать, кто и что менял', 'Ким эмнени өзгөрткөнүн билүү', 'Ваше имя › Журнал аудита', 'Атыңыз › Аудит журналы'],
+  ],
+  super: [
+    ['Найти школу', 'Мектепти табуу', 'Школы', 'Мектептер'],
+    ['Связаться с директором', 'Директор менен байланышуу', 'Школы › Директора', 'Мектептер › Директорлор'],
+    ['Прочитать заявки', 'Өтүнмөлөрдү окуу', 'Входящие', 'Кирүүчүлөр'],
+    ['Настроить четверти', 'Чейректерди жөндөө', 'Управление › Четверти', 'Башкаруу › Чейректер'],
+    ['Проверить систему', 'Тутумду текшерүү', 'Управление › Система', 'Башкаруу › Система'],
+  ],
+};
 const NAVS = {   // [подпись, подпись на кыргызском, есть «полочка»]
   student: [['Главная', 'Башкы бет'], ['Учёба', 'Окуу', 1], ['Общение', 'Баарлашуу', 1], ['Награды', 'Сыйлыктар', 1], ['Удостоверение', 'Күбөлүк']],
   teacher: [['Журнал', 'Журнал'], ['Класс', 'Класс', 1], ['Расписание', 'Тартип'], ['Ещё', 'Дагы', 1]],
@@ -277,36 +300,49 @@ const HOTS = [
   ['Ваш профиль и меню', 'Профилиңиз жана меню', ['Нажмите на своё имя: профиль, язык, политика данных, выход и эта инструкция («Как пользоваться SABAK+»).', 'Атыңызды басыңыз: профиль, тил, маалымат саясаты, чыгуу жана ушул нускама («SABAK+ кантип колдонулат»).']],
 ];
 
+// «Учёба» → «ДЗ»: отметьте… → путь (чипы) + пояснение
+function stepHTML(t) {
+  const m = t.match(/^((?:[«"][^»"]+[»"](?:\s*→\s*)?)+)\s*:?\s*(.*)$/);
+  if (!m) return `<p>${esc(t)}</p>`;
+  const path = [...m[1].matchAll(/[«"]([^»"]+)[»"]/g)].map(x => `<span>${esc(x[1])}</span>`).join('<i>›</i>');
+  return `<div class="wz-path">${path}</div><p>${esc(m[2])}</p>`;
+}
+function pathHTML(txt) { return `<div class="wz-path">${txt.split('›').map(x => `<span>${esc(x.trim())}</span>`).join('<i>›</i>')}</div>`; }
 function buildPages(r) {
   const L = LESSONS[r.group] || [];
   const p = [{ id: 'welcome', g: 0 }, { id: 'ui', g: 1 }];
   L.forEach((_, i) => p.push({ id: 'lesson', i, g: 2 }));
-  p.push({ id: 'tune', g: 3 }, { id: 'install', g: 4 }, { id: 'done', g: 4 });
+  p.push({ id: 'cheat', g: 3 }, { id: 'tune', g: 3 }, { id: 'install', g: 4 }, { id: 'done', g: 4 });
   return p;
 }
 
 // ───────────────────────── каркас окна ─────────────────────────
 function renderWizard() {
-  clearAnim(); W.phase = 'wizard'; root.className = 'wz wz-setup'; root.style.setProperty('--horn', hornTile('#ffffff', .07, 88));
+  clearAnim(); W.phase = 'wizard'; root.className = 'wz wz-setup'; root.style.setProperty('--horn', hornTile('#8a6a30', .07, 96));
   root.innerHTML = `<div class="wz-bgfx"></div>
   <div class="wz-win" role="dialog" aria-modal="true" aria-labelledby="wz-ttl">
-    <div class="wz-title"><span class="wz-mark">SABAK<b>+</b></span><span class="wz-ttl" id="wz-ttl">${T('Установка SABAK+', 'SABAK+ орнотуу')}</span><button type="button" class="wz-x" data-wz="ask" aria-label="${T('Пропустить знакомство', 'Таанышууну өткөрүп жиберүү')}">✕</button></div>
+    <header class="wz-top"><span class="wz-brand" aria-hidden="true">SABAK<b>+</b></span><span class="wz-ttl" id="wz-ttl"></span><button type="button" class="wz-x" data-wz="ask" aria-label="${T('Пропустить знакомство', 'Таанышууну өткөрүп жиберүү')}">✕</button></header>
+    <div class="wz-pb" id="wz-pb" role="progressbar" aria-valuemin="1"></div>
     <div class="wz-body"><aside class="wz-side" id="wz-side"></aside><section class="wz-main" id="wz-main"></section></div>
     <footer class="wz-foot" id="wz-foot"></footer>
     <div class="wz-ask" id="wz-ask" hidden></div>
   </div>`;
   drawAll(true);
 }
-function drawAll(first) { const tt = $('#wz-ttl'); if (tt) tt.textContent = T('Установка SABAK+', 'SABAK+ орнотуу'); drawSide(); drawMain(first); drawFoot(); }
+function drawAll(first) {
+  const p = W.pages[W.page], tt = $('#wz-ttl'); if (tt) tt.textContent = T(...GROUPS[p.g]);
+  const pb = $('#wz-pb'); if (pb) { pb.setAttribute('aria-valuemax', W.pages.length); pb.setAttribute('aria-valuenow', W.page + 1); pb.setAttribute('aria-label', T(`Шаг ${W.page + 1} из ${W.pages.length}`, `${W.pages.length} кадамдын ${W.page + 1}-кадамы`)); pb.innerHTML = W.pages.map((_, i) => `<i class="${i < W.page ? 'done' : i === W.page ? 'on' : ''}"></i>`).join(''); }
+  drawSide(); drawMain(first); drawFoot();
+}
 
 function drawSide() {
   const p = W.pages[W.page], g = p.g, last = p.id === 'done', lessons = W.pages.filter(x => x.id === 'lesson').length;
   const left = W.pages.length - 1 - W.page, min = Math.max(1, Math.ceil(left * .35));
-  $('#wz-side').innerHTML = `<div class="wz-logo">SABAK<b>+</b><small>${T('мастер установки', 'орнотуу устасы')}</small></div>
+  $('#wz-side').innerHTML = `<div class="wz-logo">${T('Шаги установки', 'Орнотуу кадамдары')}</div>
     <ol class="wz-steps">${GROUPS.map((n, i) => {
       const done = last || i < g, on = !last && i === g;
-      const sub = i === 2 && on && lessons ? ` <em>${p.i + 1}/${lessons}</em>` : '';
-      return `<li class="wz-st${done ? ' done' : on ? ' on' : ''}"${on ? ' aria-current="step"' : ''}><i aria-hidden="true">${done ? '✓' : on ? '▶' : ''}</i><span>${T(...n)}${sub}</span></li>`;
+      const sub = i === 2 && on && lessons ? `<em>${p.i + 1}/${lessons}</em>` : '';
+      return `<li class="wz-st${done ? ' done' : on ? ' on' : ''}"${on ? ' aria-current="step"' : ''}><i aria-hidden="true"></i><span>${T(...n)}${sub}</span></li>`;
     }).join('')}</ol>
     <div class="wz-eta">${last ? `<b>${T('Установка завершена', 'Орнотуу аяктады')}</b>` : `${T('Осталось примерно', 'Болжол менен калды')}<b id="wz-eta">${min} ${T('мин.', 'мүн.')}</b>`}</div>`;
 }
@@ -386,8 +422,17 @@ const PAGE = {
     <h2 class="wz-h">${T(...L.t)}</h2>
     <p class="wz-lead">${T(...L.lead)}</p>
     <div class="wz-les"><div class="wz-visw" id="wz-vis">${VIS[L.vis]()}</div>
-      <div class="wz-how"><h3>${T('Что нажать', 'Эмнени басуу керек')}</h3><ol class="wz-steps2">${L.steps.map(s => `<li>${esc(T(...s))}</li>`).join('')}</ol>
+      <div class="wz-how"><h3>${T('Что нажать', 'Эмнени басуу керек')}</h3><ol class="wz-steps2">${L.steps.map(s => `<li>${stepHTML(T(...s))}</li>`).join('')}</ol>
         <div class="wz-tip"><span aria-hidden="true">💡</span><p>${esc(T(...L.tip))}</p></div></div></div>`;
+  },
+
+  cheat() {
+    const rows = CHEAT[W.r.group] || CHEAT.student;
+    return `<p class="wz-k">${T('Шпаргалка', 'Шпаргалка')}</p>
+    <h2 class="wz-h">${T('Что нужно — куда нажать', 'Эмне керек — кайда басуу керек')}</h2>
+    <p class="wz-lead">${T('Самое частое, что вам понадобится. Сохраните этот экран в голове: путь написан тёмными ярлыками, читайте слева направо.', 'Сизге көп керек болчу нерселер. Жол кара белгилер менен жазылган, солдон оңго окуңуз.')}</p>
+    <ul class="wz-cheat">${rows.map(r => `<li><b>${esc(T(r[0], r[1]))}</b>${pathHTML(T(r[2], r[3]))}</li>`).join('')}</ul>
+    <div class="wz-tip"><span aria-hidden="true">📱</span><p>${T('На телефоне разделы внизу экрана, на компьютере — вверху. Пункты со стрелкой ▾ раскрываются.', 'Телефондо бөлүмдөр экрандын ылдый жагында, компьютерде жогору жагында. ▾ белгиси бар пункттар ачылат.')}</p></div>`;
   },
 
   tune() {
@@ -430,8 +475,9 @@ const PAGE = {
     const g = W.r.group, items = FIRST[g] || FIRST.student;
     return `<div class="wz-ok"><svg viewBox="0 0 64 64" width="72" height="72" aria-hidden="true"><circle cx="32" cy="32" r="29" fill="#34b928" stroke="#0B0B0B" stroke-width="3"/><path d="M18 33l9 9 19-21" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <div><p class="wz-k">${T('Всё готово', 'Баары даяр')}</p><h2 class="wz-h">${T('Установка завершена', 'Орнотуу аяктады')}</h2></div></div>
-    <p class="wz-lead">${T(`SABAK+ готов к работе${W.r.first ? ', ' + esc(W.r.first) : ''}. Вот с чего удобно начать: нажмите «Открыть» или просто «Готово».`, `SABAK+ иштөөгө даяр${W.r.first ? ', ' + esc(W.r.first) : ''}. Мына баштоого ыңгайлуу кадамдар: «Ачуу» же жөн гана «Даяр» басыңыз.`)}</p>
+    <p class="wz-lead">${T(`SABAK+ готов к работе${W.r.first ? ', ' + esc(W.r.first) : ''}. Вот с чего удобно начать: нажмите «Открыть», «Показать на экране» (подсветим главные кнопки) или просто «Готово».`, `SABAK+ иштөөгө даяр${W.r.first ? ', ' + esc(W.r.first) : ''}. Мына баштоого ыңгайлуу кадамдар: «Ачуу», «Экрандан көрсөтүү» (негизги баскычтарды жарыктандырабыз) же жөн гана «Даяр» басыңыз.`)}</p>
     <ol class="wz-first">${items.map(([r, a, b]) => `<li><span>${esc(T(a, b))}</span><button type="button" class="wz-b" data-wz="go" data-r="${r}">${T('Открыть', 'Ачуу')} ›</button></li>`).join('')}</ol>
+    <div class="wz-row"><button type="button" class="wz-b def" data-wz="tour">👆 ${T('Показать на экране', 'Экрандан көрсөтүү')}</button></div>
     <div class="wz-tip"><span aria-hidden="true">↺</span><p>${T('Инструкцию можно открыть снова: меню профиля (ваше имя вверху) → «Как пользоваться SABAK+».', 'Нускаманы кайра ачсаңыз болот: профиль менюсу (жогорудагы атыңыз) → «SABAK+ кантип колдонулат».')}</p></div>`;
   },
 };
@@ -584,6 +630,43 @@ function startInstall() {
   later(cyc, 2300);
 }
 
+
+// ───────────────────────── экскурсия по настоящему экрану ─────────────────────────
+const TSEL = ['.nav', '.top .net', '.top .tools [data-act=a11y]', '.top .bell', '.top .usr-b'];
+const TOUR = { i: 0, steps: [], el: null };
+function startTour() {
+  const g = (W.r && W.r.group) || 'student';
+  const steps = TSEL.map((sel, n) => ({ sel, n })).filter(x => document.querySelector(x.sel));
+  if (!steps.length) return;
+  TOUR.steps = steps; TOUR.i = 0; TOUR.g = g;
+  const el = document.createElement('div'); el.id = 'wz-tour';
+  el.innerHTML = '<div class="wzt-catch"></div><div class="wzt-hole"></div><div class="wzt-tip" role="dialog" aria-modal="true" aria-labelledby="wzt-t"></div>';
+  document.body.appendChild(el); TOUR.el = el; TOUR.from = document.activeElement;
+  el.addEventListener('click', e => { const b = e.target.closest('[data-tour]'); if (!b) return; if (b.dataset.tour === 'next') { if (TOUR.i < TOUR.steps.length - 1) { TOUR.i++; tourDraw(); } else endTour(); } else if (b.dataset.tour === 'back') { if (TOUR.i > 0) { TOUR.i--; tourDraw(); } } else endTour(); });
+  tourDraw();
+}
+function endTour() { if (TOUR.el) { TOUR.el.remove(); TOUR.el = null; } window.removeEventListener('resize', tourPos); try { if (TOUR.from && document.contains(TOUR.from)) TOUR.from.focus(); } catch {} }
+function tourDraw() {
+  const el = TOUR.el; if (!el) return; const st0 = TOUR.steps[TOUR.i], last = TOUR.i === TOUR.steps.length - 1;
+  const h = HOTS[st0.n], txt = st0.n === 0 ? T(...NAVTXT[TOUR.g]) : T(...h[2]);
+  const tip = el.querySelector('.wzt-tip');
+  tip.innerHTML = `<small>${T('Показываем на экране', 'Экрандан көрсөтөбүз')} · ${TOUR.i + 1}/${TOUR.steps.length}</small><h3 id="wzt-t">${T(h[0], h[1])}</h3><p>${esc(txt)}</p>
+    <div class="wz-row"><button type="button" class="wz-b" data-tour="back" ${TOUR.i === 0 ? 'disabled' : ''}>${T('‹ Назад', '‹ Артка')}</button><button type="button" class="wz-b def" data-tour="next">${last ? T('Понятно', 'Түшүнүктүү') : T('Далее ›', 'Кийинки ›')}</button><button type="button" class="wz-b link" data-tour="end">${T('Закрыть', 'Жабуу')}</button></div>`;
+  const t = document.querySelector(st0.sel); if (t && t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  window.removeEventListener('resize', tourPos); window.addEventListener('resize', tourPos); tourPos();
+  const nb = tip.querySelector('.def'); if (nb) nb.focus({ preventScroll: true });
+}
+function tourPos() {
+  const el = TOUR.el; if (!el) return; const st0 = TOUR.steps[TOUR.i], t = document.querySelector(st0.sel); if (!t) return;
+  const r = t.getBoundingClientRect(), pad = 6, hole = el.querySelector('.wzt-hole'), tip = el.querySelector('.wzt-tip');
+  hole.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
+  if (innerWidth <= 760) { tip.style.left = tip.style.top = ''; return; }
+  const th = tip.offsetHeight, tw = tip.offsetWidth, below = r.bottom + 14 + th < innerHeight;
+  tip.style.top = (below ? r.bottom + 14 : Math.max(10, r.top - 14 - th)) + 'px';
+  tip.style.left = clamp(r.left + r.width / 2 - tw / 2, 12, innerWidth - tw - 12) + 'px';
+}
+window.addEventListener('keydown', e => { if (!TOUR.el) return; if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); endTour(); } else if (e.key === 'ArrowRight') { const b = TOUR.el.querySelector('[data-tour=next]'); if (b) b.click(); } else if (e.key === 'ArrowLeft') { const b = TOUR.el.querySelector('[data-tour=back]'); if (b && !b.disabled) b.click(); } }, true);
+
 // ───────────────────────── события ─────────────────────────
 function next() {
   const i = W.pages[W.page].id; if (i === 'install' && !W.installDone) return;
@@ -601,8 +684,7 @@ function onClick(e) {
   const b = e.target.closest('[data-wz]'); if (!b || b.disabled) return;
   const a = b.dataset.wz, d = b.dataset, v = W.v;
   switch (a) {
-    case 'splash-skip': if (W.phase === 'splash') renderText(); return;
-    case 'text-go': renderWizard(); return;
+    case 'splash-skip': if (W.phase === 'splash') renderWizard(); return;
     case 'next': next(); return;
     case 'back': back(); return;
     case 'ask': ask(true); return;
@@ -610,6 +692,7 @@ function onClick(e) {
     case 'skip': skip(); return;
     case 'finish': finish(); return;
     case 'go': finish(d.r); return;
+    case 'tour': { const r = W.r; finish(); W.r = r; setTimeout(startTour, 450); return; }
     case 'lang': S.setPrefs({ lang: d.v }); if (W.phase === 'wizard') { drawAll(true); } return;
     case 'hot': v.hot = +d.n; { const keep = $('#wz-main').scrollTop; drawMain(true); $('#wz-main').scrollTop = keep; const n = root.querySelector(`[data-wz=hot][data-n="${d.n}"]`); if (n) n.focus({ preventScroll: true }); } return;
     // калькулятор оценок
@@ -640,9 +723,8 @@ S.on(() => { if (W.open && W.phase === 'wizard' && W.pages[W.page] && W.pages[W.
 window.addEventListener('keydown', e => {
   if (!W.open) return;
   if (e.altKey && /^[aAфФ]$/.test(e.key)) { e.preventDefault(); e.stopPropagation(); return; }   // панель доступности лежит под окном; настройки есть на странице «Настройка»
-  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (W.phase === 'wizard') ask(!W.ask); else if (W.phase === 'splash') renderText(); else skip(); return; }
-  if (W.phase === 'splash' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); renderText(); return; }
-  if (W.phase === 'text' && e.key === 'Enter') { const g = $('#wzt-go'); if (g && !g.disabled) { e.preventDefault(); renderWizard(); } return; }
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (W.phase === 'wizard') ask(!W.ask); else if (W.phase === 'splash') renderWizard(); else skip(); return; }
+  if (W.phase === 'splash' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); renderWizard(); return; }
   if (W.phase === 'wizard') {
     if (W.ask) { if (e.key === 'Tab') trap(e, $('#wz-ask')); return; }
     if (e.key === 'Tab') { trap(e, root.querySelector('.wz-win')); return; }
