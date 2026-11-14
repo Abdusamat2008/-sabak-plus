@@ -2,6 +2,7 @@ import * as S from './store.js';
 import { t, setLang, getLang, AFFIRMATIONS } from './i18n.js';
 import * as Ky from './ky.js';
 import * as Privacy from './privacy.js';
+import * as Account from './account.js';
 import { TYPES, REASONS, RULES_RU, wavg, finalGrade, fmt1, fmt2, dmy, todayISO, addDays, fiveStreak, sortGrades, mean, trend, isWeekend, gradesNeeded, whatIfTest } from './calc.js';
 import { advise, studentReport, subjectReport, isAtRisk, anonymousSummary, achievements } from './ai.js';
 import * as Tour from './tour.js';
@@ -25,7 +26,6 @@ import * as Cal from './cal.js';
 import * as Reports from './reports.js';
 import * as IdCard from './idcard.js';
 import * as Backup from './backup.js';
-import * as Profile from './profile.js';
 
 const $app = document.getElementById('app');
 const dayFmt = d => { try { return new Date(d + 'T12:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch { return d; } };
@@ -103,11 +103,11 @@ function shell(content) {
       <a class="ibtn bell ${unread ? 'has-new' : ''}" href="#/notifs" aria-label="Уведомления${unread ? ': ' + unread : ''}">${ico('bell')}${unread ? `<b class="cnt">${unread}</b>` : ''}</a>
       <div class="usr">
         <button class="usr-b" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">${u.role === 'student' && me ? avatar(me, 32) : `<span class="av ini sm" style="width:32px;height:32px;border-color:var(--blue);color:var(--blue)">${esc((u.name || '?').split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase())}</span>`}<span class="usr-n"><b>${esc(first(u.name))}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}</small></span><span class="car" aria-hidden="true">▾</span></button>
-        ${ui.menu ? `<div class="menu" role="menu"><div class="mh2"><b>${esc(u.name)}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}${st.school ? ' · ' + esc(st.school.name) : ''}</small></div>
+        ${ui.menu ? `<div class="menu" role="menu"><div class="mh2"><b>${esc(u.name)}</b><small>${esc(u.level ? ROLE_RU[u.level] : t('role_' + u.role))}${st.school ? ' · ' + esc(st.school.name) : ''}</small>${S.isLive() && u.email ? `<small class="mh-mail" title="Почта аккаунта">${esc(u.email)}</small>` : ''}</div>
           ${S.isLive() ? '' : `<label class="mi">Показать как<select class="roleSel" data-act="role" aria-label="Показать как">${[['student', 'Ученик'], ['parent', 'Родитель'], ['teacher', 'Учитель'], ['admin', 'Директор'], ['deputy', 'Завуч'], ['super', 'Суперадмин']].map(([x, n]) => `<option value="${x}" ${(x === u.role || (u.level === 'deputy' && x === 'deputy') && true) && !(x === 'admin' && u.level === 'deputy') ? 'selected' : ''}>${n}</option>`).join('')}</select></label><button class="mi" data-act="tour">▶ Демо-сценарий</button>`}
-          <a class="mi" href="#/profile">Мой профиль</a>
           <button class="mi" data-act="a11y">Специальные возможности <b>Alt+A</b></button>
-          <button class="mi" data-act="privacy">Политика данных</button>
+          <button class="mi" data-act="account">${L() === 'ru' ? 'Мой профиль' : 'Менин профилим'}</button>
+          <button class="mi" data-act="privacy">${L() === 'ru' ? 'Политика конфиденциальности' : 'Купуялык саясаты'}</button>
           <button class="mi" data-act="lang">Язык: <b>${L() === 'ru' ? 'Русский → Кыргызча' : 'Кыргызча → Русский'}</b></button>
           ${u.role === 'admin' ? '<a class="mi" href="#/admin/audit">Журнал аудита</a>' : ''}
           <button class="mi out" data-act="logout">${t('logout')}</button></div>` : ''}
@@ -404,7 +404,6 @@ function view() {
     return Auth.authView();
   }
   if (r === 'notifs') return People.notifsPage();
-  if (r === 'profile') return Profile.page();
   if (r.startsWith('dossier/')) return People.dossierView(r.split('/')[1]);
   const sub = r.split('/');
   if (!r.startsWith(u.role)) { go(u.role); return ''; }
@@ -545,7 +544,8 @@ document.addEventListener('click', async e => {
   if (act === 'demo-back') { ui.demoPick = false; render(); return; }
   if (act === 'logout') { ui.menu = false; S.logout(); location.hash = ''; ui.demoPick = false; render(); return; }
   if (act === 'to-live') { S.switchMode('live'); location.hash = ''; render(); return; }
-  if (act === 'privacy') { Privacy.open(); return; }
+  if (act === 'privacy') { ui.menu = false; render(); Privacy.open(); return; }
+  if (act === 'account') { ui.menu = false; render(); Account.open(); return; }
   if (act === 'lang') { S.setPrefs({ lang: st.prefs.lang === 'ru' ? 'ky' : 'ru' }); return; }
   if (A11y.act(act, el)) return;
   if (act === 'ach-demo') { const got = S.demoPerfectAttendance(el.dataset.sid, 30); if (!got.length) toast('Уже получено — сбросьте демо-данные в подвале, чтобы показать заново', 'warn'); return; }
@@ -615,7 +615,7 @@ document.addEventListener('submit', async e => {
     if (S.isLive()) { const r = await V.call('lesson_set', { p_class: c && c.id, p_subj: ui.subj, p_date: todayISO(), p_topic: topic, p_hw: hw || null, p_due: hw ? due : null }); if (!r.ok) { toast('Не сохранено: ' + (r.error || ''), 'warn'); return; } }
     S.addLesson({ cls: ui.cls, subj: ui.subj, topic, hw, due }); ui.lesson = false; render(); toast('План урока сохранён', 'ok'); return;
   }
-  if (await Coins.submit(f, fd) || await News.submit(f, fd) || await Un.submit(f, fd) || await Cal.submit(f, fd) || await Reports.submit(f, fd) || await Profile.submit(f, fd)) return;
+  if (await Coins.submit(f, fd) || await News.submit(f, fd) || await Un.submit(f, fd) || await Cal.submit(f, fd) || await Reports.submit(f, fd)) return;
   if (await Auth.submit(f, fd)) return;
   if (await Sched.submit(f, fd)) return;
   if (Archive.submit(f, fd) || Super.submit(f, fd) || Super.dirSubmit(f, fd)) return;
