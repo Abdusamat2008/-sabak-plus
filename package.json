@@ -16,7 +16,8 @@
     "test:v06": "node tests/v06.test.js",
     "test:v07": "node tests/v07.test.js",
     "test:v08": "node tests/v08.test.js",
-    "test:mobile": "node tests/mobile.js"
+    "test:mobile": "node tests/mobile.js",
+    "test:welcome": "node tests/welcome.test.js"
   },
   "devDependencies": { "playwright": "^1.45.0", "jpeg-js": "^0.4.4", "pg": "^8.11.0" }
 }
